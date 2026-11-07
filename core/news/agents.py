@@ -14,12 +14,17 @@ import urllib.request
 from pathlib import Path
 
 from .checks import schema, validate_schema
-from .config import ROOT
+from .config import ROOT, ensure_online
 from .episode import write_text
 
 
 class AgentError(Exception):
     pass
+
+
+def agent_schema(name):
+    """Schema gửi cho AI: bỏ $schema/title (Claude CLI chỉ nhận draft mặc định)."""
+    return {k: v for k, v in schema(name).items() if k not in ("$schema", "title")}
 
 
 def extract_json(text):
@@ -34,7 +39,7 @@ def extract_json(text):
 
 def claude_cli(conf, prompt, schema_name, workdir, tools, timeout):
     command = [conf.get("bin", "claude"), "-p", "--output-format", "json", "--no-session-persistence",
-               "--model", conf["model"], "--json-schema", json.dumps(schema(schema_name)),
+               "--model", conf["model"], "--json-schema", json.dumps(agent_schema(schema_name)),
                "--permission-mode", "dontAsk", "--tools", ",".join(tools) if tools else ""]
     if conf.get("max_budget_usd"):
         command += ["--max-budget-usd", str(conf["max_budget_usd"])]
@@ -51,7 +56,7 @@ def router(conf, prompt, schema_name, workdir, tools, timeout):
     """API kiểu OpenAI chat completions (9router hoặc nhà cung cấp khác)."""
     body = {"model": conf["model"], "messages": [{"role": "user", "content": prompt}],
             "response_format": {"type": "json_schema",
-                                "json_schema": {"name": schema_name, "schema": schema(schema_name), "strict": True}}}
+                                "json_schema": {"name": schema_name, "schema": agent_schema(schema_name), "strict": True}}}
     headers = {"Content-Type": "application/json"}
     key = os.environ.get(conf.get("key_env", "ROUTER_API_KEY"))
     if key:
@@ -72,7 +77,7 @@ def codex_cli(conf, prompt, schema_name, workdir, tools, timeout):
     """Codex tác tử: được ghi file trong thư mục tập (tải ảnh), trả JSON theo schema."""
     schema_file = Path(workdir) / "logs" / f".schema-{schema_name}.json"
     last = Path(workdir) / "logs" / f".codex-{schema_name}-{int(time.time())}.txt"
-    write_text(schema_file, json.dumps(schema(schema_name)))
+    write_text(schema_file, json.dumps(agent_schema(schema_name)))
     command = [conf.get("bin", "codex"), "exec", "--skip-git-repo-check", "--ephemeral", "-s", "workspace-write",
                "-C", str(workdir), "--output-schema", str(schema_file), "-o", str(last), *conf.get("cli_args", []), "-"]
     out = subprocess.run(command, input=prompt, capture_output=True, text=True, timeout=timeout)
@@ -98,6 +103,7 @@ def build_prompt(step, context):
 
 
 def run(cfg, episode, role, step, context, schema_name, tools=(), timeout=900, agentic=False):
+    ensure_online(f"gọi AI ({role}/{step})")
     conf = dict(cfg.machine["agents"][role])
     backend = conf.get("agentic_backend", "codex_cli") if agentic else conf["backend"]
     prompt = build_prompt(step, context)

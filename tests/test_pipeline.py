@@ -23,7 +23,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.env = mock.patch.dict(os.environ, {"NEWS_DATA_DIR": self.tmp.name, "NEWS_DRY": "1", "NEWS_NOTIFY": "0", "NEWS_DRY_RENDER": "ffmpeg"})
+        self.env = mock.patch.dict(os.environ, {"NEWS_DATA_DIR": self.tmp.name, "NEWS_DRY": "1", "NEWS_NOTIFY": "0", "NEWS_DRY_RENDER": "ffmpeg", "NEWS_OFFLINE": "1"})
         self.env.start()
         self.addCleanup(self.env.stop)
         lessons_dir = Path(self.tmp.name) / "repo-lessons"
@@ -90,12 +90,25 @@ class PipelineTest(Base):
         self.assertFalse(episode.file("audio/voice.mp3").exists())
 
     def test_not_ready_step_stops_cleanly(self):
-        cfg = Config()
-        cfg.dry = False
-        episode = self.new()
-        pipeline.run(cfg, episode)
+        def not_ready(ctx):
+            raise steps.NotReady("assets: chưa xây (thử)")
+
+        with mock.patch.object(steps.BY_NAME["assets"], "run", not_ready):
+            episode = self.new()
+            pipeline.run(self.cfg, episode)
         self.assertEqual(episode.state["status"], "needs_human")
         self.assertIn("chưa xây", episode.state["blocker"])
+
+    def test_offline_blocks_real_services(self):
+        """Lưới an toàn: test không bao giờ được gọi AI/Vbee thật."""
+        cfg = Config()
+        cfg.dry = False
+        cfg.enforce_budget = False
+        episode = self.new()
+        pipeline.run(cfg, episode)
+        self.assertEqual(episode.state["status"], "failed")
+        self.assertIn("NEWS_OFFLINE", episode.state["blocker"])
+        self.assertFalse((self.cfg.data_dir / "_ledger.jsonl").exists())
 
 
 class LessonsTest(Base):

@@ -37,6 +37,15 @@ def load_env_file(path):
             os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 
+class OfflineError(RuntimeError):
+    """NEWS_OFFLINE=1 (test): cấm mọi lời gọi ra ngoài và mọi bước tốn tiền."""
+
+
+def ensure_online(what):
+    if os.environ.get("NEWS_OFFLINE") == "1":
+        raise OfflineError(f"NEWS_OFFLINE=1: chặn {what}")
+
+
 class Config:
     def __init__(self, root=ROOT):
         self.root = Path(root)

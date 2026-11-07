@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import agents, checks
-from .config import ROOT
+from .config import ROOT, ensure_online
 from .episode import read_json, write_json, write_text
 
 FIXTURE = ROOT / "tests" / "fixtures" / "sample"
@@ -81,7 +81,18 @@ def next_version(ctx, prefix):
 def run_collect(ctx):
     if ctx.cfg.dry:
         return fixture(ctx, "inbox.json")
-    raise NotReady("collect: fetch_feeds + Codex chưa xây (G4)")
+    from . import feeds
+    raw = feeds.collect()
+    write_json(ctx.ep.file("raw_feed.json"), raw)
+    if not raw["items"]:
+        raise RuntimeError("RSS không có tin nào sau lọc: " + json.dumps(raw["feeds"], ensure_ascii=False)[:300])
+    items = [{k: i[k] for k in ("title", "url", "summary", "published_at", "publisher", "tier")} for i in raw["items"]]
+    inbox = agents.run(ctx.cfg, ctx.ep, "codex", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Bài RSS": items}, "inbox")
+    known = {i["url"] for i in raw["items"]}
+    for story in inbox["stories"]:  # AI không được bịa link: chỉ giữ link có trong RSS
+        story["sources"] = [s for s in story["sources"] if s["url"] in known]
+    inbox["stories"] = [s for s in inbox["stories"] if s["sources"]]
+    write_json(ctx.ep.file("inbox.json"), inbox)
 
 
 def check_collect(ctx):
@@ -124,7 +135,7 @@ def run_write(ctx):
     if ctx.cfg.dry:
         fixture(ctx, "script.json")
     else:
-        ctx_data = {"Brief": ctx.json("brief.json"),
+        ctx_data = {"Brief": ctx.json("brief.json"), "Văn bản nguồn": source_texts(ctx, ctx.json("brief.json")["sources"]),
                     "Chuẩn kịch bản": (ROOT / "core/standard/script.md").read_text(encoding="utf-8"),
                     "Bản trước": ctx.json("script.json") if ctx.ep.file("script.json").exists() else "chưa có",
                     "Cần sửa": ctx.feedback("write")}
@@ -153,24 +164,47 @@ def run_review(ctx):
         shutil.copyfile(FIXTURE / "review.json", target)
         return
     script = ctx.json("script.json")
-    sources = {s["url"]: fetch_text(s["url"]) for s in script["sources"]}
-    facts = agents.run(ctx.cfg, ctx.ep, "codex", "factcheck", {"Kịch bản": script, "Văn bản nguồn": sources}, "review")
+    sources = source_texts(ctx, script["sources"])
+    facts = agents.run(ctx.cfg, ctx.ep, "codex", "factcheck", {"Kịch bản": script, "Văn bản nguồn": sources}, "factcheck")
+    write_json(ctx.ep.file(f"qa/factcheck_v{version}.json"), facts)
     review = agents.run(ctx.cfg, ctx.ep, "claude", "review",
                         {"Kịch bản": script, "Kết quả đối chiếu nguồn của Codex": facts}, "review")
     review["fact_errors"] = facts["fact_errors"] + review["fact_errors"]
     write_json(target, review)
 
 
-def fetch_text(url, limit=20000):
+def source_texts(ctx, sources):
+    """Nội dung bài nguồn, tải một lần rồi lưu trong tập (sources_text.json) để các bước dùng chung."""
+    path = ctx.ep.file("sources_text.json")
+    cache = read_json(path) if path.exists() else {}
+    for source in sources:
+        if source["url"] not in cache or cache[source["url"]].startswith("[không tải được"):
+            cache[source["url"]] = fetch_text(source["url"])
+    write_json(path, cache)
+    return {s["url"]: cache[s["url"]] for s in sources}
+
+
+def fetch_text(url, limit=15000):
+    ensure_online(f"tải bài {url}")
+    import html as htmllib
+    import re
     try:
-        request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 news-video"})
+        request = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; news-video/1.0)"})
         with urllib.request.urlopen(request, timeout=30) as response:
-            html = response.read(2_000_000).decode("utf-8", "replace")
+            raw = response.read(3_000_000)
+        if raw[:2] == b"\x1f\x8b":  # một số trang trả gzip dù không yêu cầu
+            import gzip
+            raw = gzip.decompress(raw)
+        page = raw.decode("utf-8", "replace")
     except OSError as error:
         return f"[không tải được: {error}]"
-    import re
-    text = re.sub(r"<(script|style)[\s\S]*?</\1>|<[^>]+>", " ", html)
-    return re.sub(r"\s+", " ", text)[:limit]
+    page = re.sub(r"<(script|style|nav|header|footer|aside)[\s\S]*?</\1>", " ", page, flags=re.I)
+    title = re.search(r"<h1[^>]*>([\s\S]*?)</h1>", page, re.I)
+    paragraphs = [htmllib.unescape(re.sub(r"<[^>]+>", " ", p)) for p in re.findall(r"<p[^>]*>([\s\S]*?)</p>", page, re.I)]
+    paragraphs = [re.sub(r"\s+", " ", p).strip() for p in paragraphs if len(p.strip()) > 40]
+    body = "\n".join(paragraphs) if sum(map(len, paragraphs)) > 400 else re.sub(r"\s+", " ", htmllib.unescape(re.sub(r"<[^>]+>", " ", page)))
+    head = re.sub(r"<[^>]+>|\s+", " ", title.group(1)).strip() + "\n" if title else ""
+    return (head + body)[:limit]
 
 
 def check_review(ctx):
@@ -193,6 +227,7 @@ def run_voice(ctx):
     if ctx.cfg.dry:
         fake_voice(ctx)
     else:
+        ensure_online("tạo giọng Vbee (tốn credit)")
         tts = ctx.cfg.channel["tts"]
         command = ["tts", "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
                    "--file", ctx.ep.file("script_tts.txt"), "--out", audio, "--project", tts["project"], "--srt"]

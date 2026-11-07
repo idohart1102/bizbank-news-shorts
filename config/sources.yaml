@@ -1,16 +1,22 @@
 # Nguồn tin. tier 1 = chính thống, đủ 1 nguồn; tier 2 = báo lớn; tier 3 = mạng xã hội, chỉ làm tín hiệu.
+# rss: feed đọc tự động (core/news/feeds.py). Nguồn không có rss chỉ dùng khi đối chiếu fact.
 press:
-  - {name: Chính phủ, url: https://baochinhphu.vn, tier: 1}
-  - {name: Tổng cục Thuế / Cục Thuế, url: https://gdt.gov.vn, tier: 1}
+  - {name: Báo Chính phủ, url: https://baochinhphu.vn, tier: 1, rss: [https://baochinhphu.vn/chinh-sach-moi.rss, https://baochinhphu.vn/home.rss]}
+  - {name: Xây dựng chính sách (Chính phủ), url: https://xaydungchinhsach.chinhphu.vn, tier: 1, rss: [https://xaydungchinhsach.chinhphu.vn/home.rss]}
+  - {name: Cục Thuế, url: https://gdt.gov.vn, tier: 1}
   - {name: Thư viện Pháp luật, url: https://thuvienphapluat.vn, tier: 1}
-  - {name: VnExpress Kinh doanh, url: https://vnexpress.net/kinh-doanh, tier: 2}
-  - {name: Tuổi Trẻ Kinh doanh, url: https://tuoitre.vn/kinh-doanh.htm, tier: 2}
-  - {name: Thanh Niên Kinh tế, url: https://thanhnien.vn/kinh-te.htm, tier: 2}
-  - {name: CafeF, url: https://cafef.vn, tier: 2}
-  - {name: VietnamBiz, url: https://vietnambiz.vn, tier: 2}
-  - {name: Dân trí Kinh doanh, url: https://dantri.com.vn/kinh-doanh.htm, tier: 2}
-social:
+  - {name: VnExpress, url: https://vnexpress.net/kinh-doanh, tier: 2, rss: [https://vnexpress.net/rss/kinh-doanh.rss]}
+  - {name: Tuổi Trẻ, url: https://tuoitre.vn/kinh-doanh.htm, tier: 2, rss: [https://tuoitre.vn/rss/kinh-doanh.rss]}
+  - {name: Thanh Niên, url: https://thanhnien.vn/kinh-te.htm, tier: 2, rss: [https://thanhnien.vn/rss/kinh-te.rss]}
+  - {name: Dân trí, url: https://dantri.com.vn/kinh-doanh.htm, tier: 2, rss: [https://dantri.com.vn/rss/kinh-doanh.rss]}
+  - {name: CafeF, url: https://cafef.vn, tier: 2, rss: [https://cafef.vn/home.rss]}
+  - {name: VietnamBiz, url: https://vietnambiz.vn, tier: 2, rss: [https://vietnambiz.vn/rss/tin-moi-nhat.rss]}
+  - {name: VnEconomy, url: https://vneconomy.vn, tier: 2, rss: [https://vneconomy.vn/tin-moi.rss]}
+social:   # chưa đọc tự động (cần API/đấu nối); chỉ làm tín hiệu, tin chỉ có ở đây phải ghi "theo thông tin lan truyền"
   - {name: Facebook fanpage báo/cơ quan, tier: 3}
   - {name: TikTok xu hướng kinh doanh, tier: 3}
   - {name: Nhóm cộng đồng chủ shop, tier: 3}
 topics_priority: [thuế, hóa đơn điện tử, hộ kinh doanh, sàn TMĐT, phí ngân hàng/thanh toán, lương tối thiểu, BHXH, giá cả đầu vào, vay vốn, quy định mới có hiệu lực]
+# Lọc thô trước khi đưa cho AI (khớp không dấu, chữ thường). Tin không khớp từ nào bị bỏ để tiết kiệm token.
+keywords: [thue, hoa don, ho kinh doanh, ho ca the, doanh nghiep nho, sme, tieu thuong, cua hang, chu shop, ban hang online, san thuong mai, tmdt, thuong mai dien tu, shopee, tiktok shop, lazada, lai suat, vay von, goi vay, tin dung, thanh toan, chuyen khoan, phi dich vu, gia xang, gia dien, gia ca, tang gia, luong toi thieu, bhxh, bao hiem xa hoi, nghi dinh, thong tu, quy dinh moi, co hieu luc, xu phat, muc phat, chinh sach moi, ho tro doanh nghiep, mat bang, xuat khau, nhap khau, hai quan, an toan thuc pham, giay phep kinh doanh, ma so thue, khai thue, quyet toan]
+window_hours: 48

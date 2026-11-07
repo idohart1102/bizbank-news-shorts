@@ -39,7 +39,7 @@ class CaptionsTest(unittest.TestCase):
 class RemotionRenderTest(unittest.TestCase):
     def test_dry_episode_renders_with_remotion(self):
         with tempfile.TemporaryDirectory() as tmp, mock.patch.dict(os.environ, {"NEWS_DATA_DIR": tmp, "NEWS_DRY": "1",
-                                                                                "NEWS_NOTIFY": "0"}):
+                                                                                "NEWS_NOTIFY": "0", "NEWS_OFFLINE": "1"}):
             os.environ.pop("NEWS_DRY_RENDER", None)
             cfg = Config()
             episode = Episode.create(cfg.data_dir, "2026-01-01-1030", "manual")
