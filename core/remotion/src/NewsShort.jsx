@@ -1,31 +1,34 @@
 import {AbsoluteFill, Audio, Img, Sequence, interpolate, spring, staticFile, useCurrentFrame, useVideoConfig} from 'remotion';
 import {FONT} from './fonts';
 
-// Thứ tự lớp cố định theo decisions.md: media → chữ nhấn → phụ đề → overlay.png (trên cùng).
+// Thứ tự lớp (decisions.md): media → cutout → thẻ chữ/số → overlay.png (template trên cùng).
+// Không có phụ đề. Thẻ và cutout chỉ nằm trong vùng ảnh (nửa trên) vì khung template che phần dưới.
+const FADE = 6;
+
 export const NewsShort = (props) => {
   const {fps} = useVideoConfig();
   const at = (seconds) => Math.round(seconds * fps);
-  const style = {accent: '#FFD400', text: '#FFFFFF', shadow: 'rgba(0,0,0,0.85)', ...props.style};
+  const brand = {navy: '#0B2A6B', lime: '#C3D82E', cyan: '#22A6E8', mint: '#A8E0D0', ...props.style};
+  const span = (item) => Math.max(1, at(item.end) - at(item.start));
   return (
-    <AbsoluteFill style={{backgroundColor: '#0b1622', fontFamily: FONT}}>
+    <AbsoluteFill style={{backgroundColor: brand.navy, fontFamily: FONT}}>
       {props.scenes.map((scene, i) => (
-        // Cảnh kéo dài thêm FADE khung, nằm dưới cảnh sau trong lúc cảnh sau hiện dần: không lộ nền (chớp đen).
+        // Cảnh kéo dài thêm FADE khung nằm dưới cảnh sau trong lúc cảnh sau hiện dần: không chớp nền.
         <Sequence key={`m${i}`} from={at(scene.start)}
           durationInFrames={Math.max(1, at(scene.end) - at(scene.start) + (i < props.scenes.length - 1 ? FADE : 0))}>
           <MediaScene scene={scene} rect={props.layout.media} fade={i > 0} />
         </Sequence>
       ))}
-      {props.scenes.filter((s) => s.headline).map((scene, i) => (
-        <Sequence key={`h${i}`} from={at(scene.start)} durationInFrames={Math.max(1, at(scene.end) - at(scene.start))}>
-          <Headline text={scene.headline} rect={props.layout.headline} style={style} />
+      {props.cutouts.map((item, i) => (
+        <Sequence key={`c${i}`} from={at(item.start)} durationInFrames={span(item)}>
+          <Cutout item={item} rect={props.layout.cutout} />
         </Sequence>
       ))}
-      {props.emphasis.map((item, i) => (
-        <Sequence key={`e${i}`} from={at(item.start)} durationInFrames={Math.max(1, at(item.end) - at(item.start))}>
-          <Emphasis text={item.text} rect={props.layout.emphasis || props.layout.media} style={style} />
+      {props.cards.map((card, i) => (
+        <Sequence key={`k${i}`} from={at(card.start)} durationInFrames={span(card)}>
+          <Card card={card} rect={props.layout.cards} brand={brand} />
         </Sequence>
       ))}
-      <Subtitles captions={props.captions} rect={props.layout.subtitle} style={style} />
       {props.overlay ? <Img src={staticFile(props.overlay)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%'}} /> : null}
       {props.voice ? <Audio src={staticFile(props.voice)} /> : null}
       {props.sfx.map((item, i) => (
@@ -37,8 +40,6 @@ export const NewsShort = (props) => {
     </AbsoluteFill>
   );
 };
-
-const FADE = 6;
 
 // Nhạc nền nhỏ xuyên suốt video: lặp nếu ngắn hơn video, fade vào/ra.
 const Music = ({music, duration}) => {
@@ -61,70 +62,64 @@ const MOTIONS = {
 
 const MediaScene = ({scene, rect, fade}) => {
   const frame = useCurrentFrame();
-  const {fps, width, height} = useVideoConfig();
+  const {fps} = useVideoConfig();
   const total = Math.max(1, Math.round((scene.end - scene.start) * fps));
   const p = interpolate(frame, [0, total], [0, 1], {extrapolateRight: 'clamp'});
   const m = (MOTIONS[scene.motion] || MOTIONS['ken-burns'])(p);
   const fadeIn = fade ? interpolate(frame, [0, FADE], [0, 1], {extrapolateRight: 'clamp'}) : 1;
   const src = staticFile(scene.src);
+  const box = {position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, overflow: 'hidden'};
   return (
     <AbsoluteFill style={{opacity: fadeIn}}>
-      {/* Nền: chính ảnh đó phóng to, làm mờ, để ảnh ngang không để lại viền đen */}
-      <Img src={src} style={{position: 'absolute', width, height, objectFit: 'cover', filter: 'blur(40px) brightness(0.55)', transform: 'scale(1.2)'}} />
-      <div style={{position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, overflow: 'hidden'}}>
-        <Img src={src} style={{width: '100%', height: '100%', objectFit: scene.fit || 'cover',
+      <div style={box}>
+        {/* Nền: chính ảnh đó phóng to, làm mờ, để ảnh văn bản/ảnh ngang không để lại viền trống */}
+        <Img src={src} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+          filter: 'blur(36px) brightness(0.55)', transform: 'scale(1.25)'}} />
+        <Img src={src} style={{position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: scene.fit || 'cover',
           transform: `scale(${m.scale}) translate(${m.x}%, ${m.y}%)`}} />
       </div>
     </AbsoluteFill>
   );
 };
 
-const Headline = ({text, rect, style}) => {
+// Cutout (người được nhắc tên, sự vật quan trọng): trượt vào từ cạnh, nảy nhẹ, chân đặt ở mép dưới vùng ảnh.
+const Cutout = ({item, rect}) => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const pop = spring({frame, fps, config: {damping: 14}});
-  // Ưu tiên một dòng: co chữ theo độ dài (≥ 44px), dài quá mới xuống dòng; không để chữ cuối đứng lẻ.
-  const fontSize = Math.max(44, Math.min(58, Math.floor((rect.w - 40) / Math.max(1, text.length * 0.56))));
+  const {fps, durationInFrames} = useVideoConfig();
+  const enter = spring({frame, fps, config: {damping: 13, stiffness: 120}});
+  const leave = interpolate(frame, [durationInFrames - 6, durationInFrames], [1, 0], {extrapolateLeft: 'clamp'});
+  const height = Math.min(rect.h * 0.92, 640);
+  const width = Math.min(height * item.ratio, rect.w * 0.55);
+  const right = item.side === 'right';
+  const x = right ? rect.x + rect.w - width - 30 : rect.x + 30;
+  const slide = (1 - enter) * (right ? 1 : -1) * (width + 60);
+  const float = Math.sin(frame / 18) * 4;
   return (
-    <div style={{position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, display: 'flex',
-      alignItems: 'center', justifyContent: 'center', transform: `scale(${0.9 + 0.1 * pop})`, opacity: pop}}>
-      <div style={{color: style.text, fontWeight: 800, fontSize, lineHeight: 1.15, textAlign: 'center', textWrap: 'balance',
-        textShadow: `0 4px 12px ${style.shadow}`}}>{text}</div>
-    </div>
+    <Img src={staticFile(item.src)} style={{position: 'absolute', left: x + slide, top: rect.y + rect.h - height + float + 8,
+      width, height, objectFit: 'contain', objectPosition: 'bottom', opacity: leave,
+      filter: 'drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff) drop-shadow(0 16px 22px rgba(0,0,0,0.55))'}} />
   );
 };
 
-const Emphasis = ({text, rect, style}) => {
+// Thẻ chữ/số: giá trị lớn + nhãn nhỏ, màu nhận diện, bật lên đúng lúc được đọc.
+const Card = ({card, rect, brand}) => {
   const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const pop = spring({frame, fps, config: {damping: 11, stiffness: 160}});
-  // Co chữ theo độ dài để khung không chạm mép (ước lượng bề rộng ký tự ~0,6em, chừa lề 120px).
-  const fontSize = Math.min(76, Math.floor((rect.w - 120) / Math.max(1, text.length * 0.6)));
+  const {fps, durationInFrames} = useVideoConfig();
+  const pop = spring({frame, fps, config: {damping: 12, stiffness: 170}});
+  const leave = interpolate(frame, [durationInFrames - 5, durationInFrames], [1, 0], {extrapolateLeft: 'clamp'});
+  const narrow = card.align !== 'center';
+  const width = narrow ? rect.w * 0.6 : Math.min(rect.w, 860);
+  const left = card.align === 'left' ? rect.x : card.align === 'right' ? rect.x + rect.w - width : rect.x + (rect.w - width) / 2;
+  const valueSize = Math.min(narrow ? 84 : 104, Math.floor((width - 70) / Math.max(1, card.value.length * 0.6)));
   return (
-    <div style={{position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, display: 'flex',
-      alignItems: 'center', justifyContent: 'center'}}>
-      <div style={{background: style.accent, color: '#111', fontWeight: 800, fontSize, padding: '14px 34px',
-        borderRadius: 18, transform: `scale(${pop}) rotate(${(1 - pop) * -4}deg)`, boxShadow: '0 10px 30px rgba(0,0,0,0.45)',
-        textAlign: 'center', maxWidth: rect.w}}>{text}</div>
-    </div>
-  );
-};
-
-const Subtitles = ({captions, rect, style}) => {
-  const frame = useCurrentFrame();
-  const {fps} = useVideoConfig();
-  const t = frame / fps;
-  const current = captions.find((c) => t >= c.start && t < c.end);
-  if (!current) return null;
-  return (
-    <div style={{position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, display: 'flex',
-      alignItems: 'center', justifyContent: 'center', textAlign: 'center'}}>
-      <div style={{fontWeight: 800, fontSize: 62, lineHeight: 1.22, color: style.text,
-        textShadow: `0 0 10px ${style.shadow}, 0 4px 8px ${style.shadow}`, WebkitTextStroke: `2px ${style.shadow}`,
-        paintOrder: 'stroke fill'}}>
-        {current.words.map((w, i) => (
-          <span key={i} style={{color: t >= w.start ? style.accent : style.text}}>{w.text}{i < current.words.length - 1 ? ' ' : ''}</span>
-        ))}
+    <div style={{position: 'absolute', left, top: rect.y + rect.h - 230, width, opacity: leave,
+      transform: `translateY(${(1 - pop) * 40}px) scale(${0.85 + 0.15 * pop})`, transformOrigin: 'center bottom'}}>
+      <div style={{background: '#fff', borderRadius: 22, overflow: 'hidden', boxShadow: '0 14px 34px rgba(0,0,0,0.45)',
+        borderLeft: `14px solid ${brand.lime}`}}>
+        <div style={{padding: '14px 28px 4px', color: brand.navy, fontWeight: 800, fontSize: valueSize, lineHeight: 1.05,
+          letterSpacing: -1}}>{card.value}</div>
+        <div style={{padding: '0 28px 16px', color: '#3a4a6b', fontWeight: 600, fontSize: narrow ? 30 : 36, lineHeight: 1.2}}>
+          {card.label}</div>
       </div>
     </div>
   );

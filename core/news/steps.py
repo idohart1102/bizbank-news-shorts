@@ -299,7 +299,12 @@ def run_assets(ctx):
     if ctx.cfg.dry:
         fixture(ctx, "assets.json")
         colors = ["0x1f4e79", "0x7a1f3d", "0x2e6b30", "0x6b4e16", "0x3b2a6b"]
-        for i, item in enumerate(ctx.json("assets.json")["items"]):
+        for item in ctx.json("assets.json")["items"]:
+            if item["kind"] == "cutout":  # PNG trong suốt giả: một khối màu bo giữa nền trong suốt
+                ctx.sh(ctx.cfg.bin("ffmpeg"), "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=0xE8B04A:s=280x560",
+                       "-vf", "format=rgba,pad=400:600:60:40:color=black@0", "-frames:v", "1",
+                       ctx.ep.file(f"assets/{item['file']}"))
+        for i, item in enumerate(a for a in ctx.json("assets.json")["items"] if a["kind"] != "cutout"):
             ctx.sh(ctx.cfg.bin("ffmpeg"), "-y", "-v", "error", "-f", "lavfi",
                    "-i", f"testsrc2=s=1080x1350,hue=s=0.4,drawbox=c={colors[i % 5]}@0.6:t=fill",
                    "-frames:v", "1", ctx.ep.file(f"assets/{item['file']}"))
@@ -329,19 +334,22 @@ def check_assets(ctx):
 def run_plan(ctx):
     if ctx.cfg.dry:
         return write_json(ctx.ep.file("edit_plan.json"), simple_plan(ctx))
-    from . import captions, render
+    from . import render, timeline
     script = ctx.json("script.json")
-    _, emphasis, by_segment = captions.build(script, ctx.json("audio/voice.words.json"))
+    seconds = round(checks.duration(ctx.ep.file("audio/voice.mp3"), ctx.cfg.bin("ffprobe")), 3)
+    cards, cutouts = timeline.events(script, ctx.json("audio/voice.words.json"), seconds)
     _, layout, _ = render.template(ctx.cfg)
     sfx = {k: {"category": v["category"], "duration_s": v["duration_s"]}
            for k, v in json.loads((ROOT / "assets/sfx/index.json").read_text(encoding="utf-8")).items()}
     ctx_data = {
-        "Thời lượng audio (giây)": round(checks.duration(ctx.ep.file("audio/voice.mp3"), ctx.cfg.bin("ffprobe")), 3),
+        "Thời lượng audio (giây)": seconds,
         "Mốc từng đoạn": ctx.json("audio/segments.json"),
-        "Kịch bản (show, highlight)": [{"segment": s["id"], "role": s["role"], "show": s["show"], "highlight": s["highlight"]}
-                                       for s in script["segments"]],
-        "Mốc từng từ hiển thị": by_segment, "Chữ nhấn và lúc đọc": emphasis,
-        "Ảnh": [{k: a[k] for k in ("id", "segment", "kind", "width", "height", "note")} for a in ctx.json("assets.json")["items"]],
+        "Lời từng đoạn": [{"segment": s["id"], "role": s["role"], "show": s["show"]} for s in script["segments"]],
+        "Thẻ chữ/số và cutout (hệ thống tự hiện, tự có tiếng động)": [
+            {"kind": k, "text": e.get("value") or e.get("name"), "start": e["start"], "end": e["end"]}
+            for k, group in (("card", cards), ("cutout", cutouts)) for e in group],
+        "Ảnh nền": [{k: a[k] for k in ("id", "segment", "kind", "width", "height", "note")}
+                    for a in ctx.json("assets.json")["items"] if a["kind"] != "cutout"],
         "Vùng layout": layout, "Kho tiếng động": sfx,
         "Bản trước": ctx.json("edit_plan.json") if ctx.ep.file("edit_plan.json").exists() else "chưa có",
         "Cần sửa": ctx.feedback("plan")}
@@ -350,7 +358,8 @@ def run_plan(ctx):
 
 def simple_plan(ctx):
     """Plan tất định (dry): mỗi ảnh của đoạn một cảnh (không dùng lại ảnh), tiếng động ở đầu mỗi đoạn."""
-    segments, assets = ctx.json("audio/segments.json"), ctx.json("assets.json")["items"]
+    segments = ctx.json("audio/segments.json")
+    assets = [a for a in ctx.json("assets.json")["items"] if a["kind"] != "cutout"]
     scenes, last_sfx = [], -9.0
     motions = ["ken-burns", "zoom-in", "pan-left", "zoom-out", "pan-right"]
     for seg in segments:

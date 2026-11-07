@@ -6,7 +6,7 @@ import {TempOverlay} from './TempOverlay';
 
 // Props do core/news/render.py dựng từ edit_plan.json; xem NewsShort.jsx để biết cấu trúc.
 const emptyProps = {fps: 30, width: 1080, height: 1920, duration: 3, layout: null, overlay: null, voice: null,
-  scenes: [], captions: [], emphasis: [], sfx: [], music: null, style: {}};
+  scenes: [], cards: [], cutouts: [], sfx: [], music: null, style: {}};
 
 export const Root = () => (
   <>

@@ -7,11 +7,17 @@
    "say": "Đây là bản tin mẫu dùng để kiểm thử hệ thống dựng video tự động.",
    "show": "Đây là bản tin mẫu dùng để kiểm thử hệ thống dựng video tự động.",
    "visual": "thẻ chữ mẫu",
-   "highlight": [
-    "kiểm thử"
-   ],
    "source_ids": [
     1
+   ],
+   "cards": [],
+   "cutouts": [
+    {
+     "name": "nhân vật mẫu",
+     "kind": "person",
+     "trigger": "bản tin mẫu",
+     "search": "mẫu"
+    }
    ]
   },
   {
@@ -20,13 +26,18 @@
    "say": "Theo thông báo mẫu, hộ doanh thu trên một tỷ đồng mỗi năm phải dùng hóa đơn điện tử.",
    "show": "Theo thông báo mẫu, hộ doanh thu trên 1 tỷ đồng/năm phải dùng hóa đơn điện tử.",
    "visual": "ảnh chụp văn bản mẫu",
-   "highlight": [
-    "1 tỷ đồng/năm"
-   ],
    "source_ids": [
     1,
     2
-   ]
+   ],
+   "cards": [
+    {
+     "value": "1 tỷ đồng/năm",
+     "label": "Ngưỡng doanh thu mẫu",
+     "trigger": "1 tỷ đồng/năm"
+    }
+   ],
+   "cutouts": []
   },
   {
    "id": "s3",
@@ -34,13 +45,22 @@
    "say": "Quy định mẫu áp dụng từ ngày một tháng bảy. Mức phạt mẫu là năm triệu đồng.",
    "show": "Quy định mẫu áp dụng từ ngày 1/7. Mức phạt mẫu là 5 triệu đồng.",
    "visual": "biểu đồ mẫu",
-   "highlight": [
-    "1/7",
-    "5 triệu đồng"
-   ],
    "source_ids": [
     1
-   ]
+   ],
+   "cards": [
+    {
+     "value": "1/7",
+     "label": "Ngày áp dụng mẫu",
+     "trigger": "1/7"
+    },
+    {
+     "value": "5 triệu đồng",
+     "label": "Mức phạt mẫu",
+     "trigger": "5 triệu đồng"
+    }
+   ],
+   "cutouts": []
   },
   {
    "id": "s4",
@@ -48,9 +68,17 @@
    "say": "Chủ shop nên kiểm tra phần mềm hóa đơn và hỏi kế toán ngay trong tuần này.",
    "show": "Chủ shop nên kiểm tra phần mềm hóa đơn và hỏi kế toán ngay trong tuần này.",
    "visual": "ảnh minh họa cửa hàng",
-   "highlight": [],
    "source_ids": [
     1
+   ],
+   "cards": [],
+   "cutouts": [
+    {
+     "name": "phần mềm hóa đơn",
+     "kind": "object",
+     "trigger": "phần mềm hóa đơn",
+     "search": "invoice software"
+    }
    ]
   },
   {
@@ -59,8 +87,9 @@
    "say": "Theo dõi kênh để không lỡ tin chính sách mới.",
    "show": "Theo dõi kênh để không lỡ tin chính sách mới.",
    "visual": "logo kênh",
-   "highlight": [],
-   "source_ids": []
+   "source_ids": [],
+   "cards": [],
+   "cutouts": []
   }
  ],
  "sources": [

@@ -11,7 +11,10 @@ Luật:
 - Kịch bản là `script.json` (schema `core/schemas/script.schema.json`), chia đoạn. Mỗi đoạn có:
   - `say`: lời đọc cho TTS, số/ký hiệu/viết tắt viết bằng chữ ("một tỷ đồng", "mười phần trăm").
   - `show`: chữ hiển thị trên phụ đề, cùng ý với `say`, số dạng chữ số ("1 tỷ đồng", "10%").
-  - `visual`: mô tả hình để Codex tìm/tạo; `highlight`: cụm từ trong `show` cần nhấn; `source_ids`: nguồn của fact.
+  - `visual`: mô tả hình nền để Codex tìm/tạo; `source_ids`: nguồn của fact.
+  - `cards`: thẻ chữ/số (`value` ≤ 18 ký tự, `label` ≤ 40, `trigger` nguyên văn trong `show`); cả video ≥ 3 thẻ.
+  - `cutouts`: người nổi tiếng được nhắc tên (`person`) hoặc sự vật quan trọng (`object`), `trigger` nguyên văn trong `show`.
+  - Mỗi đoạn tin có ≥ 1 thẻ hoặc cutout. Không có phụ đề; `show` dùng để canh thời điểm thẻ/cutout và để duyệt.
 - `sources`: mỗi nguồn có `quote` trích nguyên văn đoạn chứa số liệu/ngày dùng trong kịch bản.
 - Không phán xét chính trị, không suy đoán, không khuyên đầu tư hay pháp lý chắc chắn.
 - `script_tts.txt` và `sources.md` do hệ thống sinh từ `script.json`, không viết tay.

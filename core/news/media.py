@@ -1,17 +1,22 @@
 """Ảnh cho từng đoạn và khung hình QC.
 
-Ảnh: Codex tìm ứng viên (web) → tải, kiểm (đúng là ảnh, cạnh ngắn ≥ MIN_SIDE, không trùng) → chuẩn hóa JPG.
+Ảnh nền: Codex tìm ứng viên (web) → tải, kiểm (đúng là ảnh, cạnh ngắn ≥ MIN_SIDE, không trùng) → chuẩn hóa JPG.
 Thiếu thì lấy og:image của bài nguồn của đoạn; vẫn thiếu thì tạo ảnh AI (ghi rõ kind=ai).
+Cutout (kind=cutout, PNG trong suốt):
+- người được nhắc tên: ảnh báo chí thật → tách nền (Apple Vision, giữ người lớn nhất). Không dùng AI vẽ người thật.
+- sự vật: AI tạo PNG nền trong suốt; dự phòng ảnh thật → tách nền.
 """
 import hashlib
 import json
+import platform
 import re
+import shutil
 import subprocess
 import urllib.request
 from pathlib import Path
 
 from . import agents
-from .config import ensure_online
+from .config import ROOT, ensure_online
 from .episode import write_json
 
 MIN_SIDE = 600
@@ -52,6 +57,83 @@ def normalize(raw, target, ffmpeg="ffmpeg", ffprobe="ffprobe"):
         temporary.unlink(missing_ok=True)
 
 
+def cutout_tool():
+    """Công cụ tách nền: Apple Vision (macOS, biên dịch từ core/tools/cutout.swift một lần). Máy khác: None."""
+    binary, source = ROOT / ".cache" / "bin" / "cutout", ROOT / "core" / "tools" / "cutout.swift"
+    if platform.system() != "Darwin" or not shutil.which("swiftc"):
+        return None
+    if not binary.exists() or binary.stat().st_mtime < source.stat().st_mtime:
+        binary.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["swiftc", "-O", str(source), "-o", str(binary)], check=True, capture_output=True)
+    return binary
+
+
+def remove_background(raw, target, largest):
+    """Ghi PNG trong suốt đã tách nền; trả (w, h) hoặc None."""
+    tool = cutout_tool()
+    if not tool:
+        return None
+    source = target.with_suffix(".src")
+    source.write_bytes(raw)
+    try:
+        out = subprocess.run([str(tool), str(source), str(target)] + (["--largest"] if largest else []),
+                             capture_output=True, text=True, timeout=120)
+        if out.returncode != 0 or not target.exists():
+            return None
+        size = probe_image(target)
+        return size if size and size[1] >= 300 else None
+    finally:
+        source.unlink(missing_ok=True)
+
+
+def has_alpha(path, ffprobe="ffprobe"):
+    out = subprocess.run([ffprobe, "-v", "error", "-show_entries", "stream=pix_fmt", "-of", "csv=p=0", str(path)],
+                         capture_output=True, text=True)
+    return "a" in out.stdout.strip().replace("gray", "")
+
+
+def gather_cutouts(ctx, script, search, items, log):
+    cfg, ep = ctx.cfg, ctx.ep
+    found = {c["name"]: c["candidates"] for c in search.get("cutouts", [])}
+    done = set()
+    for segment in script["segments"]:
+        for cutout in segment["cutouts"]:
+            if cutout["name"] in done:
+                continue
+            done.add(cutout["name"])
+            target = ep.file(f"assets/cut-{len(done)}.png")
+            size, source_url, credit = None, None, None
+            if cutout["kind"] == "object":
+                try:
+                    raw = agents.generate_image(cfg, f"{cutout['search']}. Single isolated object, product photo style, "
+                                                     "transparent background, no text, no logo.", size="1024x1024", transparent=True)
+                    target.write_bytes(raw)
+                    if has_alpha(target, cfg.bin("ffprobe")):
+                        size, credit = probe_image(target, cfg.bin("ffprobe")), "Ảnh minh họa AI"
+                    else:
+                        size = remove_background(raw, target, largest=True)
+                        credit = "Ảnh minh họa AI" if size else None
+                except Exception as error:
+                    log.append(f"cutout {cutout['name']}: AI lỗi: {error}")
+            for candidate in found.get(cutout["name"], []) if not size else []:
+                try:
+                    raw = download(candidate["image_url"], referer=candidate["page_url"])
+                except Exception as error:
+                    log.append(f"cutout {cutout['name']}: bỏ {candidate['image_url'][:80]}: {error}")
+                    continue
+                size = remove_background(raw, target, largest=True)
+                if size:
+                    source_url, credit = candidate["page_url"], candidate["credit"]
+                    break
+            if not size:
+                log.append(f"cutout {cutout['name']}: không có ảnh dùng được, bỏ qua")
+                target.unlink(missing_ok=True)
+                continue
+            items.append({"id": target.stem, "file": target.name, "segment": segment["id"], "kind": "cutout",
+                          "source_url": source_url, "credit": credit, "width": size[0], "height": size[1],
+                          "note": cutout["name"]})
+
+
 def og_image(url):
     try:
         page = download(url, limit=2_000_000).decode("utf-8", "replace")
@@ -70,9 +152,11 @@ def gather(ctx):
                  "seconds": None} for s in script["segments"]]
     times = {s["segment"]: s["end"] - s["start"] for s in ctx.json("audio/segments.json")} \
         if ep.file("audio/segments.json").exists() else {}
+    people = [{"name": c["name"], "search": c["search"]} for s in script["segments"] for c in s["cutouts"] if c["kind"] == "person"]
     search = agents.run(cfg, ep, "codex", "assets", {
         "Các đoạn": segments, "Nguồn bài báo": [{"url": s["url"], "publisher": s["publisher"]} for s in script["sources"]],
-        "Cần sửa": ctx.feedback("assets")}, "asset_search", tools=["web_search"], timeout=1200)
+        "Người cần ảnh cutout": people or "không có", "Cần sửa": ctx.feedback("assets")},
+        "asset_search", tools=["web_search"], timeout=1200)
     write_json(ep.file("assets/search.json"), search)
     found = {s["segment"]: s for s in search["segments"]}
     items, hashes, log = [], set(), []
@@ -124,6 +208,7 @@ def gather(ctx):
                     got += 1
             except Exception as error:
                 log.append(f"{sid}: ảnh AI lỗi: {error}")
+    gather_cutouts(ctx, script, search, items, log)
     write_json(ep.file("assets.json"), {"items": items})
     (ep.file("logs") / "assets.log").write_text("\n".join(log) + "\n", encoding="utf-8")
 

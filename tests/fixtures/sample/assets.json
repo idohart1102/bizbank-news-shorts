@@ -109,6 +109,28 @@
    "width": 1080,
    "height": 1350,
    "note": "mẫu"
+  },
+  {
+   "id": "cut-1",
+   "file": "cut-1.png",
+   "segment": "s1",
+   "kind": "cutout",
+   "source_url": null,
+   "credit": "mẫu",
+   "width": 400,
+   "height": 600,
+   "note": "nhân vật mẫu"
+  },
+  {
+   "id": "cut-2",
+   "file": "cut-2.png",
+   "segment": "s4",
+   "kind": "cutout",
+   "source_url": null,
+   "credit": "mẫu",
+   "width": 400,
+   "height": 600,
+   "note": "phần mềm hóa đơn"
   }
  ]
 }

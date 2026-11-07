@@ -24,8 +24,9 @@
      "say",
      "show",
      "visual",
-     "highlight",
-     "source_ids"
+     "source_ids",
+     "cards",
+     "cutouts"
     ],
     "properties": {
      "id": {
@@ -53,19 +54,78 @@
       "type": "string",
       "description": "mô tả hình cần tìm/tạo cho đoạn này"
      },
-     "highlight": {
-      "type": "array",
-      "items": {
-       "type": "string"
-      },
-      "description": "cụm từ trong show cần nhấn (chữ nhấn)"
-     },
      "source_ids": {
       "type": "array",
       "items": {
        "type": "integer"
       },
       "description": "id nguồn trong sources hỗ trợ fact của đoạn"
+     },
+     "cards": {
+      "type": "array",
+      "maxItems": 3,
+      "description": "thẻ chữ/số: thông tin quan trọng hiện lên lúc được đọc",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "value",
+        "label",
+        "trigger"
+       ],
+       "properties": {
+        "value": {
+         "type": "string",
+         "description": "chữ/số lớn trên thẻ, ≤ 18 ký tự, ví dụ '5,7 triệu/tháng', '1/1/2027'",
+         "maxLength": 18
+        },
+        "label": {
+         "type": "string",
+         "description": "dòng nhỏ giải thích, ≤ 40 ký tự, ví dụ 'Lương tối thiểu vùng 1'",
+         "maxLength": 40
+        },
+        "trigger": {
+         "type": "string",
+         "description": "cụm từ nguyên văn trong show; thẻ hiện đúng lúc cụm này được đọc"
+        }
+       }
+      }
+     },
+     "cutouts": {
+      "type": "array",
+      "maxItems": 2,
+      "description": "người nổi tiếng được nhắc tên, sự vật quan trọng được nhắc tới",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "name",
+        "kind",
+        "trigger",
+        "search"
+       ],
+       "properties": {
+        "name": {
+         "type": "string",
+         "description": "tên người/sự vật, ví dụ 'Phó Thủ tướng Phạm Thị Thanh Trà', 'sổ bảo hiểm xã hội'"
+        },
+        "kind": {
+         "type": "string",
+         "enum": [
+          "person",
+          "object"
+         ]
+        },
+        "trigger": {
+         "type": "string",
+         "description": "cụm từ nguyên văn trong show; cutout xuất hiện lúc cụm này được đọc"
+        },
+        "search": {
+         "type": "string",
+         "description": "từ khóa tìm ảnh (người: họ tên + chức danh; vật: mô tả tiếng Anh cho ảnh nền trong suốt)"
+        }
+       }
+      }
      }
     }
    },

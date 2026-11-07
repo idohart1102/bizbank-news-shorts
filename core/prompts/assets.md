@@ -12,4 +12,6 @@ Mỗi cảnh trong video dùng một ảnh riêng, **không dùng lại ảnh**,
 
 `ai_prompt`: mô tả tiếng Anh cho ảnh minh họa dự phòng (dọc 2:3, phong cách ảnh chụp tài liệu, bối cảnh Việt Nam), **không** tái hiện người thật hay sự kiện cụ thể, không chữ trong ảnh. Đoạn `cta` có thể để candidates rỗng.
 
-Chỉ trả một JSON object: {"segments": [{"segment": "s1", "candidates": [...], "ai_prompt": "..."}]}
+**Cutout người** ("Người cần ảnh cutout"): với mỗi người, trả 2–4 `candidates` là ảnh báo chí thật của **đúng người đó** (ảnh chân dung hoặc nửa người, một mình, rõ mặt, nền càng đơn giản càng tốt) — hệ thống sẽ tách nền. Không lấy ảnh nhiều người, ảnh bị che, ảnh hoạt họa.
+
+Chỉ trả một JSON object: {"segments": [{"segment": "s1", "candidates": [...], "ai_prompt": "..."}], "cutouts": [{"name": "...", "candidates": [...]}]}

@@ -8,5 +8,6 @@ Thang 10 điểm:
 - `clarity` (2): chủ tiệm tạp hóa nghe một lần có hiểu không; thuật ngữ có giải thích.
 - `pacing` (2): ≤ 60 giây, câu ngắn, không lan man, không lặp.
 - `cta` (1): có việc cần làm cụ thể + lời mời theo dõi ngắn.
+Kiểm thêm thẻ chữ/số (`cards`) và `cutouts`: giá trị trên thẻ đúng nguồn, ngắn, dễ nhớ; có đủ thông tin quan trọng; cutout người chỉ cho người được nhắc tên. Thiếu/thừa ghi vào `issues`.
 
 `issues`: lỗi cụ thể kèm cách sửa (đoạn nào, sửa thành gì). `fact_errors`: chỉ ghi lỗi fact **bạn** thấy thêm (lỗi của Codex hệ thống tự gộp). `pass` = score ≥ 8 và không có fact sai.

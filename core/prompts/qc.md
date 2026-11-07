@@ -1,10 +1,10 @@
 # Bước 9: QC video (Claude, không phải người lên plan)
 
 Xem các ảnh contact sheet (dùng tool Read mở từng file trong "Khung hình"). Mỗi sheet là lưới khung hình theo thứ tự thời gian, trái → phải, trên → dưới; mốc thời gian từng ô ghi trong "Khung hình".
+Bố cục: nửa trên là vùng ảnh (ảnh nền, thẻ chữ/số, cutout); nửa dưới là khung template BizBank (cố ý để trống, không phải lỗi). Video **không có phụ đề** (cố ý).
 
 Kiểm và ghi `issues` (time = giây của khung lỗi):
-- `major`: chữ (tiêu đề, chữ nhấn, phụ đề) bị overlay/template che hoặc tràn khỏi khung; chữ nằm dưới vùng an toàn (300px dưới cùng) hoặc sát mép phải; sai chính tả tiếng Việt; hình không liên quan/ngược nghĩa với lời đang đọc (so với kịch bản); khung đen/trắng/ảnh lỗi; ảnh AI trông như ảnh thật của người/sự kiện có thật; nội dung phản cảm.
-- `minor`: ảnh mờ, bố cục chưa đẹp, chữ nhấn hơi sớm/muộn.
+- `major`: thẻ chữ/số bị tràn, bị cắt, chữ đè nhau hoặc sai chính tả tiếng Việt; thẻ/cutout che nhãn "Nguồn…" góc trên phải; cutout lỗi (mất đầu, rìa bẩn, sai người/sai vật so với lời); hình nền không liên quan/ngược nghĩa với lời đang đọc; khung đen/trắng/ảnh lỗi; ảnh AI trông như ảnh thật của người/sự kiện có thật; nội dung phản cảm.
+- `minor`: ảnh mờ, bố cục chưa đẹp, thẻ hơi sớm/muộn, cutout che mất chủ thể của ảnh nền.
 
-`fix`: sửa cụ thể trong edit_plan.json (đổi asset của cảnh t=…, rút headline, đổi motion…). `pass` = không có lỗi `major`.
-Lưu ý: nhãn "TEMPLATE TẠM" là overlay tạm có chủ đích, không phải lỗi.
+`fix`: sửa cụ thể trong edit_plan.json (đổi asset nền của cảnh t=…, đổi motion…). Lỗi nằm ở thẻ/cutout thì ghi rõ để người bảo trì sửa kịch bản/asset. `pass` = không có lỗi `major`.

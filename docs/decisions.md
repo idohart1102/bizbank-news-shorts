@@ -2,7 +2,7 @@
 
 - 2026-11-07: Tạo dự án tại `projects/youtube/News video`. Short tin tức VN < 60s, đối tượng hộ kinh doanh và SME, nguồn báo chí + mạng xã hội VN.
 - 2026-11-07: Phân vai: Claude Opus 5.5 viết/duyệt kịch bản, plan dựng; Codex gpt-6.1-sol tìm tư liệu, ảnh thật, ảnh/asset minh họa; Remotion dựng.
-- 2026-11-07: Template là 1 PNG do Sếp thiết kế, nằm lớp trên cùng.
+- 2026-11-07: Template là 1 PNG do Sếp thiết kế, nằm lớp trên cùng. (2026-11-08: giữ nguyên, template BizBank trên cùng; thẻ/cutout chỉ trong vùng ảnh nửa trên.)
 - 2026-11-07: Giọng Vbee, tích hợp vào `platform/tts` dùng chung (không giữ key trong repo).
 - 2026-11-07: Tiếng động lấy từ Pixabay Sound Effects, giữ một kho cố định `assets/sfx/` kèm license.
 - 2026-11-07: Được dùng ảnh báo, ảnh internet, ảnh AI; Sếp chấp nhận rủi ro bản quyền. Vẫn ghi nguồn ảnh trong `assets.json`.
@@ -12,3 +12,6 @@
 - 2026-11-07: Lịch chạy mặc định 10:30 và 19:00 hằng ngày (mỗi lần 1 tập, không lặp tin đã làm), và chạy khi được yêu cầu (`news run`).
 - 2026-11-07: Repo là hệ độc lập, chuyển giao được cho người khác: không đường dẫn máy/bí mật/dữ liệu tập trong Git, phụ thuộc ngoài qua adapter, không đưa lịch sử sản phẩm/video (dữ liệu các tập làm ở local) lên GitHub; lịch sử commit của hệ thống vẫn giữ. Có cơ chế bài học tự cải thiện (`lessons/`).
 - 2026-11-07: Không dùng lại ảnh trong một video (mỗi ảnh một cảnh). Giọng đọc liền mạch, ngắt nghỉ ngắn nhất (Vbee clientPause). Có nhạc nền nhỏ xuyên suốt video (kho Pixabay `assets/music/`) kèm hiệu ứng âm thanh.
+- 2026-11-08: Không làm phụ đề. Tập trung thẻ chữ/số cho thông tin quan trọng, mỗi thẻ xuất hiện kèm tiếng động.
+- 2026-11-08: Đa dạng cutout: người nổi tiếng được nhắc tên (ảnh thật tách nền, không AI vẽ người thật), sự vật quan trọng được nhắc tới (AI PNG trong suốt hoặc ảnh thật tách nền); xuất hiện kèm tiếng động.
+- 2026-11-08: Template mặc định: BizBank (`assets/template/overlay.png`, bản Sếp gửi ngày 2026-11-07, Drive `05 - BUSINESS/Bizbank`). Không dùng `Template 1.png`.

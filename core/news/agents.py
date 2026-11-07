@@ -104,13 +104,15 @@ def router(conf, prompt, schema_name, workdir, tools, timeout):
     return extract_json(payload["choices"][0]["message"]["content"])
 
 
-def generate_image(cfg, prompt, size="1024x1536"):
+def generate_image(cfg, prompt, size="1024x1536", transparent=False):
     """Ảnh minh họa AI qua 9router (model cấu hình agents.codex.image_model). Trả bytes PNG."""
     ensure_online("tạo ảnh AI")
     import base64
     conf = cfg.machine["agents"]["codex"]
     body = {"model": conf.get("image_model", "cx/gpt-image-2.6-sunburst"), "prompt": prompt, "size": size, "n": 1,
             "output_format": "png"}
+    if transparent:
+        body["background"] = "transparent"
     data = router_post(conf, "/images/generations", body, 300)["data"][0]
     if data.get("b64_json"):
         return base64.b64decode(data["b64_json"])

@@ -45,6 +45,8 @@ def lint_script(script):
     if total > MAX_SYLLABLES:
         errors.append(f"Tổng {total} âm tiết, vượt {MAX_SYLLABLES}; cắt bớt {total - MAX_SYLLABLES}")
     source_ids = {s["id"] for s in script["sources"]}
+    if sum(len(s["cards"]) for s in script["segments"]) < 3:
+        errors.append("Cần ≥ 3 thẻ chữ/số trong cả video (số tiền, ngày, mức %, đối tượng áp dụng)")
     roles = [s["role"] for s in script["segments"]]
     if roles[0] != "hook":
         errors.append("Đoạn đầu phải là hook")
@@ -65,9 +67,11 @@ def lint_script(script):
         missing = set(segment["source_ids"]) - source_ids
         if missing:
             errors.append(f"{sid}: source_ids {sorted(missing)} không có trong sources")
-        for word in segment["highlight"]:
-            if word not in segment["show"]:
-                errors.append(f"{sid}: highlight «{word}» không xuất hiện nguyên văn trong show")
+        for item in segment["cards"] + segment["cutouts"]:
+            if item["trigger"].lower() not in segment["show"].lower():
+                errors.append(f"{sid}: trigger «{item['trigger']}» không có nguyên văn trong show")
+        if segment["role"] in ("hook", "story", "action") and not (segment["cards"] or segment["cutouts"]):
+            errors.append(f"{sid}: đoạn chưa có thẻ chữ/số hay cutout nào (mỗi đoạn tin cần ≥ 1)")
     return errors
 
 
@@ -122,7 +126,7 @@ def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2
     if errors:
         return errors
     scenes = sorted(plan["scenes"], key=lambda s: s["start"])
-    asset_ids = {a["id"] for a in assets["items"]}
+    asset_ids = {a["id"] for a in assets["items"] if a["kind"] != "cutout"}  # cutout là lớp riêng, không làm nền
     if scenes[0]["start"] > 0.05:
         errors.append(f"Khoảng trống đầu video 0→{scenes[0]['start']:.2f}s")
     if scenes[-1]["end"] < audio_seconds - 0.05:
@@ -160,7 +164,7 @@ def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2
         by_asset[(scene["segment"], scene["asset"])] += scene["end"] - scene["start"]
     for (segment, asset), seconds in by_asset.items():
         others = {a for (s, a) in by_asset if s == segment}
-        if seconds > 7 and len([a for a in assets["items"] if a["segment"] == segment]) > len(others):
+        if seconds > 7 and len([a for a in assets["items"] if a["segment"] == segment and a["kind"] != "cutout"]) > len(others):
             errors.append(f"Đoạn {segment}: ảnh {asset} chiếm {seconds:.1f}s trong khi đoạn còn ảnh chưa dùng")
     with_sfx = {s["segment"] for s in scenes if s["sfx"]}
     for segment in segments[:-1]:  # đoạn cuối (lời kêu gọi) không bắt buộc
