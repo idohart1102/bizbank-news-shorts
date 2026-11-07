@@ -52,3 +52,45 @@ candidates:
   first_seen: '2026-11-07'
   last_seen: '2026-11-07'
   evidence: 1
+- id: plan-006
+  step: plan
+  rule: Tách mọi cảnh dài quá 4 giây thành nhiều cảnh ngắn; đoạn lời dài thì chia
+    nhiều ảnh hoặc góc cắt khác nhau, kiểm độ dài từng cảnh trước khi nộp plan.
+  why: Cổng check_plan trả lại nhiều lần liên tiếp vì cảnh dài hơn 4 giây.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: voice-007
+  step: voice
+  rule: Sau khi căn thời gian, kiểm mốc từng segment trong srt tương xứng số chữ;
+    segment quá ngắn hoặc quá dài bất thường thì căn lại theo audio thật, không tạo
+    lại giọng.
+  why: Mốc srt lệch khiến phụ đề, chữ nhấn và cảnh không khớp lời đọc.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: plan-008
+  step: plan
+  rule: Lấy start/end cảnh theo mốc segment trong srt, không đặt mốc cố định; chữ
+    nhấn của segment chỉ hiện trong các cảnh thuộc chính segment đó.
+  why: Chữ nhấn mức phạt hiện sang cảnh bảo hiểm, gây hiểu nhầm nội dung.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: assets-009
+  step: assets
+  rule: Không dùng ảnh thật có mặt người nhận diện được hoặc lực lượng chức năng nếu
+    không đúng sự việc; thay bằng ảnh đồ vật trung tính hoặc thẻ chữ minh họa.
+  why: Ảnh cuộc họp có người mặc quân phục công an không liên quan lời đọc, có thể
+    gán sai sự việc cho người thật.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1

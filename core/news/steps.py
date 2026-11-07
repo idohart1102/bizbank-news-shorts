@@ -227,19 +227,24 @@ def run_voice(ctx):
     audio = ctx.ep.file("audio/voice.mp3")
     if ctx.cfg.dry:
         fake_voice(ctx)
-    else:
+    if not ctx.cfg.dry:
         ensure_online("tạo giọng Vbee (tốn credit)")
         tts = ctx.cfg.channel["tts"]
         command = ["tts", "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
                    "--file", ctx.ep.file("script_tts.txt"), "--out", audio, "--project", tts["project"], "--srt"]
         if tts.get("pauses"):
             command += ["--pauses", ",".join(f"{k}={v}" for k, v in tts["pauses"].items())]
-        ctx.sh(*command, timeout=1800)
+        said = ctx.sh(*command, timeout=1800)
         ctx.sh("tts", "align", "--audio", audio, "--text", ctx.ep.file("script_tts.txt"),
                "--out", ctx.ep.file("audio/voice.srt"), "--words", ctx.ep.file("audio/voice.words.json"), timeout=1800)
+        if "dùng lại kết quả cũ" in said:
+            ctx.ep.log("giọng: dùng lại kết quả cũ của platform/tts, không tính tiền")
+        else:
+            ledger(ctx, len(ctx.ep.file("script_tts.txt").read_text(encoding="utf-8")))
+    else:
+        ledger(ctx, len(ctx.ep.file("script_tts.txt").read_text(encoding="utf-8")))
     segments = checks.segment_times(ctx.json("script.json"), ctx.json("audio/voice.words.json"))
     write_json(ctx.ep.file("audio/segments.json"), segments)
-    ledger(ctx, len(ctx.ep.file("script_tts.txt").read_text(encoding="utf-8")))
 
 
 def fake_voice(ctx):
@@ -278,6 +283,13 @@ def check_voice(ctx):
         return [f"Giọng dài {seconds:.1f}s > 57s: cắt khoảng {cut} âm tiết"]
     if seconds < 15:
         return [f"Giọng chỉ {seconds:.1f}s, quá ngắn"]
+    # Mốc căn chữ phải hợp lý: tiếng Việt đọc tin khoảng 3–7 âm tiết/giây. Lệch là căn hỏng, không phải lỗi kịch bản.
+    script = ctx.json("script.json")
+    for seg in ctx.json("audio/segments.json"):
+        count = len(checks.syllables(next(s["say"] for s in script["segments"] if s["id"] == seg["segment"])))
+        rate = count / max(seg["end"] - seg["start"], 0.01)
+        if count >= 8 and not 2.0 <= rate <= 9.0:
+            raise RuntimeError(f"Căn chữ hỏng: đoạn {seg['segment']} {rate:.1f} âm tiết/giây. Chạy lại tts align")
     return []
 
 
