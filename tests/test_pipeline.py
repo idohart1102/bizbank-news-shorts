@@ -23,7 +23,7 @@ class Base(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
-        self.env = mock.patch.dict(os.environ, {"NEWS_DATA_DIR": self.tmp.name, "NEWS_DRY": "1", "NEWS_NOTIFY": "0"})
+        self.env = mock.patch.dict(os.environ, {"NEWS_DATA_DIR": self.tmp.name, "NEWS_DRY": "1", "NEWS_NOTIFY": "0", "NEWS_DRY_RENDER": "ffmpeg"})
         self.env.start()
         self.addCleanup(self.env.stop)
         lessons_dir = Path(self.tmp.name) / "repo-lessons"

@@ -138,6 +138,8 @@ def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2
             errors.append(f"Cảnh {span} đứng yên > {max_static}s")
         if scene["end"] - scene["start"] > 4.0:
             errors.append(f"Cảnh {span} dài > 4s, cần tách")
+        if scene["headline"] and len(scene["headline"]) > 42:
+            errors.append(f"Cảnh {span}: headline dài {len(scene['headline'])} ký tự (> 42)")
         if scene["asset"] not in asset_ids:
             errors.append(f"Cảnh {span}: asset {scene['asset']} không có trong assets.json")
         if scene["sfx"]:

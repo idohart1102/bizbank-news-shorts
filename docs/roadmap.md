@@ -93,9 +93,9 @@ config/machine.example.yaml  .env.example   bin/bootstrap
 | GĐ | Việc | Xong khi |
 |---|---|---|
 | G0 ✅ | Khung repo, provider Vbee + SRT | Gọi Vbee thật OK |
-| G1 Nền | schemas, `new_episode`, `pipeline.py` (state, resume, lock, ngân sách), adapter TTS/LLM, `machine.example.yaml`, `bin/bootstrap`, `news doctor`, ghi sự kiện bài học, `bin/news`, chuyển skill sang `script.json` | `news run --dry` chạy hết 11 bước với stub, resume được giữa chừng; clone sạch vào thư mục khác vẫn chạy |
+| G1 Nền ✅ | schemas, `new_episode`, `pipeline.py` (state, resume, lock, ngân sách), adapter TTS/LLM, `machine.example.yaml`, `bin/bootstrap`, `news doctor`, ghi sự kiện bài học, `bin/news`, chuyển skill sang `script.json` | `news run --dry` chạy hết 11 bước với stub, resume được giữa chừng; clone sạch vào thư mục khác vẫn chạy |
 | G2 Kho | ✅ 20 sfx (manifest + `fetch_sfx.py`, sha256, LUFS); còn font OFL, overlay tạm | Validator thấy đủ loại whoosh/pop/ding/swoosh/riser/click |
-| G3 Dựng | Remotion NewsShort (ken-burns/zoom/pan/split, chữ nhấn theo `words.json`, phụ đề karaoke theo `show`), `validate_plan`, `render`, `render_check` | Render fixture 30s ra 1080×1920, đạt check |
+| G3 Dựng ✅ | Remotion NewsShort (ken-burns/zoom/pan/split, chữ nhấn theo `words.json`, phụ đề karaoke theo `show`), `validate_plan`, `render`, `render_check` | Render fixture 30s ra 1080×1920, đạt check |
 | G4 Nội dung | `fetch_feeds` (RSS/sitemap), prompt + adapter cho bước 1–4, `lint_script` | Từ ngày bất kỳ ra `script.json` đạt QA |
 | G5 Media | `voice.py`, `fetch_assets` (Codex tìm ảnh → script tải, chuẩn hóa, ghi nguồn; chart tự dựng), prompt plan-edit | Có `edit_plan.json` hợp lệ từ tập thật |
 | G6 Kết | QC khung hình + Claude vision, `meta.json`, `publish.py` (outbox), `notify`, `report`, chưng cất bài học | Một lệnh ra video + báo cáo; clone từ GitHub vào thư mục sạch chạy được, không có dữ liệu tập nào |

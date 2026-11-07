@@ -16,3 +16,7 @@ lessons/metrics/
 logs/
 __pycache__/
 .venv-align/
+assets/template/overlay-temp.png
+core/remotion/node_modules/
+.cache/
+.remotion/

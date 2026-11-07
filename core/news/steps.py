@@ -4,6 +4,7 @@ Bản thật của từng bước được bổ sung theo giai đoạn (docs/roa
 mẫu trong tests/fixtures/sample để chạy trọn luồng không tốn tiền, dùng cho test và kiểm máy mới.
 """
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -247,8 +248,10 @@ def check_voice(ctx):
 def run_assets(ctx):
     if ctx.cfg.dry:
         fixture(ctx, "assets.json")
-        for item in ctx.json("assets.json")["items"]:
-            ctx.sh(ctx.cfg.bin("ffmpeg"), "-y", "-v", "error", "-f", "lavfi", "-i", "color=c=0x1f4e79:s=1080x1350",
+        colors = ["0x1f4e79", "0x7a1f3d", "0x2e6b30", "0x6b4e16", "0x3b2a6b"]
+        for i, item in enumerate(ctx.json("assets.json")["items"]):
+            ctx.sh(ctx.cfg.bin("ffmpeg"), "-y", "-v", "error", "-f", "lavfi",
+                   "-i", f"testsrc2=s=1080x1350,hue=s=0.4,drawbox=c={colors[i % 5]}@0.6:t=fill",
                    "-frames:v", "1", ctx.ep.file(f"assets/{item['file']}"))
         return
     raise NotReady("assets: Codex tìm/tải ảnh chưa xây (G5)")
@@ -310,14 +313,15 @@ def check_plan(ctx):
 
 def run_render(ctx):
     out = ctx.ep.file("render/final.mp4")
-    if ctx.cfg.dry:
+    if ctx.cfg.dry and os.environ.get("NEWS_DRY_RENDER") == "ffmpeg":  # test nhanh, không dùng Remotion
         video = ctx.cfg.video
         ctx.sh(ctx.cfg.bin("ffmpeg"), "-y", "-v", "error", "-f", "lavfi",
                "-i", f"color=c=0x102030:s={video['width']}x{video['height']}:r={video['fps']}",
                "-i", ctx.ep.file("audio/voice.mp3"), "-shortest", "-c:v", "libx264", "-pix_fmt", "yuv420p",
                "-c:a", "aac", "-af", "loudnorm=I=-14", out)
         return
-    raise NotReady("render: Remotion NewsShort chưa xây (G3)")
+    from . import render
+    render.render(ctx)
 
 
 def check_render(ctx):
