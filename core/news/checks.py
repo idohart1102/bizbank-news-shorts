@@ -67,6 +67,9 @@ def lint_script(script):
         missing = set(segment["source_ids"]) - source_ids
         if missing:
             errors.append(f"{sid}: source_ids {sorted(missing)} không có trong sources")
+        for card in segment["cards"]:
+            if len(numbers(card["value"])) > 2:
+                errors.append(f"{sid}: thẻ «{card['value']}» nhồi {len(numbers(card['value']))} con số; mỗi thẻ một giá trị (tối đa 2 số cho khoảng)")
         for item in segment["cards"] + segment["cutouts"]:
             if item["trigger"].lower() not in segment["show"].lower():
                 errors.append(f"{sid}: trigger «{item['trigger']}» không có nguyên văn trong show")

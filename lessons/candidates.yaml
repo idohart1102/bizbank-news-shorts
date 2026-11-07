@@ -94,3 +94,68 @@ candidates:
   first_seen: '2026-11-07'
   last_seen: '2026-11-07'
   evidence: 1
+- id: write-010
+  step: write
+  rule: Khi nêu mức phạt, nghĩa vụ hay quyền lợi, ghi rõ đối tượng áp dụng (cá nhân,
+    hộ kinh doanh hay doanh nghiệp) trong cả `say` và nhãn thẻ; ưu tiên mức áp dụng
+    cho hộ kinh doanh.
+  why: Hook nêu mức phạt tối đa của doanh nghiệp khiến hộ kinh doanh hiểu sai; câu
+    về bảo hiểm xã hội không rõ áp dụng cho ai.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-011
+  step: write
+  rule: Nhãn thẻ và lời đọc giữ đúng tiêu chí của nguồn (đối tượng đếm, điều kiện
+    áp dụng); không tự diễn giải lại làm đổi nghĩa.
+  why: Nhãn thẻ đổi 'số lao động bị vi phạm' thành 'số người vi phạm', sai đối tượng
+    đếm.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-012
+  step: write
+  rule: Mức phạt và quy định pháp lý phải dẫn văn bản gốc (số nghị định/luật, điều,
+    khoản) kèm quote nguyên văn; không dựa duy nhất vào một bài báo.
+  why: Mức phạt chỉ có một nguồn báo tier 2, không đạt luật cứng về nguồn.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-013
+  step: write
+  rule: Số liệu chia theo nhóm (vùng, bậc, quy mô) thì thẻ hiện đủ mọi nhóm, lời đọc
+    chỉ nêu nhóm chính hoặc nhóm sát với hộ kinh doanh nhất.
+  why: Chỉ nêu vùng 1 và vùng 4, khán giả vùng 2, 3 không biết mức của mình; khung
+    phạt hẹp sát hộ nhỏ bị bỏ qua.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-014
+  step: write
+  rule: Mỗi thẻ phải mang con số hoặc thông tin cụ thể; bỏ thẻ chỉ lặp lại lời đọc
+    mà không có số.
+  why: Thẻ 'Tăng theo' không có số, gần như lặp câu đọc.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-015
+  step: write
+  rule: Không đặt cutout chung chung (văn bản, con dấu, giấy tờ) trùng ý với ảnh chụp
+    thật đã có; ưu tiên ảnh thật của nguồn.
+  why: Cutout 'văn bản nghị định có dấu đỏ' dễ trông giả và trùng ý với ảnh chụp trang
+    thật.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
