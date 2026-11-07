@@ -148,6 +148,14 @@ def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2
             if scene["start"] - last_sfx < 1.5:
                 errors.append(f"Cảnh {span}: sfx cách cái trước < 1.5s")
             last_sfx = scene["start"]
+    by_asset = {}
+    for scene in scenes:
+        by_asset.setdefault((scene["segment"], scene["asset"]), 0.0)
+        by_asset[(scene["segment"], scene["asset"])] += scene["end"] - scene["start"]
+    for (segment, asset), seconds in by_asset.items():
+        others = {a for (s, a) in by_asset if s == segment}
+        if seconds > 7 and len([a for a in assets["items"] if a["segment"] == segment]) > len(others):
+            errors.append(f"Đoạn {segment}: ảnh {asset} chiếm {seconds:.1f}s trong khi đoạn còn ảnh chưa dùng")
     covered = {s["segment"] for s in scenes}
     for segment in segments:
         if segment["segment"] not in covered:

@@ -26,10 +26,12 @@ def read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def hash_files(paths):
+def hash_files(paths, base=None):
+    """Mã băm nội dung; tên file tính tương đối theo `base` để đổi tên thư mục tập không làm chạy lại."""
     digest = hashlib.sha256()
     for path in sorted(str(p) for p in paths):
-        digest.update(path.encode())
+        name = os.path.relpath(path, base) if base else path
+        digest.update(name.encode())
         p = Path(path)
         if p.is_file():
             with p.open("rb") as handle:

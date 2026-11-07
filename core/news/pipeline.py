@@ -38,7 +38,7 @@ class Lock:
 def input_hash(ctx, step):
     files = [ctx.ep.file(name) for name in step.inputs] + [steps.ROOT / "lessons" / "rules" / f"{step.name}.md"]
     feedback = ctx.ep.file(f"qa/feedback_{step.name}.json")
-    return hash_files(files + [feedback])
+    return hash_files(files + [feedback], base=ctx.ep.path)
 
 
 def outputs_exist(ctx, step):

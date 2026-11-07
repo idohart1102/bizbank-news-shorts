@@ -52,25 +52,70 @@ def claude_cli(conf, prompt, schema_name, workdir, tools, timeout):
     return payload.get("structured_output") or extract_json(payload.get("result", ""))
 
 
-def router(conf, prompt, schema_name, workdir, tools, timeout):
-    """API kiểu OpenAI chat completions (9router hoặc nhà cung cấp khác)."""
-    body = {"model": conf["model"], "messages": [{"role": "user", "content": prompt}],
-            "response_format": {"type": "json_schema",
-                                "json_schema": {"name": schema_name, "schema": agent_schema(schema_name), "strict": True}}}
-    headers = {"Content-Type": "application/json"}
-    key = os.environ.get(conf.get("key_env", "ROUTER_API_KEY"))
-    if key:
-        headers["Authorization"] = f"Bearer {key}"
-    request = urllib.request.Request(conf["url"].rstrip("/") + "/chat/completions",
-                                     data=json.dumps(body).encode(), headers=headers, method="POST")
+_ROUTER_KEY = {}
+
+
+def router_key(conf):
+    """Key 9router: biến môi trường (NINEROUTER_API_KEY) hoặc đọc (chỉ đọc) key đang bật trong DB của 9router.
+    Giống cách dự án Tiền Sử làm; không ghi key ra file/log. Nhiều key bật: NINEROUTER_KEY_NAME chọn tên."""
+    for name in (conf.get("key_env", "NINEROUTER_API_KEY"), "NINEROUTER_API_KEY", "ROUTER_API_KEY"):
+        if os.environ.get(name):
+            return os.environ[name]
+    db = Path(os.path.expanduser(conf.get("key_db", "~/.9router/db/data.sqlite")))
+    if "key" not in _ROUTER_KEY:
+        if not db.exists():
+            raise AgentError(f"router: không có key (đặt NINEROUTER_API_KEY trong .env hoặc có {db})")
+        import sqlite3
+        connection = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+        name = os.environ.get("NINEROUTER_KEY_NAME")
+        query = "select key from apiKeys where isActive=1" + (" and name=?" if name else "") + " order by createdAt limit 1"
+        row = connection.execute(query, (name,) if name else ()).fetchone()
+        connection.close()
+        if not row:
+            raise AgentError("router: không có key 9router đang bật")
+        _ROUTER_KEY["key"] = row[0]
+    return _ROUTER_KEY["key"]
+
+
+def router_post(conf, path, body, timeout):
+    request = urllib.request.Request(conf["url"].rstrip("/") + path, data=json.dumps(body).encode(), method="POST",
+                                     headers={"Content-Type": "application/json", "Authorization": f"Bearer {router_key(conf)}"})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            payload = json.loads(response.read())
+            return json.loads(response.read())
     except urllib.error.HTTPError as error:
         raise AgentError(f"router HTTP {error.code}: {error.read()[:300]!r}") from None
     except OSError as error:
         raise AgentError(f"router không gọi được: {error}") from None
+
+
+def router(conf, prompt, schema_name, workdir, tools, timeout):
+    """API kiểu OpenAI. Có tool web_search thì dùng Responses API (tìm web), không thì chat completions."""
+    if "web_search" in tools:
+        body = {"model": conf["model"], "input": prompt, "tools": [{"type": "web_search"}]}
+        payload = router_post(conf, "/responses", body, timeout)
+        text = payload.get("output_text") or "".join(
+            c.get("text", "") for o in payload.get("output", []) if o.get("type") == "message" for c in o.get("content", []))
+        return extract_json(text)
+    body = {"model": conf["model"], "messages": [{"role": "user", "content": prompt}],
+            "response_format": {"type": "json_schema",
+                                "json_schema": {"name": schema_name, "schema": agent_schema(schema_name), "strict": True}}}
+    payload = router_post(conf, "/chat/completions", body, timeout)
     return extract_json(payload["choices"][0]["message"]["content"])
+
+
+def generate_image(cfg, prompt, size="1024x1536"):
+    """Ảnh minh họa AI qua 9router (model cấu hình agents.codex.image_model). Trả bytes PNG."""
+    ensure_online("tạo ảnh AI")
+    import base64
+    conf = cfg.machine["agents"]["codex"]
+    body = {"model": conf.get("image_model", "cx/gpt-image-2.6-sunburst"), "prompt": prompt, "size": size, "n": 1,
+            "output_format": "png"}
+    data = router_post(conf, "/images/generations", body, 300)["data"][0]
+    if data.get("b64_json"):
+        return base64.b64decode(data["b64_json"])
+    with urllib.request.urlopen(data["url"], timeout=120) as response:
+        return response.read()
 
 
 def codex_cli(conf, prompt, schema_name, workdir, tools, timeout):

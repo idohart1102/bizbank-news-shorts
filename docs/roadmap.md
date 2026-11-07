@@ -97,8 +97,8 @@ config/machine.example.yaml  .env.example   bin/bootstrap
 | G2 Kho | ✅ 20 sfx (manifest + `fetch_sfx.py`, sha256, LUFS); còn font OFL, overlay tạm | Validator thấy đủ loại whoosh/pop/ding/swoosh/riser/click |
 | G3 Dựng ✅ | Remotion NewsShort (ken-burns/zoom/pan/split, chữ nhấn theo `words.json`, phụ đề karaoke theo `show`), `validate_plan`, `render`, `render_check` | Render fixture 30s ra 1080×1920, đạt check |
 | G4 Nội dung ✅ (trừ mạng xã hội tier 3) | `fetch_feeds` (RSS/sitemap), prompt + adapter cho bước 1–4, `lint_script` | Từ ngày bất kỳ ra `script.json` đạt QA |
-| G5 Media | `voice.py`, `fetch_assets` (Codex tìm ảnh → script tải, chuẩn hóa, ghi nguồn; chart tự dựng), prompt plan-edit | Có `edit_plan.json` hợp lệ từ tập thật |
-| G6 Kết | QC khung hình + Claude vision, `meta.json`, `publish.py` (outbox), `notify`, `report`, chưng cất bài học | Một lệnh ra video + báo cáo; clone từ GitHub vào thư mục sạch chạy được, không có dữ liệu tập nào |
+| G5 Media ✅ | `voice.py`, `fetch_assets` (Codex tìm ảnh → script tải, chuẩn hóa, ghi nguồn; chart tự dựng), prompt plan-edit | Có `edit_plan.json` hợp lệ từ tập thật |
+| G6 Kết ✅ (Drive, Telegram, API đăng: chờ đấu nối) | QC khung hình + Claude vision, `meta.json`, `publish.py` (outbox), `notify`, `report`, chưng cất bài học | Một lệnh ra video + báo cáo; clone từ GitHub vào thư mục sạch chạy được, không có dữ liệu tập nào |
 | G7 Chạy thật | Tập thử với tin hôm nay (có người xem kết quả), rồi 3 ngày chạy lịch (10:30, 19:00) với outbox, sửa lỗi; Sếp đấu nối API đăng + Telegram khi sẵn sàng | 3 tập liên tiếp không cần sửa tay |
 
 Thứ tự Sếp giao trước đây khớp như sau: việc 2 = G2, việc 3 = G1 + G3, việc 4 = G7.

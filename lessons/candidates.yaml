@@ -1,1 +1,54 @@
-candidates: []
+candidates:
+- id: write-script-001
+  step: write
+  rule: Giữ tổng lời đọc `say` dưới khoảng 230 âm tiết để giọng không vượt 57 giây;
+    đếm âm tiết trước khi nộp kịch bản, vượt thì cắt ý phụ.
+  why: Bước voice bị trả lại vì giọng dài 60.3s > 57s, phải cắt khoảng 17 âm tiết;
+    lỗi gốc nằm ở độ dài kịch bản.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: plan-edit-002
+  step: plan
+  rule: Gộp các cảnh liền nhau dùng cùng một asset thành một cảnh duy nhất; hạn chế
+    đổi asset dồn dập để ảnh không phải mount lại giữa câu.
+  why: QC hai lần bắt khung đen ở điểm cắt giữa các cảnh cùng asset hoặc xen kẽ asset
+    liên tục.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: render-003
+  step: render
+  rule: Premount/preload ảnh của cảnh kế tiếp và không fade-in từ đen; cảnh mới phải
+    cắt thẳng hoặc crossfade chồng lên cảnh cũ.
+  why: Đầu cảnh mới bị khung tối trống 1 giây vì ảnh chưa tải hoặc fade từ đen.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: plan-edit-004
+  step: plan
+  rule: Giữ `highlight_words` ngắn, tối đa khoảng 3 từ (ưu tiên con số chính kèm đơn
+    vị), để khung chữ nhấn không chạm mép khung hình.
+  why: Khung chữ nhấn cụm dài gần chạm cả hai mép trái phải khi pop vào.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1
+- id: plan-edit-005
+  step: plan
+  rule: Trong mỗi đoạn, dùng hết các ảnh đã có và chia đều thời lượng; không để một
+    ảnh chiếm quá lâu khi đoạn còn ảnh chưa dùng.
+  why: Cổng check_plan trả lại plan vì ở nhiều đoạn một ảnh chiếm 9–13 giây trong
+    khi các ảnh khác của đoạn không được dùng.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-07'
+  last_seen: '2026-11-07'
+  evidence: 1

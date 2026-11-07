@@ -1,0 +1,66 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "asset_search",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "segments"
+ ],
+ "properties": {
+  "segments": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "segment",
+     "ai_prompt",
+     "candidates"
+    ],
+    "properties": {
+     "segment": {
+      "type": "string"
+     },
+     "ai_prompt": {
+      "type": "string"
+     },
+     "candidates": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "image_url",
+        "page_url",
+        "credit",
+        "kind",
+        "why"
+       ],
+       "properties": {
+        "image_url": {
+         "type": "string"
+        },
+        "page_url": {
+         "type": "string"
+        },
+        "credit": {
+         "type": "string"
+        },
+        "kind": {
+         "type": "string",
+         "enum": [
+          "real",
+          "doc"
+         ]
+        },
+        "why": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

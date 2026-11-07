@@ -75,7 +75,7 @@ def build(script, words, max_chars=26, max_seconds=2.6):
         words_out = [dict(w, text=w["text"].rstrip(",;:") if w is group[-1] else w["text"]) for w in group]
         result.append({"start": group[0]["start"], "end": group[-1]["end"], "words": words_out})
     for current, following in zip(result, result[1:]):  # phụ đề liền mạch, không nháy trống giữa các dòng
-        if following["start"] - current["end"] < 0.5:
+        if following["start"] - current["end"] < 1.0:
             current["end"] = following["start"]
     return result, dedupe_emphasis(emphasis), by_segment
 

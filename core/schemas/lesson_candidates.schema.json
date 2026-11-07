@@ -20,7 +20,20 @@
     ],
     "properties": {
      "step": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+       "collect",
+       "pick",
+       "write",
+       "review",
+       "voice",
+       "assets",
+       "plan",
+       "render",
+       "qc",
+       "package",
+       "publish"
+      ]
      },
      "rule": {
       "type": "string",

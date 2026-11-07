@@ -289,7 +289,8 @@ def run_assets(ctx):
                    "-i", f"testsrc2=s=1080x1350,hue=s=0.4,drawbox=c={colors[i % 5]}@0.6:t=fill",
                    "-frames:v", "1", ctx.ep.file(f"assets/{item['file']}"))
         return
-    raise NotReady("assets: Codex tìm/tải ảnh chưa xây (G5)")
+    from . import media
+    media.gather(ctx)
 
 
 def check_assets(ctx):
@@ -313,7 +314,23 @@ def check_assets(ctx):
 def run_plan(ctx):
     if ctx.cfg.dry:
         return write_json(ctx.ep.file("edit_plan.json"), simple_plan(ctx))
-    raise NotReady("plan: prompt plan-edit chưa xây (G5)")
+    from . import captions, render
+    script = ctx.json("script.json")
+    _, emphasis, by_segment = captions.build(script, ctx.json("audio/voice.words.json"))
+    _, layout, _ = render.template(ctx.cfg)
+    sfx = {k: {"category": v["category"], "duration_s": v["duration_s"]}
+           for k, v in json.loads((ROOT / "assets/sfx/index.json").read_text(encoding="utf-8")).items()}
+    ctx_data = {
+        "Thời lượng audio (giây)": round(checks.duration(ctx.ep.file("audio/voice.mp3"), ctx.cfg.bin("ffprobe")), 3),
+        "Mốc từng đoạn": ctx.json("audio/segments.json"),
+        "Kịch bản (show, highlight)": [{"segment": s["id"], "role": s["role"], "show": s["show"], "highlight": s["highlight"]}
+                                       for s in script["segments"]],
+        "Mốc từng từ hiển thị": by_segment, "Chữ nhấn và lúc đọc": emphasis,
+        "Ảnh": [{k: a[k] for k in ("id", "segment", "kind", "width", "height", "note")} for a in ctx.json("assets.json")["items"]],
+        "Vùng layout": layout, "Kho tiếng động": sfx,
+        "Bản trước": ctx.json("edit_plan.json") if ctx.ep.file("edit_plan.json").exists() else "chưa có",
+        "Cần sửa": ctx.feedback("plan")}
+    write_json(ctx.ep.file("edit_plan.json"), agents.run(ctx.cfg, ctx.ep, "claude", "plan", ctx_data, "edit_plan"))
 
 
 def simple_plan(ctx):
@@ -370,7 +387,16 @@ def run_qc(ctx):
     if ctx.cfg.dry:
         shutil.copyfile(FIXTURE / "qc.json", target)
         return
-    raise NotReady("qc: trích khung hình + Claude vision chưa xây (G6)")
+    from . import media
+    sheets = media.contact_sheets(ctx)
+    script = ctx.json("script.json")
+    segments = {s["segment"]: s for s in ctx.json("audio/segments.json")}
+    ctx_data = {
+        "Khung hình": [{"file": str(path.relative_to(ctx.ep.path)), "giây": stamps} for path, stamps in sheets],
+        "Lời theo thời gian": [{"segment": s["id"], "start": segments[s["id"]]["start"], "end": segments[s["id"]]["end"],
+                                "show": s["show"]} for s in script["segments"]],
+        "Plan": ctx.json("edit_plan.json"), "Template tạm": ctx.ep.state.get("template_temporary", True)}
+    write_json(target, agents.run(ctx.cfg, ctx.ep, "claude", "qc", ctx_data, "qc", tools=["Read"]))
 
 
 def check_qc(ctx):

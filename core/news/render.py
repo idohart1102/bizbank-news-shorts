@@ -19,7 +19,16 @@ SFX_TARGET_LUFS = -24.0  # tiếng động nhỏ hơn giọng (-14) khoảng 10 
 
 
 def npx(cfg):
-    return [cfg.bin("npx"), "--prefix", str(REMOTION), "remotion"]
+    """CLI Remotion của repo, kèm cổng trống riêng: dự án Remotion khác đang giữ cổng mặc định (3000)
+    thì trình duyệt render sẽ nạp nhầm bundle của dự án đó."""
+    return [str(REMOTION / "node_modules" / ".bin" / "remotion"), f"--port={free_port()}"]
+
+
+def free_port():
+    import socket
+    with socket.socket() as probe:
+        probe.bind(("127.0.0.1", 0))
+        return probe.getsockname()[1]
 
 
 def template(cfg, name="default"):
@@ -32,7 +41,7 @@ def template(cfg, name="default"):
     temp_overlay, temp_layout = folder / "overlay-temp.png", folder / "layout-temp.json"
     if not temp_overlay.exists():
         props = json.dumps({"layout": read_json(temp_layout), "title": cfg.channel.get("display_name", "BẢN TIN KINH DOANH")})
-        run([*npx(cfg), "still", str(ENTRY), "TempOverlay", str(temp_overlay), f"--props={props}", "--image-format=png"])
+        run([*npx(cfg)[:1], "still", str(ENTRY), *npx(cfg)[1:], "TempOverlay", str(temp_overlay), f"--props={props}", "--image-format=png"])
     return temp_overlay, read_json(temp_layout), True
 
 
@@ -92,7 +101,7 @@ def build_props(ctx):
 def render(ctx):
     props, public, temporary = build_props(ctx)
     raw, final = ctx.ep.file("render/raw.mp4"), ctx.ep.file("render/final.mp4")
-    run([*npx(ctx.cfg), "render", str(ENTRY), "NewsShort", str(raw), f"--props={ctx.ep.file('render/props.json')}",
+    run([*npx(ctx.cfg)[:1], "render", str(ENTRY), "NewsShort", str(raw), *npx(ctx.cfg)[1:], f"--props={ctx.ep.file('render/props.json')}",
          f"--public-dir={public}", "--codec=h264", "--crf=18", "--audio-bitrate=192k", "--log=error"], timeout=3600)
     normalize_loudness(ctx.cfg, raw, final)
     raw.unlink(missing_ok=True)

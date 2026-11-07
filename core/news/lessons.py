@@ -14,6 +14,8 @@ from .config import ROOT
 from .episode import now, write_text
 
 PROMOTE_AFTER = 2
+STEP_ALIASES = {"collect-news": "collect", "pick-stories": "pick", "write-script": "write", "review-script": "review",
+                "gather-assets": "assets", "plan-edit": "plan", "qc-video": "qc"}  # tên skill → tên bước
 LESSONS = ROOT / "lessons"
 FORBIDDEN = re.compile(r"https?://|\b\d{4}-\d{2}-\d{2}-|episodes/", re.I)
 
@@ -62,6 +64,7 @@ def merge_candidates(cfg, new_items, episode_ids, source):
     for item in new_items:
         if FORBIDDEN.search(item["rule"]):
             continue  # luật phải tổng quát
+        item = dict(item, step=STEP_ALIASES.get(item["step"], item["step"]))
         target = by_id.get(item.get("merge_with") or "")
         if not target:
             target = {"id": f"{item['step']}-{len(candidates) + 1:03d}", "step": item["step"], "rule": item["rule"],
