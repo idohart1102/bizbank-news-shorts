@@ -1,0 +1,43 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "lesson_candidates",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "candidates"
+ ],
+ "properties": {
+  "candidates": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "step",
+     "rule",
+     "why",
+     "merge_with"
+    ],
+    "properties": {
+     "step": {
+      "type": "string"
+     },
+     "rule": {
+      "type": "string",
+      "description": "luật tổng quát, không chứa nội dung tin/link/tên tập"
+     },
+     "why": {
+      "type": "string"
+     },
+     "merge_with": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "description": "id ứng viên đã có nếu cùng ý"
+     }
+    }
+   }
+  }
+ }
+}

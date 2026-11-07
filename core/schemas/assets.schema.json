@@ -1,0 +1,71 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "assets",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "items"
+ ],
+ "properties": {
+  "items": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "file",
+     "segment",
+     "kind",
+     "source_url",
+     "credit",
+     "width",
+     "height",
+     "note"
+    ],
+    "properties": {
+     "id": {
+      "type": "string"
+     },
+     "file": {
+      "type": "string",
+      "description": "đường dẫn tương đối trong <tap>/assets/"
+     },
+     "segment": {
+      "type": "string"
+     },
+     "kind": {
+      "type": "string",
+      "enum": [
+       "real",
+       "doc",
+       "chart",
+       "ai",
+       "card"
+      ]
+     },
+     "source_url": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "credit": {
+      "type": "string",
+      "description": "tên nguồn để ghi vào mô tả"
+     },
+     "width": {
+      "type": "integer"
+     },
+     "height": {
+      "type": "integer"
+     },
+     "note": {
+      "type": "string"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

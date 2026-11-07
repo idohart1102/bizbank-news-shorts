@@ -19,7 +19,9 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 ## Trình tự
 1. Đọc `docs/decisions.md` một lần mỗi phiên; mâu thuẫn thì `decisions.md` thắng.
 2. Mở đúng `core/skills/<skill>/SKILL.md` theo bảng, chỉ đọc các file skill nêu.
-3. Luồng đầy đủ: `core/standard/pipeline.md`.
+3. Luồng đầy đủ: `core/standard/pipeline.md`. Lộ trình xây hệ thống, input/output từng bước: `docs/roadmap.md`.
+4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Máy mới: `bin/bootstrap` rồi `bin/news doctor`.
+5. Bài học: luật đã rút ra nằm ở `lessons/rules/<bước>.md`, bắt buộc tuân theo. Góp ý của Sếp: `bin/news feedback <tap> <bước> "<nội dung>"`.
 
 | Việc | Skill | Người làm |
 |---|---|---|
@@ -36,7 +38,7 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 
 ## Luật cứng
 - Mỗi tin ít nhất 2 nguồn độc lập, hoặc 1 nguồn chính thống (cơ quan nhà nước, văn bản luật). Tin chỉ có trên mạng xã hội thì ghi rõ "theo thông tin lan truyền" hoặc bỏ.
-- Số liệu, ngày hiệu lực, mức phạt phải khớp nguyên văn nguồn; ghi link trong `sources.md`.
+- Số liệu, ngày hiệu lực, mức phạt phải khớp nguyên văn nguồn; ghi link và trích nguyên văn (`quote`) trong `script.json`.
 - Không đọc `node_modules/`, `episodes/*/audio|render|assets`.
-- Media của tập không lên Git. Git chỉ chứa hệ thống.
+- Repo là hệ độc lập, chuyển giao được: không đường dẫn máy, bí mật, dữ liệu sản phẩm/video. Dữ liệu các tập, hàng chờ đăng, sự kiện bài học thô chỉ ở local; hook `core/scripts/guard_repo.py` chặn khi commit/push.
 - Mỗi lần tạo giọng đều tốn credit: tạo một lần, chỉ dùng `--replace` khi kịch bản đổi.

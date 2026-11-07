@@ -1,0 +1,101 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "inbox",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "date",
+  "stories"
+ ],
+ "properties": {
+  "date": {
+   "type": "string",
+   "description": "YYYY-MM-DD"
+  },
+  "stories": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "title",
+     "summary",
+     "impact",
+     "topic",
+     "score",
+     "effective_date",
+     "sources"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "description": "slug ngắn, duy nhất trong ngày"
+     },
+     "title": {
+      "type": "string"
+     },
+     "summary": {
+      "type": "string",
+      "description": "2 câu"
+     },
+     "impact": {
+      "type": "string",
+      "description": "ai bị ảnh hưởng, ảnh hưởng gì tới tiền/thủ tục"
+     },
+     "topic": {
+      "type": "string"
+     },
+     "score": {
+      "type": "integer",
+      "description": "1-10 mức liên quan tới hộ KD/SME",
+      "minimum": 1,
+      "maximum": 10
+     },
+     "effective_date": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "description": "YYYY-MM-DD nếu có ngày hiệu lực"
+     },
+     "sources": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "additionalProperties": false,
+       "required": [
+        "url",
+        "publisher",
+        "tier",
+        "published_at"
+       ],
+       "properties": {
+        "url": {
+         "type": "string",
+         "description": "URL đầy đủ http(s)",
+         "pattern": "^https?://"
+        },
+        "publisher": {
+         "type": "string"
+        },
+        "tier": {
+         "type": "integer",
+         "minimum": 1,
+         "maximum": 3
+        },
+        "published_at": {
+         "type": "string",
+         "description": "ISO 8601"
+        }
+       }
+      },
+      "minItems": 1
+     }
+    }
+   },
+   "minItems": 0
+  }
+ },
+ "description": "Tin gom trong 24-48h, xếp theo score giảm dần"
+}

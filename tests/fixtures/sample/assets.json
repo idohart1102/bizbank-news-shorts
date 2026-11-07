@@ -1,0 +1,59 @@
+{
+ "items": [
+  {
+   "id": "a1",
+   "file": "a1.png",
+   "segment": "s1",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a2",
+   "file": "a2.png",
+   "segment": "s2",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a3",
+   "file": "a3.png",
+   "segment": "s3",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a4",
+   "file": "a4.png",
+   "segment": "s4",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a5",
+   "file": "a5.png",
+   "segment": "s5",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  }
+ ]
+}

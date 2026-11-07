@@ -1,0 +1,20 @@
+#!/bin/sh
+# Cài hệ thống trên máy mới: venv Python ghim version, kho sfx, git hook chặn dữ liệu sản phẩm.
+set -e
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
+PY="${PYTHON:-python3.12}"
+command -v "$PY" >/dev/null || PY=python3
+[ -x .venv/bin/python ] || "$PY" -m venv .venv
+.venv/bin/pip install -q -r requirements.txt
+.venv/bin/python -I core/scripts/fetch_sfx.py
+[ -f config/machine.yaml ] || cp config/machine.example.yaml config/machine.yaml
+[ -f .env ] || cp .env.example .env
+if [ -d .git ]; then
+  for hook in pre-commit pre-push; do
+    printf '#!/bin/sh\nexec "%s/.venv/bin/python" -I "%s/core/scripts/guard_repo.py" %s\n' "$ROOT" "$ROOT" "$hook" > ".git/hooks/$hook"
+    chmod +x ".git/hooks/$hook"
+  done
+fi
+[ -f core/remotion/package-lock.json ] && (cd core/remotion && npm ci --silent)
+echo "Xong. Sửa config/machine.yaml và .env cho máy này, rồi chạy: bin/news doctor"

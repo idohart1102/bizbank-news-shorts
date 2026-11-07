@@ -1,0 +1,107 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "edit_plan",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "template",
+  "fps",
+  "duration",
+  "scenes",
+  "music"
+ ],
+ "properties": {
+  "template": {
+   "type": "string"
+  },
+  "fps": {
+   "type": "integer"
+  },
+  "duration": {
+   "type": "number"
+  },
+  "scenes": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "start",
+     "end",
+     "segment",
+     "asset",
+     "motion",
+     "headline",
+     "highlight_words",
+     "sfx"
+    ],
+    "properties": {
+     "start": {
+      "type": "number"
+     },
+     "end": {
+      "type": "number"
+     },
+     "segment": {
+      "type": "string"
+     },
+     "asset": {
+      "type": "string",
+      "description": "id trong assets.json"
+     },
+     "motion": {
+      "type": "string",
+      "enum": [
+       "zoom-in",
+       "zoom-out",
+       "pan-left",
+       "pan-right",
+       "ken-burns",
+       "static",
+       "split"
+      ]
+     },
+     "headline": {
+      "type": [
+       "string",
+       "null"
+      ]
+     },
+     "highlight_words": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "sfx": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "description": "id trong assets/sfx/index.json"
+     }
+    }
+   },
+   "minItems": 1
+  },
+  "music": {
+   "type": [
+    "object",
+    "null"
+   ],
+   "additionalProperties": false,
+   "required": [
+    "file",
+    "volume_db"
+   ],
+   "properties": {
+    "file": {
+     "type": "string"
+    },
+    "volume_db": {
+     "type": "number"
+    }
+   }
+  }
+ }
+}

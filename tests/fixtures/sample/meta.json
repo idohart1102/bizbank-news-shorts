@@ -1,0 +1,19 @@
+{
+ "title": "[MẪU] Hóa đơn điện tử cho hộ kinh doanh",
+ "description": "Dữ liệu kiểm thử.",
+ "hashtags": [
+  "#shorts",
+  "#hokinhdoanh",
+  "#thue"
+ ],
+ "sources": [
+  {
+   "publisher": "Cơ quan mẫu",
+   "url": "https://example.org/co-quan-thue/thong-bao-mau"
+  },
+  {
+   "publisher": "Báo mẫu",
+   "url": "https://example.org/bao-mau/tin-mau"
+  }
+ ]
+}

@@ -1,0 +1,82 @@
+{
+ "title": "[MẪU KIỂM THỬ] Hóa đơn điện tử",
+ "segments": [
+  {
+   "id": "s1",
+   "role": "hook",
+   "say": "Đây là bản tin mẫu dùng để kiểm thử hệ thống dựng video tự động.",
+   "show": "Đây là bản tin mẫu dùng để kiểm thử hệ thống dựng video tự động.",
+   "visual": "thẻ chữ mẫu",
+   "highlight": [
+    "kiểm thử"
+   ],
+   "source_ids": [
+    1
+   ]
+  },
+  {
+   "id": "s2",
+   "role": "story",
+   "say": "Theo thông báo mẫu, hộ doanh thu trên một tỷ đồng mỗi năm phải dùng hóa đơn điện tử.",
+   "show": "Theo thông báo mẫu, hộ doanh thu trên 1 tỷ đồng/năm phải dùng hóa đơn điện tử.",
+   "visual": "ảnh chụp văn bản mẫu",
+   "highlight": [
+    "1 tỷ đồng/năm"
+   ],
+   "source_ids": [
+    1,
+    2
+   ]
+  },
+  {
+   "id": "s3",
+   "role": "story",
+   "say": "Quy định mẫu áp dụng từ ngày một tháng bảy. Mức phạt mẫu là năm triệu đồng.",
+   "show": "Quy định mẫu áp dụng từ ngày 1/7. Mức phạt mẫu là 5 triệu đồng.",
+   "visual": "biểu đồ mẫu",
+   "highlight": [
+    "1/7",
+    "5 triệu đồng"
+   ],
+   "source_ids": [
+    1
+   ]
+  },
+  {
+   "id": "s4",
+   "role": "action",
+   "say": "Chủ shop nên kiểm tra phần mềm hóa đơn và hỏi kế toán ngay trong tuần này.",
+   "show": "Chủ shop nên kiểm tra phần mềm hóa đơn và hỏi kế toán ngay trong tuần này.",
+   "visual": "ảnh minh họa cửa hàng",
+   "highlight": [],
+   "source_ids": [
+    1
+   ]
+  },
+  {
+   "id": "s5",
+   "role": "cta",
+   "say": "Theo dõi kênh để không lỡ tin chính sách mới.",
+   "show": "Theo dõi kênh để không lỡ tin chính sách mới.",
+   "visual": "logo kênh",
+   "highlight": [],
+   "source_ids": []
+  }
+ ],
+ "sources": [
+  {
+   "url": "https://example.org/co-quan-thue/thong-bao-mau",
+   "publisher": "Cơ quan mẫu",
+   "tier": 1,
+   "id": 1,
+   "quote": "Trích dẫn mẫu."
+  },
+  {
+   "url": "https://example.org/bao-mau/tin-mau",
+   "publisher": "Báo mẫu",
+   "tier": 2,
+   "id": 2,
+   "quote": "Trích dẫn mẫu."
+  }
+ ]
+}

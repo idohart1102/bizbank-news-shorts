@@ -1,0 +1,112 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "script",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "title",
+  "segments",
+  "sources"
+ ],
+ "properties": {
+  "title": {
+   "type": "string",
+   "description": "tiêu đề làm việc"
+  },
+  "segments": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "role",
+     "say",
+     "show",
+     "visual",
+     "highlight",
+     "source_ids"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "description": "s1, s2..."
+     },
+     "role": {
+      "type": "string",
+      "enum": [
+       "hook",
+       "story",
+       "action",
+       "cta"
+      ]
+     },
+     "say": {
+      "type": "string",
+      "description": "lời đọc cho TTS: số, ký hiệu, viết tắt đều viết bằng chữ"
+     },
+     "show": {
+      "type": "string",
+      "description": "chữ hiển thị trên phụ đề, cùng nội dung với say nhưng số dạng chữ số"
+     },
+     "visual": {
+      "type": "string",
+      "description": "mô tả hình cần tìm/tạo cho đoạn này"
+     },
+     "highlight": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "description": "cụm từ trong show cần nhấn (chữ nhấn)"
+     },
+     "source_ids": {
+      "type": "array",
+      "items": {
+       "type": "integer"
+      },
+      "description": "id nguồn trong sources hỗ trợ fact của đoạn"
+     }
+    }
+   },
+   "minItems": 3
+  },
+  "sources": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "url",
+     "publisher",
+     "tier",
+     "quote"
+    ],
+    "properties": {
+     "id": {
+      "type": "integer"
+     },
+     "url": {
+      "type": "string",
+      "description": "URL đầy đủ http(s)",
+      "pattern": "^https?://"
+     },
+     "publisher": {
+      "type": "string"
+     },
+     "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+     },
+     "quote": {
+      "type": "string",
+      "description": "trích nguyên văn đoạn chứa số liệu/ngày dùng trong kịch bản"
+     }
+    }
+   },
+   "minItems": 1
+  }
+ }
+}

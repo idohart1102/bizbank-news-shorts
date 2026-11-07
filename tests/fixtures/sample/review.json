@@ -1,0 +1,13 @@
+{
+ "score": 9,
+ "rubric": {
+  "hook": 2,
+  "facts": 3,
+  "clarity": 2,
+  "pacing": 1,
+  "cta": 1
+ },
+ "fact_errors": [],
+ "issues": [],
+ "pass": true
+}

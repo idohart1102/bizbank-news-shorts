@@ -8,7 +8,11 @@ Cấu trúc (mốc thời gian gần đúng):
 
 Luật:
 - Tổng ≤ 220 âm tiết. Câu ≤ 20 âm tiết, đọc một hơi.
-- Số viết theo cách đọc khi đưa cho TTS (`script_tts.md`), số dạng chữ số trong phụ đề (`script.md`).
+- Kịch bản là `script.json` (schema `core/schemas/script.schema.json`), chia đoạn. Mỗi đoạn có:
+  - `say`: lời đọc cho TTS, số/ký hiệu/viết tắt viết bằng chữ ("một tỷ đồng", "mười phần trăm").
+  - `show`: chữ hiển thị trên phụ đề, cùng ý với `say`, số dạng chữ số ("1 tỷ đồng", "10%").
+  - `visual`: mô tả hình để Codex tìm/tạo; `highlight`: cụm từ trong `show` cần nhấn; `source_ids`: nguồn của fact.
+- `sources`: mỗi nguồn có `quote` trích nguyên văn đoạn chứa số liệu/ngày dùng trong kịch bản.
 - Không phán xét chính trị, không suy đoán, không khuyên đầu tư hay pháp lý chắc chắn.
-- Mỗi câu có fact đánh dấu `[n]` trỏ tới `sources.md`.
-- Mỗi đoạn có ghi chú hình `{hình: ...}` để Codex tìm asset.
+- `script_tts.txt` và `sources.md` do hệ thống sinh từ `script.json`, không viết tay.
+- Luật kiểm tự động bằng `core/news/checks.py: lint_script`.

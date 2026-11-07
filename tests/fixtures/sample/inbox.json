@@ -1,0 +1,28 @@
+{
+ "date": "2026-01-01",
+ "stories": [
+  {
+   "id": "tin-mau-hoa-don",
+   "title": "[MẪU KIỂM THỬ] Quy định mẫu về hóa đơn điện tử",
+   "summary": "Dữ liệu giả lập để kiểm thử hệ thống. Không phải tin thật.",
+   "impact": "Hộ kinh doanh mẫu",
+   "topic": "hóa đơn điện tử",
+   "score": 8,
+   "effective_date": null,
+   "sources": [
+    {
+     "url": "https://example.org/co-quan-thue/thong-bao-mau",
+     "publisher": "Cơ quan mẫu",
+     "tier": 1,
+     "published_at": "2026-01-01T08:00:00+07:00"
+    },
+    {
+     "url": "https://example.org/bao-mau/tin-mau",
+     "publisher": "Báo mẫu",
+     "tier": 2,
+     "published_at": "2026-01-01T08:00:00+07:00"
+    }
+   ]
+  }
+ ]
+}

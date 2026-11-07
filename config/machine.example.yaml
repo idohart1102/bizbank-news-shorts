@@ -1,0 +1,20 @@
+# Cấu hình riêng của máy (chép thành config/machine.yaml, KHÔNG vào Git). Bỏ trống dòng nào thì dùng mặc định.
+data_dir: episodes                 # nơi lưu dữ liệu các tập (không vào Git); NEWS_DATA_DIR ghi đè
+tts:
+  backend: platform_tts            # platform_tts: dịch vụ TTS dùng chung trên máy | vbee_direct: (G5) gọi Vbee trực tiếp, key trong .env
+  platform_tts_url: http://127.0.0.1:8791
+agents:
+  claude:
+    backend: claude_cli            # claude_cli | (sau) anthropic_api
+    bin: claude
+    model: claude-opus-5-5
+  codex:
+    backend: router                # router: API kiểu OpenAI (9router...) | codex_cli
+    url: http://127.0.0.1:20128/v1
+    model: cx/gpt-6.1-sol
+    key_env: ROUTER_API_KEY        # tên biến trong .env nếu router cần key
+    fallback: codex_cli
+    agentic_backend: codex_cli     # việc cần tác tử (tìm và tải ảnh)
+    bin: codex
+bins: {ffmpeg: ffmpeg, ffprobe: ffprobe, node: node, npx: npx}
+notify: {macos: true}

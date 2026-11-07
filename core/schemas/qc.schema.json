@@ -1,0 +1,51 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "qc",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "pass",
+  "issues"
+ ],
+ "properties": {
+  "pass": {
+   "type": "boolean"
+  },
+  "issues": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "time",
+     "severity",
+     "kind",
+     "problem",
+     "fix"
+    ],
+    "properties": {
+     "time": {
+      "type": "number"
+     },
+     "severity": {
+      "type": "string",
+      "enum": [
+       "major",
+       "minor"
+      ]
+     },
+     "kind": {
+      "type": "string"
+     },
+     "problem": {
+      "type": "string"
+     },
+     "fix": {
+      "type": "string",
+      "description": "sửa cụ thể trong edit_plan.json"
+     }
+    }
+   }
+  }
+ }
+}

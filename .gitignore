@@ -14,3 +14,5 @@ notifications.jsonl
 lessons/events/
 lessons/metrics/
 logs/
+__pycache__/
+.venv-align/
