@@ -5,7 +5,7 @@ Mỗi đoạn kịch bản có `visual` mô tả hình cần. Dùng web_search t
 2. Ảnh chụp/trang văn bản chính thống (cổng Chính phủ, Bộ, Cục Thuế) khi đoạn nói về văn bản.
 3. Ảnh báo chí cùng chủ đề (chợ, cửa hàng, quầy thu ngân, người lao động…) nếu không có ảnh sự kiện.
 
-Với mỗi đoạn, trả 2–4 `candidates`:
+Mỗi cảnh trong video dùng một ảnh riêng, **không dùng lại ảnh**, nên cần khoảng 1 ảnh cho mỗi 3,5 giây lời đọc. Với mỗi đoạn, trả 4–8 `candidates` khác nhau (không trùng ảnh, không cùng ảnh ở cỡ khác):
 - `image_url`: link **trực tiếp** tới file ảnh (.jpg/.jpeg/.png/.webp), lấy đúng từ trang bạn đã mở (thẻ og:image hoặc ảnh trong bài). Không bịa, không đoán đường dẫn.
 - `page_url`: trang chứa ảnh; `credit`: tên báo/cơ quan; `kind`: `real` (ảnh chụp) hoặc `doc` (ảnh văn bản, bảng, website).
 - Ảnh ngang hay dọc đều được, cạnh ngắn nên ≥ 600px. Tránh ảnh có watermark to, ảnh chân dung lãnh đạo không liên quan, ảnh quảng cáo.

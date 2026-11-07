@@ -92,7 +92,7 @@ def gather(ctx):
 
     for segment in script["segments"]:
         sid = segment["id"]
-        want = max(1, min(3, -(-times.get(sid, 0) // 4.5)))  # ~1 ảnh mỗi 4,5 giây, tối đa 3
+        want = int(max(1, min(6, -(-times.get(sid, 0) // 3.5))))  # mỗi cảnh một ảnh riêng: ~1 ảnh/3,5 giây
         got = 0
         for candidate in found.get(sid, {}).get("candidates", []):
             if got >= want:
@@ -115,11 +115,12 @@ def gather(ctx):
                         got += 1
                 except Exception as error:
                     log.append(f"{sid}: og:image lỗi: {error}")
-        if got == 0 or (got < want and times.get(sid, 0) > 9):  # dự phòng 2: ảnh AI minh họa
-            prompt = found.get(sid, {}).get("ai_prompt") or f"Vertical documentary-style photo, Vietnam, {segment['visual']}"
+        angles = ["", " Close-up detail shot.", " Wide establishing shot.", " Over-the-shoulder view.", " Top-down view."]
+        for attempt in range(want - got):  # dự phòng 2: ảnh AI minh họa, mỗi ảnh một góc khác nhau
+            prompt = (found.get(sid, {}).get("ai_prompt") or f"Vertical documentary-style photo, Vietnam, {segment['visual']}")
+            prompt += angles[attempt % len(angles)] + " No text, no logos, no real identifiable people."
             try:
-                raw = agents.generate_image(cfg, prompt + ". No text, no logos, no real identifiable people.")
-                if add(raw, sid, "ai", None, "Ảnh minh họa AI", prompt):
+                if add(agents.generate_image(cfg, prompt), sid, "ai", None, "Ảnh minh họa AI", prompt):
                     got += 1
             except Exception as error:
                 log.append(f"{sid}: ảnh AI lỗi: {error}")

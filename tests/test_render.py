@@ -48,6 +48,8 @@ class RemotionRenderTest(unittest.TestCase):
             props = read_json(episode.file("render/props.json"))
             self.assertEqual(props["overlay"], "overlay.png")
             self.assertTrue(props["captions"] and props["emphasis"] and props["sfx"])
+            self.assertTrue(props["music"] and props["music"]["volume"] < 0.5, "nhạc nền nhỏ xuyên suốt")
+            self.assertEqual(len({s["src"] for s in props["scenes"]}), len(props["scenes"]), "không dùng lại ảnh")
             self.assertEqual(checks.render_check(episode.file("render/final.mp4"), cfg.video), [])
 
 

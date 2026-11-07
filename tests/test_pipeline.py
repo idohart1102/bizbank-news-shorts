@@ -111,6 +111,20 @@ class PipelineTest(Base):
         self.assertFalse((self.cfg.data_dir / "_ledger.jsonl").exists())
 
 
+class PlanRulesTest(unittest.TestCase):
+    def test_owner_rules_no_image_reuse_and_sfx_each_segment(self):
+        from news import checks
+        assets = {"items": [{"id": i, "segment": s} for i, s in (("a", "s1"), ("b", "s2"))]}
+        scene = lambda start, end, seg, asset, sfx=None: {"start": start, "end": end, "segment": seg, "asset": asset,
+                                                          "motion": "zoom-in", "headline": None, "highlight_words": [], "sfx": sfx}
+        segments = [{"segment": "s1", "start": 0, "end": 4}, {"segment": "s2", "start": 4, "end": 6}]
+        plan = {"template": "default", "fps": 30, "duration": 6, "music": None,
+                "scenes": [scene(0, 2, "s1", "a", "sting-01"), scene(2, 4, "s1", "a"), scene(4, 6, "s2", "b")]}
+        errors = checks.validate_plan(plan, segments, assets, {"sting-01": {}}, 6)
+        self.assertTrue(any("dùng 2 lần" in e for e in errors), errors)
+        self.assertFalse(any("s2 không có tiếng động" in e for e in errors), "đoạn cuối không bắt buộc sfx")
+
+
 class LessonsTest(Base):
     def test_promotion_and_privacy(self):
         item = {"step": "write", "rule": "Giải thích viết tắt BHXH ở lần đầu", "why": "chủ shop không hiểu", "merge_with": None}

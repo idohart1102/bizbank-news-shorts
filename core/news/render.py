@@ -52,6 +52,24 @@ def run(command, timeout=1800):
     return out
 
 
+def pick_music(cfg, ep, stage):
+    """Nhạc nền nhỏ xuyên suốt: chọn xoay vòng theo mã tập (cùng tập luôn cùng bài), cân về music.lufs."""
+    conf = cfg.channel.get("music", {})
+    if not conf.get("enabled"):
+        return None
+    library = ROOT / conf.get("library", "assets/music")
+    index = read_json(library / "index.json")
+    if not index:
+        return None
+    import hashlib
+    keys = sorted(index)
+    track = index[keys[int(hashlib.sha1(ep.id.encode()).hexdigest(), 16) % len(keys)]]
+    gain = 10 ** ((conf.get("lufs", -32) - (track["lufs"] or -14)) / 20)
+    ep.state["music"] = track["file"]
+    return {"src": stage(library / track["file"], f"music-{track['file']}"), "volume": round(min(gain, 1.0), 4),
+            "fade_in": conf.get("fade_in_s", 0.8), "fade_out": conf.get("fade_out_s", 1.5)}
+
+
 def build_props(ctx):
     """Dựng props + thư mục public cho Remotion. Trả (props, public_dir, dùng_template_tạm)."""
     cfg, ep = ctx.cfg, ctx.ep
@@ -87,9 +105,7 @@ def build_props(ctx):
             gain = 10 ** ((SFX_TARGET_LUFS - (item["lufs"] or SFX_TARGET_LUFS)) / 20)
             sfx.append({"start": scene["start"], "src": stage(ROOT / "assets/sfx" / item["file"], f"sfx/{item['file']}"),
                         "volume": round(min(gain, 1.0), 3)})
-    music = None
-    if plan.get("music") and cfg.channel.get("music", {}).get("enabled"):
-        music = {"src": stage(ROOT / plan["music"]["file"], "music.mp3"), "volume": 10 ** (plan["music"]["volume_db"] / 20)}
+    music = pick_music(cfg, ep, stage)
     props = {"fps": cfg.video["fps"], "width": cfg.video["width"], "height": cfg.video["height"],
              "duration": max(plan["duration"], caps[-1]["end"] if caps else 0), "layout": layout,
              "overlay": stage(overlay, "overlay.png"), "voice": stage(ep.file("audio/voice.mp3"), "voice.mp3"),

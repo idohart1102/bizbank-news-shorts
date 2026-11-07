@@ -1,8 +1,8 @@
 {
  "items": [
   {
-   "id": "a1",
-   "file": "a1.png",
+   "id": "a1a",
+   "file": "a1a.png",
    "segment": "s1",
    "kind": "card",
    "source_url": null,
@@ -12,8 +12,19 @@
    "note": "mẫu"
   },
   {
-   "id": "a2",
-   "file": "a2.png",
+   "id": "a1b",
+   "file": "a1b.png",
+   "segment": "s1",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a2a",
+   "file": "a2a.png",
    "segment": "s2",
    "kind": "card",
    "source_url": null,
@@ -23,8 +34,19 @@
    "note": "mẫu"
   },
   {
-   "id": "a3",
-   "file": "a3.png",
+   "id": "a2b",
+   "file": "a2b.png",
+   "segment": "s2",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a3a",
+   "file": "a3a.png",
    "segment": "s3",
    "kind": "card",
    "source_url": null,
@@ -34,8 +56,19 @@
    "note": "mẫu"
   },
   {
-   "id": "a4",
-   "file": "a4.png",
+   "id": "a3b",
+   "file": "a3b.png",
+   "segment": "s3",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a4a",
+   "file": "a4a.png",
    "segment": "s4",
    "kind": "card",
    "source_url": null,
@@ -45,8 +78,30 @@
    "note": "mẫu"
   },
   {
-   "id": "a5",
-   "file": "a5.png",
+   "id": "a4b",
+   "file": "a4b.png",
+   "segment": "s4",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a5a",
+   "file": "a5a.png",
+   "segment": "s5",
+   "kind": "card",
+   "source_url": null,
+   "credit": "tự dựng",
+   "width": 1080,
+   "height": 1350,
+   "note": "mẫu"
+  },
+  {
+   "id": "a5b",
+   "file": "a5b.png",
    "segment": "s5",
    "kind": "card",
    "source_url": null,

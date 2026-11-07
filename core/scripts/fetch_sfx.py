@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tải kho tiếng động theo assets/sfx/LICENSES.csv từ CDN Pixabay.
+"""Tải kho tiếng động (assets/sfx) và nhạc nền (assets/music) theo LICENSES.csv từ CDN Pixabay.
 
 File mp3 không vào Git: giấy phép Pixabay không cho phân phối lại âm thanh dạng file rời,
 nên repo chỉ giữ danh sách nguồn. Người nhận repo chạy lệnh này để có lại đúng bộ file
@@ -17,8 +17,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-SFX = ROOT / "assets" / "sfx"
-CSV_PATH = SFX / "LICENSES.csv"
+LIBRARIES = [ROOT / "assets" / "sfx", ROOT / "assets" / "music"]
 CDN = "https://cdn.pixabay.com/download/audio/"
 
 
@@ -35,6 +34,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--update", action="store_true", help="ghi sha256/thời lượng/LUFS vào CSV")
     args = parser.parse_args()
+    failed = [problem for library in LIBRARIES if (library / "LICENSES.csv").exists() for problem in sync(library, args.update)]
+    if failed:
+        print("\n".join(failed), file=sys.stderr)
+        sys.exit(1)
+
+
+def sync(SFX, update):
+    """Tải/kiểm một kho; trả danh sách lỗi."""
+    CSV_PATH = SFX / "LICENSES.csv"
     rows = list(csv.DictReader(CSV_PATH.open(encoding="utf-8")))
     failed = []
     for row in rows:
@@ -53,12 +61,12 @@ def main():
             target.write_bytes(data)
             row["downloaded_at"] = time.strftime("%Y-%m-%d")
         digest = hashlib.sha256(target.read_bytes()).hexdigest()
-        if row["sha256"] and row["sha256"] != digest and not args.update:
+        if row["sha256"] and row["sha256"] != digest and not update:
             failed.append(f"{row['id']}: sha256 khác bản đã ghi (nguồn đổi file?)")
-        if args.update:
+        if update:
             row["sha256"] = digest
             row["duration_s"], row["lufs"] = measure(target)
-    if args.update:
+    if update:
         with CSV_PATH.open("w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
             writer.writeheader()
@@ -66,10 +74,8 @@ def main():
         index = {r["id"]: {"file": r["file"], "category": r["category"], "duration_s": float(r["duration_s"]),
                            "lufs": float(r["lufs"]) if r["lufs"] else None} for r in rows if r["duration_s"]}
         (SFX / "index.json").write_text(json.dumps(index, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"{len(rows) - len(failed)}/{len(rows)} file sẵn sàng")
-    if failed:
-        print("\n".join(failed), file=sys.stderr)
-        sys.exit(1)
+    print(f"{SFX.name}: {len(rows) - len(failed)}/{len(rows)} file sẵn sàng")
+    return failed
 
 
 if __name__ == "__main__":

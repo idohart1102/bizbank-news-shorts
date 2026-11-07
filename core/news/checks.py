@@ -148,6 +148,12 @@ def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2
             if scene["start"] - last_sfx < 1.5:
                 errors.append(f"Cảnh {span}: sfx cách cái trước < 1.5s")
             last_sfx = scene["start"]
+    used = {}
+    for scene in scenes:
+        used.setdefault(scene["asset"], []).append(f"{scene['start']:.1f}s")
+    for asset, at in used.items():
+        if len(at) > 1:  # Sếp 2026-11-07: không dùng lại ảnh trong một video
+            errors.append(f"Ảnh {asset} dùng {len(at)} lần ({', '.join(at)}); mỗi ảnh chỉ một cảnh")
     by_asset = {}
     for scene in scenes:
         by_asset.setdefault((scene["segment"], scene["asset"]), 0.0)
@@ -156,6 +162,10 @@ def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2
         others = {a for (s, a) in by_asset if s == segment}
         if seconds > 7 and len([a for a in assets["items"] if a["segment"] == segment]) > len(others):
             errors.append(f"Đoạn {segment}: ảnh {asset} chiếm {seconds:.1f}s trong khi đoạn còn ảnh chưa dùng")
+    with_sfx = {s["segment"] for s in scenes if s["sfx"]}
+    for segment in segments[:-1]:  # đoạn cuối (lời kêu gọi) không bắt buộc
+        if segment["segment"] not in with_sfx:
+            errors.append(f"Đoạn {segment['segment']} không có tiếng động nào (cần ≥ 1: chuyển đoạn hoặc nhấn số)")
     covered = {s["segment"] for s in scenes}
     for segment in segments:
         if segment["segment"] not in covered:

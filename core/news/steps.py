@@ -145,7 +145,8 @@ def run_write(ctx):
 
 def derive_script_files(ctx):
     script = ctx.json("script.json")
-    write_text(ctx.ep.file("script_tts.txt"), "\n".join(s["say"] for s in script["segments"]) + "\n")
+    # Nối các đoạn bằng dấu cách, không xuống dòng: xuống dòng làm Vbee nghỉ dài (paragraphBreak).
+    write_text(ctx.ep.file("script_tts.txt"), " ".join(s["say"].strip() for s in script["segments"]) + "\n")
     lines = [f"# Nguồn: {script['title']}", ""]
     lines += [f"[{s['id']}] {s['publisher']} (tier {s['tier']}): {s['url']}\n    > {s['quote']}" for s in script["sources"]]
     write_text(ctx.ep.file("sources.md"), "\n".join(lines) + "\n")
@@ -231,6 +232,8 @@ def run_voice(ctx):
         tts = ctx.cfg.channel["tts"]
         command = ["tts", "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
                    "--file", ctx.ep.file("script_tts.txt"), "--out", audio, "--project", tts["project"], "--srt"]
+        if tts.get("pauses"):
+            command += ["--pauses", ",".join(f"{k}={v}" for k, v in tts["pauses"].items())]
         ctx.sh(*command, timeout=1800)
         ctx.sh("tts", "align", "--audio", audio, "--text", ctx.ep.file("script_tts.txt"),
                "--out", ctx.ep.file("audio/voice.srt"), "--words", ctx.ep.file("audio/voice.words.json"), timeout=1800)
@@ -334,17 +337,17 @@ def run_plan(ctx):
 
 
 def simple_plan(ctx):
-    """Plan tất định: mỗi đoạn chia cảnh ≤ 3s, xoay vòng hình của đoạn, whoosh ở đầu đoạn."""
+    """Plan tất định (dry): mỗi ảnh của đoạn một cảnh (không dùng lại ảnh), tiếng động ở đầu mỗi đoạn."""
     segments, assets = ctx.json("audio/segments.json"), ctx.json("assets.json")["items"]
     scenes, last_sfx = [], -9.0
     motions = ["ken-burns", "zoom-in", "pan-left", "zoom-out", "pan-right"]
     for seg in segments:
-        own = [a for a in assets if a["segment"] == seg["segment"]] or assets
-        count = max(1, int((seg["end"] - seg["start"]) // 3 + (1 if (seg["end"] - seg["start"]) % 3 else 0)))
+        own = [a for a in assets if a["segment"] == seg["segment"]]
+        count = len(own)
         step = (seg["end"] - seg["start"]) / count
         for i in range(count):
             start = round(seg["start"] + i * step, 3)
-            sfx = "whoosh-01" if i == 0 and start - last_sfx >= 1.5 and start > 0 else None
+            sfx = ("sting-01" if start == 0 else "whoosh-01") if i == 0 and start - last_sfx >= 1.5 else None
             last_sfx = start if sfx else last_sfx
             scenes.append({"start": start, "end": round(seg["start"] + (i + 1) * step, 3), "segment": seg["segment"],
                            "asset": own[i % len(own)]["id"], "motion": motions[len(scenes) % len(motions)],

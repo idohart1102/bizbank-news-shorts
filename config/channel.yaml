@@ -13,6 +13,7 @@ tts:
   provider: vbee
   voice: hn_female_ngochuyen_full_48k-fhg   # HN - Ngọc Huyền (Sếp chọn 2026-11-07)
   speed: 1.0
+  pauses: {sentence: 0.1, major: 0.1, medium: 0.1, paragraph: 0}   # Sếp: đọc liền mạch, ngắt nghỉ ngắn nhất Vbee cho phép
   project: news-video
   export_srt: true             # Vbee không có SRT; platform/tts căn bằng Whisper tại máy, không tốn credit
 sfx:
@@ -20,7 +21,11 @@ sfx:
   transition: whoosh
   volume_db: -14
 music:
-  enabled: false               # TODO: Sếp quyết có nhạc nền không
+  enabled: true                # Sếp 2026-11-07: nhạc nền nhỏ xuyên suốt video
+  library: assets/music/       # Pixabay, license trong assets/music/LICENSES.csv
+  lufs: -32                    # giọng -14 LUFS: nhạc nhỏ hơn ~18 dB
+  fade_in_s: 0.8
+  fade_out_s: 1.5
 drive_folder: TODO
 schedule:                      # launchd com.idohart.news-video; ngoài lịch chạy tay: news run
   - "10:30"

@@ -11,3 +11,4 @@
 - 2026-11-07: Thông báo qua Telegram, đấu nối sau; trước mắt ghi `episodes/notifications.jsonl` + thông báo macOS.
 - 2026-11-07: Lịch chạy mặc định 10:30 và 19:00 hằng ngày (mỗi lần 1 tập, không lặp tin đã làm), và chạy khi được yêu cầu (`news run`).
 - 2026-11-07: Repo là hệ độc lập, chuyển giao được cho người khác: không đường dẫn máy/bí mật/dữ liệu tập trong Git, phụ thuộc ngoài qua adapter, không đưa lịch sử sản phẩm/video (dữ liệu các tập làm ở local) lên GitHub; lịch sử commit của hệ thống vẫn giữ. Có cơ chế bài học tự cải thiện (`lessons/`).
+- 2026-11-07: Không dùng lại ảnh trong một video (mỗi ảnh một cảnh). Giọng đọc liền mạch, ngắt nghỉ ngắn nhất (Vbee clientPause). Có nhạc nền nhỏ xuyên suốt video (kho Pixabay `assets/music/`) kèm hiệu ứng âm thanh.

@@ -33,12 +33,21 @@ export const NewsShort = (props) => {
           <Audio src={staticFile(item.src)} volume={item.volume} />
         </Sequence>
       ))}
-      {props.music ? <Audio src={staticFile(props.music.src)} volume={props.music.volume} loop /> : null}
+      {props.music ? <Music music={props.music} duration={props.duration} /> : null}
     </AbsoluteFill>
   );
 };
 
 const FADE = 6;
+
+// Nhạc nền nhỏ xuyên suốt video: lặp nếu ngắn hơn video, fade vào/ra.
+const Music = ({music, duration}) => {
+  const {fps} = useVideoConfig();
+  const total = Math.round(duration * fps);
+  const volume = (f) => music.volume * interpolate(f, [0, music.fade_in * fps, total - music.fade_out * fps, total],
+    [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
+  return <Audio src={staticFile(music.src)} volume={volume} loop />;
+};
 
 const MOTIONS = {
   'zoom-in': (p) => ({scale: 1 + 0.15 * p, x: 0, y: 0}),

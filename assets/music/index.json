@@ -1,0 +1,74 @@
+{
+ "news-01": {
+  "file": "news-01.mp3",
+  "category": "news",
+  "duration_s": 141.74,
+  "lufs": -9.3
+ },
+ "news-02": {
+  "file": "news-02.mp3",
+  "category": "news",
+  "duration_s": 66.04,
+  "lufs": -10.3
+ },
+ "news-03": {
+  "file": "news-03.mp3",
+  "category": "news",
+  "duration_s": 68.05,
+  "lufs": -11.2
+ },
+ "corporate-01": {
+  "file": "corporate-01.mp3",
+  "category": "corporate",
+  "duration_s": 124.19,
+  "lufs": -12.4
+ },
+ "corporate-02": {
+  "file": "corporate-02.mp3",
+  "category": "corporate",
+  "duration_s": 63.62,
+  "lufs": -15.7
+ },
+ "corporate-03": {
+  "file": "corporate-03.mp3",
+  "category": "corporate",
+  "duration_s": 184.03,
+  "lufs": -11.8
+ },
+ "upbeat-01": {
+  "file": "upbeat-01.mp3",
+  "category": "upbeat",
+  "duration_s": 122.04,
+  "lufs": -11.6
+ },
+ "upbeat-02": {
+  "file": "upbeat-02.mp3",
+  "category": "upbeat",
+  "duration_s": 156.03,
+  "lufs": -11.6
+ },
+ "tech-01": {
+  "file": "tech-01.mp3",
+  "category": "tech",
+  "duration_s": 130.09,
+  "lufs": -14.6
+ },
+ "tech-02": {
+  "file": "tech-02.mp3",
+  "category": "tech",
+  "duration_s": 200.05,
+  "lufs": -10.6
+ },
+ "light-01": {
+  "file": "light-01.mp3",
+  "category": "light",
+  "duration_s": 87.38,
+  "lufs": -9.6
+ },
+ "light-02": {
+  "file": "light-02.mp3",
+  "category": "light",
+  "duration_s": 57.48,
+  "lufs": -9.9
+ }
+}
