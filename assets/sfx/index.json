@@ -1,0 +1,122 @@
+{
+ "whoosh-01": {
+  "file": "whoosh-01.mp3",
+  "category": "whoosh",
+  "duration_s": 0.57,
+  "lufs": -15.2
+ },
+ "whoosh-02": {
+  "file": "whoosh-02.mp3",
+  "category": "whoosh",
+  "duration_s": 2.12,
+  "lufs": -17.0
+ },
+ "whoosh-03": {
+  "file": "whoosh-03.mp3",
+  "category": "whoosh",
+  "duration_s": 4.03,
+  "lufs": -12.2
+ },
+ "whoosh-04": {
+  "file": "whoosh-04.mp3",
+  "category": "whoosh",
+  "duration_s": 0.57,
+  "lufs": -20.6
+ },
+ "swoosh-01": {
+  "file": "swoosh-01.mp3",
+  "category": "swoosh",
+  "duration_s": 1.06,
+  "lufs": -19.4
+ },
+ "swoosh-02": {
+  "file": "swoosh-02.mp3",
+  "category": "swoosh",
+  "duration_s": 1.08,
+  "lufs": -19.3
+ },
+ "pop-01": {
+  "file": "pop-01.mp3",
+  "category": "pop",
+  "duration_s": 0.72,
+  "lufs": -16.1
+ },
+ "pop-02": {
+  "file": "pop-02.mp3",
+  "category": "pop",
+  "duration_s": 1.97,
+  "lufs": -12.6
+ },
+ "pop-03": {
+  "file": "pop-03.mp3",
+  "category": "pop",
+  "duration_s": 1.06,
+  "lufs": -18.5
+ },
+ "ding-01": {
+  "file": "ding-01.mp3",
+  "category": "ding",
+  "duration_s": 2.74,
+  "lufs": -18.7
+ },
+ "ding-02": {
+  "file": "ding-02.mp3",
+  "category": "ding",
+  "duration_s": 0.72,
+  "lufs": -28.9
+ },
+ "click-01": {
+  "file": "click-01.mp3",
+  "category": "click",
+  "duration_s": 0.65,
+  "lufs": -33.4
+ },
+ "click-02": {
+  "file": "click-02.mp3",
+  "category": "click",
+  "duration_s": 1.06,
+  "lufs": -27.2
+ },
+ "riser-01": {
+  "file": "riser-01.mp3",
+  "category": "riser",
+  "duration_s": 5.07,
+  "lufs": -24.1
+ },
+ "impact-01": {
+  "file": "impact-01.mp3",
+  "category": "impact",
+  "duration_s": 2.09,
+  "lufs": -16.6
+ },
+ "impact-02": {
+  "file": "impact-02.mp3",
+  "category": "impact",
+  "duration_s": 3.05,
+  "lufs": -20.4
+ },
+ "notify-01": {
+  "file": "notify-01.mp3",
+  "category": "notification",
+  "duration_s": 2.46,
+  "lufs": -19.3
+ },
+ "kaching-01": {
+  "file": "kaching-01.mp3",
+  "category": "money",
+  "duration_s": 3.19,
+  "lufs": -22.2
+ },
+ "glitch-01": {
+  "file": "glitch-01.mp3",
+  "category": "glitch",
+  "duration_s": 3.1,
+  "lufs": -22.3
+ },
+ "sting-01": {
+  "file": "sting-01.mp3",
+  "category": "sting",
+  "duration_s": 9.04,
+  "lufs": -9.1
+ }
+}

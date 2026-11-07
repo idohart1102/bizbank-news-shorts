@@ -10,10 +10,11 @@ video:
   layout: assets/template/layout.json
 tts:
   service: platform/tts        # http://127.0.0.1:8791
-  provider: vbee               # chờ thêm provider Vbee vào platform/tts
-  voice: TODO                  # Sếp chọn giọng Vbee
+  provider: vbee
+  voice: hn_female_ngochuyen_full_48k-fhg   # HN - Ngọc Huyền (Sếp chọn 2026-11-07)
+  speed: 1.0
   project: news-video
-  export_srt: true
+  export_srt: true             # Vbee không có SRT; platform/tts căn bằng Whisper tại máy, không tốn credit
 sfx:
   library: assets/sfx/         # Pixabay, license trong assets/sfx/LICENSES.csv
   transition: whoosh
@@ -21,3 +22,15 @@ sfx:
 music:
   enabled: false               # TODO: Sếp quyết có nhạc nền không
 drive_folder: TODO
+schedule:                      # launchd com.idohart.news-video; ngoài lịch chạy tay: news run
+  - "10:30"
+  - "19:00"
+episodes_per_run: 1
+budget:
+  vbee_chars_per_day: 3000     # 2 tập/ngày x ~1.000 ký tự + dư sửa kịch bản
+publish:
+  mode: outbox                 # outbox = xếp hàng chờ đấu nối API; sau: youtube/tiktok/facebook adapter
+  platforms: [youtube_shorts, tiktok, facebook_reels]
+notify:
+  channel: telegram            # chưa đấu nối; tạm ghi episodes/notifications.jsonl + macOS notification
+  telegram: {enabled: false}

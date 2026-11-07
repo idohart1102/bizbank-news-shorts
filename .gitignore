@@ -8,3 +8,9 @@ config/machine.yaml
 *.mp3
 *.wav
 .DS_Store
+publish/outbox/*
+!publish/outbox/.gitkeep
+notifications.jsonl
+lessons/events/
+lessons/metrics/
+logs/
