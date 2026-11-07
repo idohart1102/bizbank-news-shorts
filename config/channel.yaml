@@ -1,0 +1,23 @@
+slug: news-vn
+lang: vi
+audience: hộ kinh doanh, SME Việt Nam
+video:
+  width: 1080
+  height: 1920
+  fps: 30
+  max_seconds: 59
+  template: assets/template/overlay.png
+  layout: assets/template/layout.json
+tts:
+  service: platform/tts        # http://127.0.0.1:8791
+  provider: vbee               # chờ thêm provider Vbee vào platform/tts
+  voice: TODO                  # Sếp chọn giọng Vbee
+  project: news-video
+  export_srt: true
+sfx:
+  library: assets/sfx/         # Pixabay, license trong assets/sfx/LICENSES.csv
+  transition: whoosh
+  volume_db: -14
+music:
+  enabled: false               # TODO: Sếp quyết có nhạc nền không
+drive_folder: TODO

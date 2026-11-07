@@ -1,0 +1,10 @@
+episodes/*
+!episodes/.gitkeep
+node_modules/
+.venv/
+.env
+config/machine.yaml
+*.mp4
+*.mp3
+*.wav
+.DS_Store

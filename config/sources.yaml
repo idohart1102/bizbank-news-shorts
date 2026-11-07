@@ -1,0 +1,16 @@
+# Nguồn tin. tier 1 = chính thống, đủ 1 nguồn; tier 2 = báo lớn; tier 3 = mạng xã hội, chỉ làm tín hiệu.
+press:
+  - {name: Chính phủ, url: https://baochinhphu.vn, tier: 1}
+  - {name: Tổng cục Thuế / Cục Thuế, url: https://gdt.gov.vn, tier: 1}
+  - {name: Thư viện Pháp luật, url: https://thuvienphapluat.vn, tier: 1}
+  - {name: VnExpress Kinh doanh, url: https://vnexpress.net/kinh-doanh, tier: 2}
+  - {name: Tuổi Trẻ Kinh doanh, url: https://tuoitre.vn/kinh-doanh.htm, tier: 2}
+  - {name: Thanh Niên Kinh tế, url: https://thanhnien.vn/kinh-te.htm, tier: 2}
+  - {name: CafeF, url: https://cafef.vn, tier: 2}
+  - {name: VietnamBiz, url: https://vietnambiz.vn, tier: 2}
+  - {name: Dân trí Kinh doanh, url: https://dantri.com.vn/kinh-doanh.htm, tier: 2}
+social:
+  - {name: Facebook fanpage báo/cơ quan, tier: 3}
+  - {name: TikTok xu hướng kinh doanh, tier: 3}
+  - {name: Nhóm cộng đồng chủ shop, tier: 3}
+topics_priority: [thuế, hóa đơn điện tử, hộ kinh doanh, sàn TMĐT, phí ngân hàng/thanh toán, lương tối thiểu, BHXH, giá cả đầu vào, vay vốn, quy định mới có hiệu lực]
