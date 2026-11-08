@@ -1,5 +1,7 @@
 # Chuẩn kịch bản short tin tức (dưới 60s)
 
+- `hook_text`: một câu < 100 ký tự, hiện suốt video dưới khung ảnh.
+
 Cấu trúc (mốc thời gian gần đúng):
 1. **Hook 0–3s**: một câu đánh vào quyền lợi. Ví dụ: "Từ 1/7, hộ kinh doanh doanh thu trên 1 tỷ phải dùng hóa đơn điện tử."
 2. **Tin 3–45s**: 1 tin sâu (3 ý) hoặc 3–4 tin ngắn (mỗi tin 8–12s: chuyện gì, áp dụng cho ai, khi nào).
@@ -10,7 +12,7 @@ Luật:
 - Tổng ≤ 220 âm tiết. Câu ≤ 20 âm tiết, đọc một hơi.
 - Kịch bản là `script.json` (schema `core/schemas/script.schema.json`), chia đoạn. Mỗi đoạn có:
   - `say`: lời đọc cho TTS, số/ký hiệu/viết tắt viết bằng chữ ("một tỷ đồng", "mười phần trăm").
-  - `show`: chữ hiển thị trên phụ đề, cùng ý với `say`, số dạng chữ số ("1 tỷ đồng", "10%").
+  - `show`: cùng nội dung với `say` nhưng số dạng chữ số ("1 tỷ đồng", "10%"). Không hiển thị thành phụ đề; dùng để canh lúc thẻ/cutout xuất hiện (trigger) và để duyệt.
   - `visual`: mô tả hình nền để Codex tìm/tạo; `source_ids`: nguồn của fact.
   - `cards`: thẻ chữ/số (`value` ≤ 18 ký tự, `label` ≤ 40, `trigger` nguyên văn trong `show`); cả video ≥ 3 thẻ.
   - `cutouts`: người nổi tiếng được nhắc tên (`person`) hoặc sự vật quan trọng (`object`), `trigger` nguyên văn trong `show`.

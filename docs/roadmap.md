@@ -1,5 +1,7 @@
 # Lộ trình xây dựng và tự động hóa (2026-11-07)
 
+> **Version 1 đạt ngày 2026-11-08** (repo `idohart1102/bizbank-news-shorts`, tag `v1.0.0`). Từ đó: không phụ đề; thẻ chữ/số + cutout kèm tiếng động; template BizBank khung 4:3 + câu hook; nhạc nền nhỏ; giọng liền mạch. Luồng hiện hành: `core/standard/pipeline.md`. Các bảng dưới là kế hoạch gốc, chỗ nào nhắc phụ đề/SRT/chữ nhấn là lịch sử.
+
 Mục tiêu: một lệnh (hoặc lịch launchd mỗi sáng) đi từ "hôm nay" tới `final.mp4` + `meta.json`, có thể tự đăng, không cần người can thiệp. Người chỉ nhận báo cáo và xử lý khi hệ thống tự dừng ở cổng an toàn.
 
 ```
