@@ -1,0 +1,4 @@
+- [write-010] Khi nêu mức phạt, nghĩa vụ hay quyền lợi, ghi rõ đối tượng áp dụng (cá nhân, hộ kinh doanh hay doanh nghiệp) trong cả `say` và nhãn thẻ; ưu tiên mức áp dụng cho hộ kinh doanh. (vì: Hook nêu mức phạt tối đa của doanh nghiệp khiến hộ kinh doanh hiểu sai; câu về bảo hiểm xã hội không rõ áp dụng cho ai.)
+- [write-011] Nhãn thẻ và lời đọc giữ đúng tiêu chí của nguồn (đối tượng đếm, điều kiện áp dụng); không tự diễn giải lại làm đổi nghĩa. (vì: Nhãn thẻ đổi 'số lao động bị vi phạm' thành 'số người vi phạm', sai đối tượng đếm.)
+- [write-012] Mức phạt và quy định pháp lý phải dẫn văn bản gốc (số nghị định/luật, điều, khoản) kèm quote nguyên văn; không dựa duy nhất vào một bài báo. (vì: Mức phạt chỉ có một nguồn báo tier 2, không đạt luật cứng về nguồn.)
+- [write-014] Mỗi thẻ phải mang con số hoặc thông tin cụ thể; bỏ thẻ chỉ lặp lại lời đọc mà không có số. (vì: Thẻ 'Tăng theo' không có số, gần như lặp câu đọc.)

@@ -102,10 +102,10 @@ candidates:
   why: Hook nêu mức phạt tối đa của doanh nghiệp khiến hộ kinh doanh hiểu sai; câu
     về bảo hiểm xã hội không rõ áp dụng cho ai.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
   last_seen: '2026-11-08'
-  evidence: 1
+  evidence: 2
 - id: write-011
   step: write
   rule: Nhãn thẻ và lời đọc giữ đúng tiêu chí của nguồn (đối tượng đếm, điều kiện
@@ -113,20 +113,20 @@ candidates:
   why: Nhãn thẻ đổi 'số lao động bị vi phạm' thành 'số người vi phạm', sai đối tượng
     đếm.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
   last_seen: '2026-11-08'
-  evidence: 1
+  evidence: 2
 - id: write-012
   step: write
   rule: Mức phạt và quy định pháp lý phải dẫn văn bản gốc (số nghị định/luật, điều,
     khoản) kèm quote nguyên văn; không dựa duy nhất vào một bài báo.
   why: Mức phạt chỉ có một nguồn báo tier 2, không đạt luật cứng về nguồn.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
   last_seen: '2026-11-08'
-  evidence: 1
+  evidence: 2
 - id: write-013
   step: write
   rule: Số liệu chia theo nhóm (vùng, bậc, quy mô) thì thẻ hiện đủ mọi nhóm, lời đọc
@@ -144,16 +144,69 @@ candidates:
     mà không có số.
   why: Thẻ 'Tăng theo' không có số, gần như lặp câu đọc.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
   last_seen: '2026-11-08'
-  evidence: 1
+  evidence: 2
 - id: write-015
   step: write
   rule: Không đặt cutout chung chung (văn bản, con dấu, giấy tờ) trùng ý với ảnh chụp
     thật đã có; ưu tiên ảnh thật của nguồn.
   why: Cutout 'văn bản nghị định có dấu đỏ' dễ trông giả và trùng ý với ảnh chụp trang
     thật.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-016
+  step: write
+  rule: Mọi đoạn, kể cả hook mở đầu và lời kêu gọi cuối, phải có ít nhất một thẻ chữ/số
+    hoặc cutout trước khi nộp kịch bản.
+  why: Cổng check_write trả lại vì đoạn mở và đoạn kết không có thẻ hay cutout nào.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-017
+  step: write
+  rule: 'Sửa một fact thì sửa đồng bộ mọi chỗ chứa nó: title, hook_text, say, show,
+    nhãn thẻ; rà lại cả kịch bản trước khi nộp lại.'
+  why: Lỗi đã sửa ở title nhưng hook_text, s1 và thẻ vẫn giữ cách nói sai, nên bị
+    trả lại lần nữa.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-018
+  step: write
+  rule: Hook nói rõ ai phải làm gì và tác động đến tiền của hộ kinh doanh; không để
+    người nghe hiểu nhầm chủ thể.
+  why: Câu hook nghe như shop phải tự xử lý trong 1 ngày, và chưa nêu rủi ro tiền
+    bạc.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-019
+  step: write
+  rule: Mỗi ý chỉ nói một lần trong toàn bài; không lặp cùng con số hay cụm từ ở nhiều
+    đoạn, bỏ câu lạc khỏi mạch chính.
+  why: Ý '1 ngày làm việc' lặp lại 3 lần, lời kêu gọi cuối lặp ý, làm bài mất nhịp.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-08'
+  last_seen: '2026-11-08'
+  evidence: 1
+- id: write-020
+  step: write
+  rule: Lời kêu gọi cuối phải nêu cụ thể tên hồ sơ cần nộp, nộp ở đâu và việc cần
+    rà soát; giải thích một vế cho mọi thuật ngữ thuế dễ nghe nhầm.
+  why: Kết bài chỉ ghi 'nộp đủ hồ sơ' mà không nói hồ sơ gì. Các thuật ngữ 'chấm dứt
+    hiệu lực' và 'bù trừ' cũng chưa được giải thích.
   from_owner: false
   status: candidate
   first_seen: '2026-11-08'
