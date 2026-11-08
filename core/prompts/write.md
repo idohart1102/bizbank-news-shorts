@@ -15,5 +15,5 @@ Yêu cầu bắt buộc:
 - `visual`: mô tả hình cụ thể để tìm ảnh thật (ví dụ "ảnh chụp trang đầu Nghị định 398 trên baochinhphu.vn", "chủ tiệm tạp hóa quét mã QR thanh toán").
 - `source_ids` cho mọi đoạn có fact. `sources`: mỗi nguồn dùng tới có `quote` **trích nguyên văn** câu chứa số liệu/ngày đã dùng.
 - Số liệu, ngày hiệu lực, mức phạt **khớp nguyên văn nguồn**. Không suy đoán, không khuyên pháp lý/đầu tư chắc chắn ("nên hỏi kế toán/cơ quan thuế").
-- `cta`: một câu ngắn mời theo dõi kênh; không cần nguồn.
+- `cta`: một câu ngắn mời theo dõi kênh; không cần nguồn. `visual` của cta phải có chủ thể rõ (ví dụ "chủ shop cầm điện thoại xem tin"), không mô tả không gian trống.
 - Có "Cần sửa": sửa **đúng** từng lỗi, giữ phần đã ổn của "Bản trước".

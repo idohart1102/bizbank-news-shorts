@@ -32,7 +32,7 @@ schedule:                      # launchd com.idohart.news-video; ngoài lịch c
   - "19:00"
 episodes_per_run: 1
 budget:
-  vbee_chars_per_day: 20000    # TẠM khi test (Sếp cho dùng thoải mái); chạy lịch thật hạ về 3000 (2 tập x ~1.000 + dư)
+  vbee_chars_per_day: 0        # 0 = không giới hạn (Sếp 2026-11-08: bỏ hạn mức Vbee). Đặt số > 0 nếu muốn chặn lại
 publish:
   mode: outbox                 # outbox = xếp hàng chờ đấu nối API; sau: youtube/tiktok/facebook adapter
   platforms: [youtube_shorts, tiktok, facebook_reels]

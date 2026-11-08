@@ -17,3 +17,5 @@
 - 2026-11-08: Template mặc định: BizBank (`assets/template/overlay.png`, bản Sếp gửi ngày 2026-11-07, Drive `05 - BUSINESS/Bizbank`). Không dùng `Template 1.png`.
 - 2026-11-08: Template 2 BizBank (khung ảnh/video 4:3, 1080x810) thay template trước. Thẻ chữ/số, cutout, ảnh luôn nằm trong khung 4:3 kể cả khi phóng/lia; phóng vừa đủ theo độ phân giải ảnh gốc. Câu hook < 100 ký tự dưới khung. Ảnh sưu tầm ưu tiên ≥ 1080p (phủ khung 1080x810), ảnh nhỏ hơn chỉ khi không tìm được ảnh khác. Thẻ theo màu template (navy, lá mạ, xanh dương, bạc hà).
 - 2026-11-08: Version 1 của hệ thống đạt (video demo mã số thuế 06). Repo GitHub private `idohart1102/bizbank-news-shorts`, tag `v1.0.0`. Repo chỉ chứa hệ thống, không chứa video/dữ liệu tập.
+- 2026-11-08: Bỏ hạn mức ký tự Vbee (`budget.vbee_chars_per_day: 0`). Sổ chi tiêu vẫn ghi để theo dõi.
+- 2026-11-08: Luật QC thêm: cảnh lời kêu gọi theo dõi không được là ảnh trống không chủ thể; thẻ chữ/số không được kéo sang cảnh sau (render tự tắt thẻ ở cuối cảnh, validate_plan chặn cắt cảnh < 1,2s sau khi thẻ hiện).

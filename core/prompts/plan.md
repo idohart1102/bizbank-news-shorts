@@ -12,4 +12,6 @@ Luật (code kiểm, sai là bị trả lại):
 - `sfx`: id trong kho tiếng động cho chuyển cảnh: `whoosh`/`swoosh` ở đầu mỗi đoạn tin mới (trừ cảnh 0), `kaching` hợp tin về tiền, `sting` có thể dùng ở cảnh 0. Cách nhau ≥ 1,5 giây. Tiếng chuyển cảnh trùng lúc thẻ/cutout (< 1 giây) sẽ bị bỏ, nên tránh đặt ở đó.
 - `template`: "default". `fps`: 30. `duration`: bằng thời lượng audio. `music`: null (nhạc nền do hệ thống tự chọn và trộn nhỏ xuyên suốt).
 - Tiếng động: mỗi đoạn tin có ít nhất một sfx (chuyển đoạn hoặc nhấn số liệu).
+- **Thẻ không kéo sang cảnh sau**: thẻ tự tắt khi hết cảnh nó xuất hiện, nên cảnh chứa lúc thẻ hiện phải kéo dài ít nhất 1,2 giây sau lúc đó (code kiểm). Đặt điểm cắt cảnh trước lúc thẻ hiện hoặc sau khi thẻ đã đủ thời gian.
+- **Cảnh lời kêu gọi theo dõi (cta) không được là cảnh trống**: chọn ảnh có chủ thể rõ (người xem điện thoại, chủ shop tại quầy, cửa hàng đông khách…), không chọn tường/bàn/không gian trống.
 - Có "Cần sửa": sửa đúng từng lỗi.

@@ -123,6 +123,9 @@ class PlanRulesTest(unittest.TestCase):
         errors = checks.validate_plan(plan, segments, assets, {"sting-01": {}}, 6)
         self.assertTrue(any("dùng 2 lần" in e for e in errors), errors)
         self.assertFalse(any("s2 không có tiếng động" in e for e in errors), "đoạn cuối không bắt buộc sfx")
+        card = {"value": "5 triệu", "start": 1.5, "end": 4.0}
+        errors = checks.validate_plan(plan, segments, assets, {"sting-01": {}}, 6, cards=[card])
+        self.assertTrue(any("không được kéo sang cảnh sau" in e for e in errors), "cắt cảnh 0,5s sau khi thẻ hiện")
 
 
 class LessonsTest(Base):

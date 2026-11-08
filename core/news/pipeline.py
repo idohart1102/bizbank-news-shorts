@@ -65,7 +65,7 @@ def run(cfg, episode, until=None):
         if st["state"] == "done" and st.get("input_hash") == digest and outputs_exist(ctx, step):
             index += 1
             continue
-        if step.paid and cfg.enforce_budget:
+        if step.paid and cfg.enforce_budget and cfg.channel.get("budget", {}).get("vbee_chars_per_day", 0):
             budget = cfg.channel.get("budget", {}).get("vbee_chars_per_day", 0)
             need = len(ctx.ep.file("script_tts.txt").read_text(encoding="utf-8"))
             if budget and steps.chars_today(cfg) + need > budget:

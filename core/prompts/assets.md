@@ -10,6 +10,8 @@ Mỗi cảnh trong video dùng một ảnh riêng, **không dùng lại ảnh**,
 - `page_url`: trang chứa ảnh; `credit`: tên báo/cơ quan; `kind`: `real` (ảnh chụp) hoặc `doc` (ảnh văn bản, bảng, website).
 - Khung hiển thị là **4:3 ngang (1080×810)**. Ưu tiên ảnh ngang **độ phân giải cao: rộng ≥ 1920px** (tối thiểu phủ được 1080×810); lấy bản gốc lớn nhất của ảnh (không lấy thumbnail, ảnh thu nhỏ trong danh sách). Ảnh nhỏ hơn chỉ đưa vào khi không còn ảnh nào khác. Tránh ảnh có watermark to, ảnh chân dung lãnh đạo không liên quan, ảnh quảng cáo.
 
+Đoạn `cta` (lời mời theo dõi) cũng cần ảnh có **chủ thể rõ** (người dùng điện thoại xem video, chủ shop tại quầy, cửa hàng có khách), không lấy ảnh tường, bàn trống, không gian không người.
+
 `ai_prompt`: mô tả tiếng Anh cho ảnh minh họa dự phòng (ngang 4:3, phong cách ảnh chụp tài liệu, bối cảnh Việt Nam), **không** tái hiện người thật hay sự kiện cụ thể, không chữ trong ảnh. Đoạn `cta` có thể để candidates rỗng.
 
 **Cutout người** ("Người cần ảnh cutout"): với mỗi người, trả 2–4 `candidates` là ảnh báo chí thật của **đúng người đó** (ảnh chân dung hoặc nửa người, một mình, rõ mặt, nền càng đơn giản càng tốt) — hệ thống sẽ tách nền. Không lấy ảnh nhiều người, ảnh bị che, ảnh hoạt họa.

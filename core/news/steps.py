@@ -374,15 +374,39 @@ def simple_plan(ctx):
                            "asset": own[i % len(own)]["id"], "motion": motions[len(scenes) % len(motions)],
                            "headline": None, "highlight_words": [], "sfx": sfx})
     scenes[0]["start"] = 0.0
+    hold_cards(ctx, scenes)
     return {"template": "default", "fps": ctx.cfg.video["fps"], "duration": scenes[-1]["end"], "scenes": scenes,
             "music": None}
 
 
+def hold_cards(ctx, scenes):
+    """Dời điểm cắt cảnh ra khỏi khoảng 1,2s sau khi thẻ hiện: lùi điểm cắt về trước thẻ nếu cảnh sau còn đủ dài,
+    không thì đẩy điểm cắt về sau (luật thẻ không kéo sang cảnh sau)."""
+    from . import timeline
+    seconds = scenes[-1]["end"]
+    cards, _ = timeline.events(ctx.json("script.json"), ctx.json("audio/voice.words.json"), seconds)
+    for card in cards:
+        for current, following in zip(scenes, scenes[1:]):
+            cut = current["end"]
+            if card["start"] < cut < card["start"] + checks.CARD_HOLD:
+                later = round(card["start"] + checks.CARD_HOLD, 3)
+                earlier = round(card["start"] - 0.05, 3)
+                if following["end"] - later >= 0.8:
+                    new = later
+                elif earlier - current["start"] >= 0.8:
+                    new = earlier
+                else:
+                    continue
+                current["end"] = following["start"] = new
+
+
 def check_plan(ctx):
+    from . import timeline
     sfx_index = json.loads((ROOT / "assets/sfx/index.json").read_text(encoding="utf-8"))
     seconds = checks.duration(ctx.ep.file("audio/voice.mp3"), ctx.cfg.bin("ffprobe"))
+    cards, _ = timeline.events(ctx.json("script.json"), ctx.json("audio/voice.words.json"), seconds)
     return checks.validate_plan(ctx.json("edit_plan.json"), ctx.json("audio/segments.json"), ctx.json("assets.json"),
-                                sfx_index, seconds)
+                                sfx_index, seconds, cards=cards)
 
 
 # --- 8. Render ----------------------------------------------------------------

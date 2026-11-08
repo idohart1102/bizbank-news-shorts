@@ -124,10 +124,18 @@ def segment_times(script, words):
     return result
 
 
-def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2.5):
+CARD_HOLD = 1.2  # thẻ cần đứng yên trên một cảnh ít nhất ngần này giây
+
+
+def validate_plan(plan, segments, assets, sfx_index, audio_seconds, max_static=2.5, cards=()):
     errors = validate_schema("edit_plan", plan)
     if errors:
         return errors
+    for card in cards:  # Sếp 2026-11-08: thẻ không kéo sang cảnh sau, nên cảnh phải đủ dài sau lúc thẻ hiện
+        scene = next((s for s in plan["scenes"] if s["start"] <= card["start"] < s["end"]), None)
+        if scene and scene["end"] - card["start"] < min(CARD_HOLD, card["end"] - card["start"]) - 0.01:
+            errors.append(f"Thẻ «{card['value']}» hiện lúc {card['start']:.2f}s nhưng cảnh cắt ở {scene['end']:.2f}s: "
+                          f"kéo dài cảnh tới ít nhất {card['start'] + CARD_HOLD:.2f}s (thẻ không được kéo sang cảnh sau)")
     scenes = sorted(plan["scenes"], key=lambda s: s["start"])
     asset_ids = {a["id"] for a in assets["items"] if a["kind"] != "cutout"}  # cutout là lớp riêng, không làm nền
     if scenes[0]["start"] > 0.05:

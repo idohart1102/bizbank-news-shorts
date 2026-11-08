@@ -131,6 +131,10 @@ def build_props(ctx):
         return {"start": round(start, 3), "src": stage(ROOT / "assets/sfx" / item["file"], f"sfx/{item['file']}"),
                 "volume": round(min(gain, 1.0), 3)}
 
+    for card in cards:  # Sếp 2026-11-08: thẻ không kéo sang cảnh sau
+        scene = next((s for s in scenes if s["start"] <= card["start"] < s["end"]), None)
+        if scene:
+            card["end"] = round(min(card["end"], scene["end"]), 3)
     event_sounds = [sound(e["sfx"], e["start"]) for e in cards + staged_cutouts]
     busy = [s["start"] for s in event_sounds]
     scene_sounds = [sound(s["sfx"], s["start"]) for s in plan["scenes"]  # tiếng chuyển cảnh trùng lúc thẻ/cutout thì bỏ
