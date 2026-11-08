@@ -19,3 +19,4 @@
 - 2026-11-08: Version 1 của hệ thống đạt (video demo mã số thuế 06). Repo GitHub private `idohart1102/bizbank-news-shorts`, tag `v1.0.0`. Repo chỉ chứa hệ thống, không chứa video/dữ liệu tập.
 - 2026-11-08: Bỏ hạn mức ký tự Vbee (`budget.vbee_chars_per_day: 0`). Sổ chi tiêu vẫn ghi để theo dõi.
 - 2026-11-08: Luật QC thêm: cảnh lời kêu gọi theo dõi không được là ảnh trống không chủ thể; thẻ chữ/số không được kéo sang cảnh sau (render tự tắt thẻ ở cuối cảnh, validate_plan chặn cắt cảnh < 1,2s sau khi thẻ hiện).
+- 2026-11-08: Repo `idohart1102/bizbank-news-shorts` chuyển sang **public** theo yêu cầu Sếp.
