@@ -72,6 +72,19 @@ def pick_music(cfg, ep, stage):
             "fade_in": conf.get("fade_in_s", 0.8), "fade_out": conf.get("fade_out_s", 1.5)}
 
 
+MAX_ZOOM, LOW_RES_ZOOM = 1.15, 1.04
+
+
+def zoom_limit(asset, box, fit):
+    """Mức phóng tối đa của chuyển động: vừa đủ để ảnh không bị vỡ.
+    Ảnh lớn hơn khung: phóng tới khi 1 điểm ảnh gốc = 1 điểm video (tối đa 1,15). Ảnh nhỏ hơn khung: chỉ 1,04."""
+    w, h = asset["width"], asset["height"]
+    fill = max(box["w"] / w, box["h"] / h) if fit == "cover" else min(box["w"] / w, box["h"] / h)
+    if fill >= 1.0:
+        return LOW_RES_ZOOM
+    return round(max(1.0, min(MAX_ZOOM, 1.0 / fill)), 3)
+
+
 def build_props(ctx):
     """Dựng props + thư mục public cho Remotion. Trả (props, public_dir, dùng_template_tạm)."""
     cfg, ep = ctx.cfg, ctx.ep
@@ -108,8 +121,9 @@ def build_props(ctx):
     for scene in sorted(plan["scenes"], key=lambda s: s["start"]):
         asset = assets[scene["asset"]]
         src = stage(ep.file(f"assets/{asset['file']}"), f"media/{Path(asset['file']).name}")
-        scenes.append({"start": scene["start"], "end": scene["end"], "src": src, "motion": scene["motion"],
-                       "fit": "contain" if asset["kind"] in ("doc", "chart") else "cover"})
+        fit = "contain" if asset["kind"] in ("doc", "chart") else "cover"
+        scenes.append({"start": scene["start"], "end": scene["end"], "src": src, "motion": scene["motion"], "fit": fit,
+                       "zoom_max": zoom_limit(asset, layout["media"], fit)})
 
     def sound(sfx_id, start):
         item = sfx_index[sfx_id]
@@ -127,6 +141,7 @@ def build_props(ctx):
              "duration": plan["duration"], "layout": layout,
              "overlay": stage(overlay, "overlay.png"), "voice": stage(ep.file("audio/voice.mp3"), "voice.mp3"),
              "scenes": scenes, "cards": cards, "cutouts": staged_cutouts, "sfx": sfx, "music": music,
+             "hook": script.get("hook_text"),
              "style": layout.get("brand", {})}
     write_json(ep.file("render/props.json"), props)
     return props, public, temporary

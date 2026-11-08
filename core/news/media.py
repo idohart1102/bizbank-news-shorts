@@ -19,7 +19,12 @@ from . import agents
 from .config import ROOT, ensure_online
 from .episode import write_json
 
-MIN_SIDE = 600
+MIN_SIDE = 600               # dưới mức này bỏ hẳn
+FRAME = (1080, 810)          # khung ảnh 4:3 của template: ảnh "chất lượng cao" phải phủ khung này không cần phóng
+
+
+def high_res(size):
+    return size[0] >= FRAME[0] and size[1] >= FRAME[1]
 UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"
 
 
@@ -178,16 +183,28 @@ def gather(ctx):
         sid = segment["id"]
         want = int(max(1, min(6, -(-times.get(sid, 0) // 3.5))))  # mỗi cảnh một ảnh riêng: ~1 ảnh/3,5 giây
         got = 0
+        pool = []  # tải hết ứng viên rồi ưu tiên ảnh phủ được khung 1080x810 (≈ ≥1080p); ảnh nhỏ hơn chỉ để bù
         for candidate in found.get(sid, {}).get("candidates", []):
-            if got >= want:
-                break
             try:
                 raw = download(candidate["image_url"], referer=candidate["page_url"])
             except Exception as error:
                 log.append(f"{sid}: bỏ {candidate['image_url'][:80]}: {error}")
                 continue
+            probe = ep.file(f"assets/.probe-{sid}.src")
+            probe.write_bytes(raw)
+            size = probe_image(probe, cfg.bin("ffprobe"))
+            probe.unlink(missing_ok=True)
+            if size and min(size) >= MIN_SIDE:
+                pool.append((not high_res(size), -size[0] * size[1], len(pool), raw, candidate))
+        for low, _, _, raw, candidate in sorted(pool, key=lambda item: item[:3]):
+            if got >= want:
+                break
+            if low and len([p for p in pool if not p[0]]) + got >= want:
+                break
             if add(raw, sid, candidate["kind"], candidate["page_url"], candidate["credit"], candidate["why"]):
                 got += 1
+            if low:
+                log.append(f"{sid}: dùng ảnh < 1080x810 vì không đủ ảnh lớn ({candidate['image_url'][:70]})")
         for source_id in segment["source_ids"]:  # dự phòng 1: ảnh đại diện bài nguồn của đoạn
             if got >= want or source_id not in sources:
                 continue
@@ -201,10 +218,10 @@ def gather(ctx):
                     log.append(f"{sid}: og:image lỗi: {error}")
         angles = ["", " Close-up detail shot.", " Wide establishing shot.", " Over-the-shoulder view.", " Top-down view."]
         for attempt in range(want - got):  # dự phòng 2: ảnh AI minh họa, mỗi ảnh một góc khác nhau
-            prompt = (found.get(sid, {}).get("ai_prompt") or f"Vertical documentary-style photo, Vietnam, {segment['visual']}")
+            prompt = (found.get(sid, {}).get("ai_prompt") or f"Landscape 4:3 documentary-style photo, Vietnam, {segment['visual']}")
             prompt += angles[attempt % len(angles)] + " No text, no logos, no real identifiable people."
             try:
-                if add(agents.generate_image(cfg, prompt), sid, "ai", None, "Ảnh minh họa AI", prompt):
+                if add(agents.generate_image(cfg, prompt, size="1536x1024"), sid, "ai", None, "Ảnh minh họa AI", prompt):
                     got += 1
             except Exception as error:
                 log.append(f"{sid}: ảnh AI lỗi: {error}")

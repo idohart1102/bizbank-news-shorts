@@ -5,6 +5,7 @@
  "additionalProperties": false,
  "required": [
   "title",
+  "hook_text",
   "segments",
   "sources"
  ],
@@ -167,6 +168,11 @@
     }
    },
    "minItems": 1
+  },
+  "hook_text": {
+   "type": "string",
+   "maxLength": 100,
+   "description": "câu hook < 100 ký tự hiện suốt video dưới khung ảnh, nói nội dung video"
   }
  }
 }

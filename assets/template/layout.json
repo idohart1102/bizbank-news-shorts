@@ -1,8 +1,10 @@
 {
-  "media":   {"x": 0,  "y": 0,   "w": 1080, "h": 880},
-  "cards":   {"x": 50, "y": 560, "w": 980,  "h": 280},
-  "cutout":  {"x": 0,  "y": 170, "w": 1080, "h": 710},
-  "avoid":   [{"x": 700, "y": 20, "w": 370, "h": 145}],
-  "safe_bottom": 880,
-  "brand": {"navy": "#0B2A6B", "lime": "#C3D82E", "cyan": "#22A6E8", "mint": "#A8E0D0"}
+  "media":  {"x": 0,  "y": 300, "w": 1080, "h": 810},
+  "clear":  {"x": 0,  "y": 340, "w": 1080, "h": 730},
+  "cards":  {"x": 44, "y": 360, "w": 992,  "h": 686},
+  "cutout": {"x": 0,  "y": 330, "w": 1080, "h": 780},
+  "hook":   {"x": 64, "y": 1215, "w": 952, "h": 320},
+  "avoid":  [],
+  "brand":  {"navy": "#081840", "navy_deep": "#061230", "lime": "#B8D03E", "blue": "#4AA0EA", "mint": "#B2E0CA"},
+  "note": "Template 2 BizBank: khung ảnh/video 4:3 (1080x810) tại y 300-1110; vùng hoàn toàn trong suốt y 340-1069, hai dải 40px trên/dưới là bóng mờ. Câu hook dưới ba vạch màu."
 }

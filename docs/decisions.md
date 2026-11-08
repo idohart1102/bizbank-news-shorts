@@ -15,3 +15,4 @@
 - 2026-11-08: Không làm phụ đề. Tập trung thẻ chữ/số cho thông tin quan trọng, mỗi thẻ xuất hiện kèm tiếng động.
 - 2026-11-08: Đa dạng cutout: người nổi tiếng được nhắc tên (ảnh thật tách nền, không AI vẽ người thật), sự vật quan trọng được nhắc tới (AI PNG trong suốt hoặc ảnh thật tách nền); xuất hiện kèm tiếng động.
 - 2026-11-08: Template mặc định: BizBank (`assets/template/overlay.png`, bản Sếp gửi ngày 2026-11-07, Drive `05 - BUSINESS/Bizbank`). Không dùng `Template 1.png`.
+- 2026-11-08: Template 2 BizBank (khung ảnh/video 4:3, 1080x810) thay template trước. Thẻ chữ/số, cutout, ảnh luôn nằm trong khung 4:3 kể cả khi phóng/lia; phóng vừa đủ theo độ phân giải ảnh gốc. Câu hook < 100 ký tự dưới khung. Ảnh sưu tầm ưu tiên ≥ 1080p (phủ khung 1080x810), ảnh nhỏ hơn chỉ khi không tìm được ảnh khác. Thẻ theo màu template (navy, lá mạ, xanh dương, bạc hà).
