@@ -1,20 +1,39 @@
 #!/bin/sh
-# Cài hệ thống trên máy mới: venv Python ghim version, kho sfx, git hook chặn dữ liệu sản phẩm.
-set -e
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# Python riêng qua uv; gói khóa hash; kiểm điều kiện trước khi cài.
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 cd "$ROOT"
-PY="${PYTHON:-python3.12}"
-command -v "$PY" >/dev/null || PY=python3
-[ -x .venv/bin/python ] || "$PY" -m venv .venv
-.venv/bin/pip install -q -r requirements.txt
-.venv/bin/python -I core/scripts/fetch_sfx.py
+for tool in git uv node npm ffmpeg ffprobe; do
+  command -v "$tool" >/dev/null 2>&1 || {
+    echo "Thiếu $tool. Xem phần cài máy mới trong README.md, rồi chạy lại bin/bootstrap." >&2
+    exit 1
+  }
+done
+node -e 'if (process.versions.node.split(".")[0] !== "22") { console.error("Cần Node.js 22.x. Dùng nvm install 22 && nvm use 22, rồi chạy lại bin/bootstrap."); process.exit(1); }'
+NPM_VERSION="$(npm --version)"
+case "$NPM_VERSION" in
+  [0-9]*.*) [ "${NPM_VERSION%%.*}" -ge 10 ] || { echo "Cần npm >= 10 (đi kèm Node 22)." >&2; exit 1; } ;;
+  *) echo "Không xác định được phiên bản npm." >&2; exit 1 ;;
+esac
+# Không chọn Python mặc định của máy. uv tự tải 3.12 nếu chưa có.
+PY_VERSION="$(cat .python-version)"
+if [ -e .venv ] || [ -L .venv ]; then
+  if ! [ -x .venv/bin/python ] || ! .venv/bin/python -I -c 'import sys; from pathlib import Path; assert sys.version_info[:2] == (3, 12); assert Path(".venv/.news-root").read_text().strip() == str(Path.cwd())' 2>/dev/null; then
+    mkdir -p .cache/venv-backups
+    BACKUP="$(mktemp -d .cache/venv-backups/old-XXXXXX)"
+    mv .venv "$BACKUP/venv"
+    echo "Đã giữ môi trường cũ tại $BACKUP/venv; tạo lại cho máy này."
+  fi
+fi
+[ -x .venv/bin/python ] || uv venv --python "$PY_VERSION" .venv
+uv pip sync --python .venv/bin/python --require-hashes requirements.lock
+printf '%s\n' "$ROOT" > .venv/.news-root
+.venv/bin/python -I core/news/runtime.py "$ROOT"
+uv pip check --python .venv/bin/python
 [ -f config/machine.yaml ] || cp config/machine.example.yaml config/machine.yaml
 [ -f .env ] || cp .env.example .env
-if [ -d .git ]; then
-  for hook in pre-commit pre-push; do
-    printf '#!/bin/sh\nexec "%s/.venv/bin/python" -I "%s/core/scripts/guard_repo.py" %s\n' "$ROOT" "$ROOT" "$hook" > ".git/hooks/$hook"
-    chmod +x ".git/hooks/$hook"
-  done
-fi
-[ -f core/remotion/package-lock.json ] && (cd core/remotion && npm ci --silent)
+.venv/bin/python -I core/scripts/install_hooks.py
+(cd core/remotion && npm ci --no-audit --no-fund)
+(cd core/remotion && ./node_modules/.bin/remotion browser ensure)
+.venv/bin/python -I core/scripts/fetch_sfx.py
 echo "Xong. Sửa config/machine.yaml và .env cho máy này, rồi chạy: bin/news doctor"

@@ -1,13 +1,19 @@
 {
   "name": "news-short-remotion",
   "private": true,
-  "description": "Composition NewsShort: media → chữ nhấn → phụ đề → overlay.png",
-  "scripts": {"render": "remotion render src/index.jsx NewsShort"},
+  "description": "Composition NewsShort: media → cutout → thẻ chữ/số → overlay.png",
+  "scripts": {
+    "render": "remotion render src/index.jsx NewsShort"
+  },
   "dependencies": {
     "@fontsource/be-vietnam-pro": "5.3.0",
     "@remotion/cli": "4.0.538",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "remotion": "4.0.538"
+  },
+  "engines": {
+    "node": ">=22 <23",
+    "npm": ">=10"
   }
 }

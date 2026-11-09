@@ -48,10 +48,13 @@ def ensure_online(what):
 
 class Config:
     def __init__(self, root=ROOT):
-        self.root = Path(root)
+        self.root = Path(root).resolve()
         load_env_file(self.root / ".env")
         self.channel = yaml.safe_load((self.root / "config" / "channel.yaml").read_text(encoding="utf-8"))
         machine_path = Path(os.environ.get("NEWS_MACHINE_CONFIG", self.root / "config" / "machine.yaml"))
+        if not machine_path.is_absolute():
+            machine_path = self.root / machine_path
+        self.machine_path = machine_path
         machine = yaml.safe_load(machine_path.read_text(encoding="utf-8")) if machine_path.exists() else {}
         self.machine = merge(MACHINE_DEFAULTS, machine)
         data_dir = Path(os.environ.get("NEWS_DATA_DIR", self.machine["data_dir"]))

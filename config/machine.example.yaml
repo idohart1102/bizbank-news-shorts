@@ -18,5 +18,5 @@ agents:
     fallback: codex_cli
     agentic_backend: codex_cli     # việc cần tác tử (tìm và tải ảnh)
     bin: codex
-bins: {ffmpeg: ffmpeg, ffprobe: ffprobe, node: node, npx: npx}
+bins: {ffmpeg: ffmpeg, ffprobe: ffprobe, node: node, npx: npx, npm: npm}
 notify: {macos: true}

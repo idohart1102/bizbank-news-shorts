@@ -65,7 +65,7 @@ def normalize(raw, target, ffmpeg="ffmpeg", ffprobe="ffprobe"):
 def cutout_tool():
     """Công cụ tách nền: Apple Vision (macOS, biên dịch từ core/tools/cutout.swift một lần). Máy khác: None."""
     binary, source = ROOT / ".cache" / "bin" / "cutout", ROOT / "core" / "tools" / "cutout.swift"
-    if platform.system() != "Darwin" or not shutil.which("swiftc"):
+    if platform.system() != "Darwin" or int(platform.mac_ver()[0].split(".")[0] or 0) < 14 or not shutil.which("swiftc"):
         return None
     if not binary.exists() or binary.stat().st_mtime < source.stat().st_mtime:
         binary.parent.mkdir(parents=True, exist_ok=True)

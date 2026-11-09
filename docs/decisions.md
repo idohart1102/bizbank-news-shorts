@@ -20,3 +20,5 @@
 - 2026-11-08: Bỏ hạn mức ký tự Vbee (`budget.vbee_chars_per_day: 0`). Sổ chi tiêu vẫn ghi để theo dõi.
 - 2026-11-08: Luật QC thêm: cảnh lời kêu gọi theo dõi không được là ảnh trống không chủ thể; thẻ chữ/số không được kéo sang cảnh sau (render tự tắt thẻ ở cuối cảnh, validate_plan chặn cắt cảnh < 1,2s sau khi thẻ hiện).
 - 2026-11-08: Repo `idohart1102/bizbank-news-shorts` chuyển sang **public** theo yêu cầu Sếp.
+
+- 2026-11-09: Theo yêu cầu Sếp, bộ cài dùng uv quản lý Python 3.12 riêng, khóa thư viện theo hash, kiểm Node 22/npm trước khi cài; thêm doctor --local, test cài mới macOS/Linux và phát hành v1.1.0. Windows dùng WSL2.

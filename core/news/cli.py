@@ -2,11 +2,8 @@
 import argparse
 import json
 import os
-import shutil
-import subprocess
 import sys
 import time
-import urllib.request
 
 from . import lessons, pipeline, steps
 from .config import Config
@@ -15,6 +12,8 @@ from .episode import Episode
 
 def find_episode(cfg, name):
     if name == "last":
+        if not cfg.data_dir.exists():
+            raise SystemExit("Chưa có tập nào")
         candidates = sorted((p for p in cfg.data_dir.iterdir() if (p / "state.json").exists()), key=lambda p: p.stat().st_mtime)
         if not candidates:
             raise SystemExit("Chưa có tập nào")
@@ -72,42 +71,8 @@ def cmd_lessons(cfg, args):
 
 
 def cmd_doctor(cfg, args):
-    ok = True
-
-    def report(name, good, detail=""):
-        nonlocal ok
-        ok = ok and good
-        print(f"{'✓' if good else '✗'} {name}" + (f": {detail}" if detail else ""))
-
-    for name in ("ffmpeg", "ffprobe", "node", "npx"):
-        report(name, bool(shutil.which(cfg.bin(name))), shutil.which(cfg.bin(name)) or "không thấy")
-    sfx = json.loads((cfg.root / "assets/sfx/index.json").read_text(encoding="utf-8"))
-    missing = [k for k, v in sfx.items() if not (cfg.root / "assets/sfx" / v["file"]).exists()]
-    report("kho sfx", not missing, f"thiếu {len(missing)} file, chạy core/scripts/fetch_sfx.py" if missing else f"{len(sfx)} file")
-    template = cfg.root / cfg.video["template"]
-    report("template overlay", template.exists(), str(template) if template.exists() else "chưa có (dùng overlay tạm)")
-    report("config/machine.yaml", (cfg.root / "config/machine.yaml").exists(), "dùng mặc định" if not (cfg.root / "config/machine.yaml").exists() else "")
-    tts = cfg.machine["tts"]
-    if tts["backend"] == "platform_tts":
-        try:
-            with urllib.request.urlopen(tts["platform_tts_url"] + "/health", timeout=5) as response:
-                health = json.loads(response.read())
-            report("tts", health.get("vbee_configured") and health.get("align_ready"), json.dumps(health))
-        except OSError as error:
-            report("tts", False, f"{tts['platform_tts_url']}: {error}")
-    for role, conf in cfg.machine["agents"].items():
-        binary = conf.get("bin")
-        if conf["backend"].endswith("_cli") or conf.get("fallback", "").endswith("_cli"):
-            report(f"agent {role} ({binary})", bool(shutil.which(binary or "")), shutil.which(binary or "") or "không thấy")
-        if conf["backend"] == "router":
-            try:
-                urllib.request.urlopen(conf["url"].rstrip("/") + "/models", timeout=5)
-                report(f"agent {role} router", True, conf["url"])
-            except OSError as error:
-                report(f"agent {role} router", False, str(error))
-    hook = cfg.root / ".git/hooks/pre-commit"
-    report("git hook guard_repo", hook.exists() and "guard_repo" in hook.read_text(), "chạy bin/bootstrap" if not hook.exists() else "")
-    sys.exit(0 if ok else 1)
+    from .doctor import check
+    sys.exit(0 if check(cfg, local=args.local) else 1)
 
 
 def main():
@@ -127,7 +92,8 @@ def main():
     feedback.add_argument("text")
     les = sub.add_parser("lessons", help="bài học")
     les.add_argument("action", choices=["show", "distill"])
-    sub.add_parser("doctor", help="kiểm máy đủ điều kiện chạy")
+    doctor = sub.add_parser("doctor", help="kiểm máy đủ điều kiện chạy")
+    doctor.add_argument("--local", action="store_true", help="chỉ kiểm cài đặt, không gọi TTS/AI/router")
     args = parser.parse_args()
     if getattr(args, "dry", False):
         os.environ["NEWS_DRY"] = "1"
