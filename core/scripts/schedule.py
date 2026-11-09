@@ -39,7 +39,6 @@ def generate(root, system):
         return '"' + value.replace('\\', '\\\\').replace('"', '\\"').replace('%', '%%') + '"'
     service = folder / 'bizbank-news-video.service'
     service.write_text('[Unit]\nDescription=BizBank news video\n[Service]\nType=oneshot\n'
-                       + 'WorkingDirectory=' + quote(str(root)) + '\n'
                        + ''.join('Environment=' + quote(k + '=' + v) + '\n' for k, v in env.items())
                        + 'ExecStart=:' + ' '.join(quote(c) for c in command) + '\n', encoding='utf-8')
     timer = folder / 'bizbank-news-video.timer'
