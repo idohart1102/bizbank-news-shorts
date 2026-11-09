@@ -1,0 +1,6 @@
+#!/bin/sh
+# TTS đóng gói, không phụ thuộc lệnh tts/Python toàn máy.
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+[ -x "$ROOT/.venv/bin/python" ] || { echo 'Chạy bin/bootstrap trước.' >&2; exit 1; }
+exec "$ROOT/.venv/bin/python" -I "$ROOT/core/tts/bin/tts" "$@"

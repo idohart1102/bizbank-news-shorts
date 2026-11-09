@@ -20,3 +20,7 @@ assets/template/overlay-temp.png
 core/remotion/node_modules/
 .cache/
 .remotion/
+
+# Dữ liệu dịch vụ TTS và cấu hình vận hành chỉ thuộc máy này.
+local/
+core/tts/data/

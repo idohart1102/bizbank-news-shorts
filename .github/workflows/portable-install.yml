@@ -33,7 +33,9 @@ jobs:
             brew install ffmpeg
           fi
       - name: Install from a clean checkout
-        run: bin/bootstrap
+        run: bin/bootstrap --with-tts --skip-tts-model
+      - name: Import platform aligner (no model download or paid call)
+        run: .venv-align/bin/python -c 'import platform; __import__("mlx_whisper" if platform.system() == "Darwin" and platform.machine() == "arm64" else "faster_whisper")'
       - name: Check local environment
         run: bin/news doctor --local
       - name: Test (includes a real Remotion render, no paid services)
@@ -41,5 +43,14 @@ jobs:
           NEWS_OFFLINE: '1'
           NEWS_NOTIFY: '0'
         run: .venv/bin/python -m unittest discover -s tests -v
+      - name: Validate generated schedule (does not enable jobs)
+        shell: bash
+        run: |
+          .venv/bin/python core/scripts/schedule.py
+          if [ "$RUNNER_OS" = Linux ]; then
+            systemd-analyze verify local/ops/bizbank-news-video.service local/ops/bizbank-news-video.timer
+          else
+            plutil -lint local/ops/vn.bizbank.news-video.plist
+          fi
       - name: Repository guard
         run: .venv/bin/python -I core/scripts/guard_repo.py pre-push

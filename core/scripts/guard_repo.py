@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-DATA_PREFIXES = ("episodes/", "publish/outbox/", "logs/", "lessons/events/", "lessons/metrics/")
+DATA_PREFIXES = ("episodes/", "publish/outbox/", "logs/", "lessons/events/", "lessons/metrics/", "local/", "core/tts/data/")
 ALLOWED = {"episodes/.gitkeep"}
 MEDIA = re.compile(r"\.(mp4|mov|mkv|webm|mp3|wav|m4a|aac|flac|ogg|jpg|jpeg|png|webp|gif|psd)$", re.I)
 MEDIA_ALLOWED = ("assets/template/", "tests/fixtures/")   # template của chủ kênh, fixture nhỏ

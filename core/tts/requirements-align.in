@@ -1,0 +1,3 @@
+# Apple Silicon: giữ MLX; Linux/Intel: CTranslate2 CPU, cùng dòng Whisper large-v3-turbo.
+mlx-whisper==0.4.3 ; sys_platform == 'darwin' and platform_machine == 'arm64'
+faster-whisper==1.2.1 ; sys_platform != 'darwin' or platform_machine != 'arm64'

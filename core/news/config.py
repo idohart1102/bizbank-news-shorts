@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 MACHINE_DEFAULTS = {
     "data_dir": "episodes",
-    "tts": {"backend": "platform_tts", "platform_tts_url": "http://127.0.0.1:8791"},
+    "tts": {"backend": "platform_tts", "bin": "bin/tts", "platform_tts_url": "http://127.0.0.1:8791"},
     "agents": {
         "claude": {"backend": "claude_cli", "bin": "claude", "model": "claude-opus-5-5"},
         "codex": {"backend": "router", "url": "http://127.0.0.1:20128/v1", "model": "cx/gpt-6.1-sol",

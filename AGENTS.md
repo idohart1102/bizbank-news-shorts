@@ -8,7 +8,7 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 | Claude Opus 5.5 | Chọn tin, viết kịch bản, duyệt kịch bản (phiên mới, không chấm bài mình viết), lên plan dựng (`edit_plan.json`), duyệt video, chốt bản cuối |
 | Codex `cx/gpt-6.1-sol` (qua 9router, lỗi thì Codex CLI) | Gom tin từ nguồn, đối chiếu tư liệu, tìm ảnh thật, tạo ảnh/asset minh họa, kiểm fact kịch bản |
 | Remotion | Dựng và render; PNG template của Sếp luôn nằm lớp trên cùng; không có phụ đề, thông tin quan trọng đi vào thẻ chữ/số và cutout |
-| `platform/tts` (provider Vbee) | Giọng đọc + mốc thời gian từng từ (canh thẻ/cutout). Không giữ key Vbee trong repo |
+| `bin/tts` / `core/tts` (provider Vbee) | Giọng đọc + mốc thời gian từng từ (canh thẻ/cutout). Không giữ key Vbee trong repo |
 | Kho `assets/sfx/` (Pixabay) | Tiếng chuyển cảnh, dùng lại mọi tập |
 | Sếp | Thiết kế template PNG, đăng YouTube, đổi quyết định trong `docs/decisions.md` |
 
@@ -20,7 +20,7 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 1. Đọc `docs/decisions.md` một lần mỗi phiên; mâu thuẫn thì `decisions.md` thắng.
 2. Mở đúng `core/skills/<skill>/SKILL.md` theo bảng, chỉ đọc các file skill nêu.
 3. Luồng đầy đủ: `core/standard/pipeline.md`. Lộ trình xây hệ thống, input/output từng bước: `docs/roadmap.md`.
-4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Máy mới: `bin/bootstrap` rồi `bin/news doctor`.
+4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Máy mới/cài lại/chuyển máy: đọc `docs/INSTALL.md` trước khi chạy; prompt bàn giao ở `docs/AI_SETUP_PROMPT.md`. TTS sạch ở `core/tts`; `bin/bootstrap --with-tts` cài đủ môi trường, chưa tự bật dịch vụ/lịch.
 5. Bài học: luật đã rút ra nằm ở `lessons/rules/<bước>.md`, bắt buộc tuân theo. Góp ý của Sếp: `bin/news feedback <tap> <bước> "<nội dung>"`.
 
 | Việc | Skill | Người làm |

@@ -9,7 +9,7 @@ video:
   template: assets/template/overlay.png
   layout: assets/template/layout.json
 tts:
-  service: platform/tts        # http://127.0.0.1:8791
+  service: bundled_tts         # bin/tts, source core/tts; URL ở machine.yaml
   provider: vbee
   voice: hn_female_ngochuyen_full_48k-fhg   # HN - Ngọc Huyền (Sếp chọn 2026-11-07)
   speed: 1.0
@@ -27,7 +27,7 @@ music:
   fade_in_s: 0.8
   fade_out_s: 1.5
 drive_folder: TODO
-schedule:                      # launchd com.idohart.news-video; ngoài lịch chạy tay: news run
+schedule:                      # chỉ khai báo; sinh/cài lịch theo docs/INSTALL.md
   - "10:30"
   - "19:00"
 episodes_per_run: 1

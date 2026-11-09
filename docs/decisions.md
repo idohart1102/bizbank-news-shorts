@@ -22,3 +22,5 @@
 - 2026-11-08: Repo `idohart1102/bizbank-news-shorts` chuyển sang **public** theo yêu cầu Sếp.
 
 - 2026-11-09: Theo yêu cầu Sếp, bộ cài dùng uv quản lý Python 3.12 riêng, khóa thư viện theo hash, kiểm Node 22/npm trước khi cài; thêm doctor --local, test cài mới macOS/Linux và phát hành v1.1.0. Windows dùng WSL2.
+
+- 2026-11-09: Sếp yêu cầu rà lại và hướng dẫn AI cài đầy đủ trên máy mới; chọn đưa source TTS sạch vào cùng repo. Dùng bin/tts, source core/tts; key/job/audio/model cache vẫn local. MLX Apple Silicon, faster-whisper CPU Linux/Intel. Lịch được sinh riêng và chỉ bật sau nghiệm thu, không mặc định có scheduler sau bootstrap.

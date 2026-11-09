@@ -126,6 +126,46 @@ class InstallTest(unittest.TestCase):
             self.assertEqual(hook.read_text(), first)
             self.assertTrue(os.access(hook, os.X_OK))
 
+    def test_schedule_files_use_channel_times_without_enabling_jobs(self):
+        import plistlib
+        sys.path.insert(0, str(ROOT / 'core/scripts'))
+        from schedule import generate
+        with tempfile.TemporaryDirectory(prefix='news schedule ') as tmp:
+            root = Path(tmp)
+            (root / 'config').mkdir()
+            (root / 'config/channel.yaml').write_text('schedule: ["10:30", "19:00"]\n')
+            paths = generate(root, 'macos')
+            data = plistlib.loads(paths[0].read_bytes())
+            self.assertEqual(data['StartCalendarInterval'], [{'Hour': 10, 'Minute': 30}, {'Hour': 19, 'Minute': 0}])
+            self.assertEqual(data['ProgramArguments'], [str(root.resolve() / 'bin/news'), 'run', '--trigger', 'schedule'])
+            paths = generate(root, 'linux')
+            self.assertIn('OnCalendar=*-*-* 19:00:00 Asia/Ho_Chi_Minh', paths[1].read_text())
+            self.assertFalse((root / '.config/systemd/user').exists())
+            (root / 'config/channel.yaml').write_text('schedule: ["25:00"]\n')
+            with self.assertRaises(ValueError):
+                generate(root, 'linux')
+
+    def test_tts_connection_uses_same_local_port_for_health_and_cli(self):
+        from news.voice import connection
+        cfg = Config()
+        cfg.machine['tts'] = {'backend': 'platform_tts', 'bin': 'custom-tts', 'platform_tts_url': 'http://localhost:8801/'}
+        binary, url, env = connection(cfg)
+        self.assertEqual(binary, 'custom-tts')
+        self.assertEqual(url, 'http://localhost:8801')
+        self.assertEqual(env['TTS_PORT'], '8801')
+
+    def test_tts_rejects_unimplemented_backend_or_remote_url(self):
+        from news.voice import connection
+        cfg = Config()
+        for conf in [
+            {'backend': 'vbee_direct'},
+            {'backend': 'platform_tts', 'platform_tts_url': 'http://example.com:8791'},
+            {'backend': 'platform_tts', 'platform_tts_url': 'http://127.0.0.1:8791/wrong'},
+        ]:
+            cfg.machine['tts'] = conf
+            with self.assertRaises(ValueError):
+                connection(cfg)
+
     def test_relative_repo_root_loads_its_machine_config(self):
         with tempfile.TemporaryDirectory(dir=ROOT) as tmp, mock.patch.dict(os.environ, {}, clear=False):
             os.environ.pop('NEWS_MACHINE_CONFIG', None)

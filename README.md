@@ -2,51 +2,47 @@
 
 Hệ thống tự động làm short tin tức Việt Nam (dưới 60 giây, 9:16) cho hộ kinh doanh và SME: gom tin → chọn → viết → duyệt + kiểm fact → giọng → ảnh → plan dựng → render → QC → gói → hàng chờ đăng.
 
-## Cài trên máy mới (macOS / Linux)
+## Cài đặt
 
-Windows: dùng WSL2 Ubuntu 24.04 và chạy các lệnh dưới đây trong WSL; chưa hỗ trợ PowerShell/CMD trực tiếp.
+**AI/người nhận repo trên máy mới: đọc [docs/INSTALL.md](docs/INSTALL.md) từ đầu tới cuối.** Có [prompt bàn giao AI](docs/AI_SETUP_PROMPT.md), tiêu chí nghiệm thu, cách cài macOS/Ubuntu/WSL2, TTS, tài khoản model/router, lịch và phục hồi.
 
-Cần Git, **uv**, **Node.js 22.x (kèm npm >= 10)**, FFmpeg/ffprobe. Không cần cài hoặc thay Python toàn máy: uv tạo Python **3.12.x** riêng theo `.python-version`. Thư viện khóa phiên bản và SHA-256 tại `requirements.lock`; `requirements.txt` là đầu vào để tạo lại khóa.
+Repo có source TTS sạch trong [core/tts](core/tts/README.md). Không kèm key, audio, job database hoặc cache model của máy cũ. Python 3.12 và Node 22 được quản lý riêng; không thay Python mặc định của thiết bị.
 
-- macOS có Homebrew: `brew install uv node@22 ffmpeg git`, sau đó `export PATH="$(brew --prefix node@22)/bin:$PATH"`.
-- Ubuntu/WSL2: cài Git và FFmpeg bằng `sudo apt-get update && sudo apt-get install -y git ffmpeg`, cài Node 22 qua nvm (`nvm install 22 && nvm use 22`).
-- uv nếu chưa có: theo [hướng dẫn chính thức](https://docs.astral.sh/uv/getting-started/installation/), rồi mở terminal mới hoặc thêm thư mục uv vào PATH.
-- Linux: dùng bản phân phối glibc >= 2.35 (khuyến nghị Ubuntu 24.04); Alpine/musl chưa được hỗ trợ. Remotion cần thư viện hệ thống cho Chrome Headless Shell; xem [hướng dẫn Linux chính thức](https://www.remotion.dev/docs/miscellaneous/linux-dependencies) nếu bootstrap/render báo thiếu thư viện `.so`.
+Sau khi cài Git, uv, Node 22 (npm >= 10), FFmpeg và Chrome libraries theo INSTALL:
 
 ```bash
 git clone https://github.com/idohart1102/bizbank-news-shorts.git
 cd bizbank-news-shorts
-bin/bootstrap
+bin/bootstrap --with-tts
 bin/news doctor --local
+bin/tts model status
+NEWS_OFFLINE=1 NEWS_NOTIFY=0 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-Bộ cài cần Internet để tải Python, thư viện, trình duyệt và âm thanh. Chạy lại được khi mạng lỗi; không tạo giọng hay gọi AI. Không chép `.venv`, `node_modules`, `.env`, `config/machine.yaml` từ máy khác.
-
-Tiếp theo sửa `config/machine.yaml` và `.env` trên máy nhận, cài/đăng nhập Claude CLI và Codex CLI, cấu hình 9router và kết nối dịch vụ `platform/tts` (Vbee + căn mốc từ). `platform/tts` là dịch vụ ngoài repo, người nhận phải tự triển khai/kết nối; bootstrap không cài dịch vụ này và không mang theo key. macOS 14+ cùng Xcode Command Line Tools hỗ trợ Apple Vision tách nền ảnh thật; Linux/WSL hoặc macOS cũ sẽ bỏ qua cutout nếu không có ảnh trong suốt dùng được.
+Các lệnh trên không tạo giọng trả phí. Chưa thể chạy thật cho tới khi cấu hình Vbee, Claude/Codex, gateway/model và TTS service. `--with-tts` tải model nhiều GB; nếu chỉ thử dựng dùng `bin/bootstrap`.
 
 ```bash
-bin/news doctor        # kiểm thêm dịch vụ và CLI; chưa cấu hình thì báo thiếu
-bin/news run --dry     # chạy dữ liệu mẫu, không tốn TTS/AI
-bin/news run           # chạy một tập thật; --resume last để tiếp tục
-bin/news status
-.venv/bin/python -m unittest discover -s tests -v
+bin/tts key set --provider vbee  # chủ tài khoản nhập tại terminal an toàn
+bin/tts serve                  # foreground; terminal khác kiểm status/doctor
+bin/news doctor
 ```
 
-## Nâng cấp và khắc phục lệch môi trường
+`doctor --local` chỉ kiểm môi trường local; `doctor` không chứng minh mọi model/quota. Lịch trong YAML chưa tự bật scheduler; làm bước 10 của INSTALL. Outbox chưa tự đăng nền tảng.
+
+## Nâng cấp
+
+Xem git status trước; không xóa thay đổi của người vận hành. Dừng lịch đang sở hữu trước khi sửa môi trường:
 
 ```bash
 git pull --ff-only
-bin/bootstrap
+bin/bootstrap --with-tts
 bin/news doctor --local
+bin/tts model status
 ```
 
-`bin/news` chỉ dùng `.venv` của dự án và dừng sớm nếu Python/thư viện sai phiên bản. Không sửa bằng cách cài gói vào Python hệ thống. Khi đổi máy/đường dẫn hoặc sai Python, bootstrap giữ môi trường cũ trong `.cache/venv-backups/`, rồi tạo lại; có thể xóa các bản sao sau khi xác nhận chạy tốt. Không ghi đè cấu hình máy hay `.env` đã có.
+Giữ `.env`, `config/machine.yaml`, `local/` trên máy. Không đưa chúng vào Git hoặc copy công khai. Môi trường sai/di chuyển được giữ ở `.cache/venv-backups` trước khi tạo lại. Khởi động lại dịch vụ và nạp lại lịch theo INSTALL nếu cấu hình/path thay đổi.
 
-Nếu báo Node sai phiên bản, dùng `nvm install 22 && nvm use 22`, rồi chạy lại bootstrap. Nếu thiếu FFmpeg/uv, cài công cụ được báo trong hướng dẫn trên. Nếu không tải được âm thanh, kiểm tra kết nối/CDN rồi chạy lại bootstrap. `doctor --local` kiểm cài đặt; `doctor` đầy đủ còn cần dịch vụ/tài khoản bên ngoài. Các CLI cần đăng nhập và hỗ trợ cờ lệnh trong `core/news/agents.py`; doctor chưa xác minh quyền sử dụng từng model.
-
-Hook Git được cài khi bootstrap chạy trong repo Git (kể cả worktree). Nếu đã có hook riêng, bộ cài giữ nguyên và báo cần tích hợp: gọi `.venv/bin/python -I core/scripts/guard_repo.py` trong pre-commit, thêm `pre-push` ở cuối lệnh trong hook pre-push; dùng đường dẫn tính từ `git rev-parse --show-toplevel`. Repo tải dạng ZIP không có hook đến khi `git init` và chạy bootstrap lại.
-
-Đổi thư viện: sửa `requirements.txt`, chạy `uv pip compile requirements.txt --python-version 3.12 --universal --generate-hashes -o requirements.lock`, chạy bootstrap và toàn bộ test. Đổi Node/Remotion: cập nhật `.node-version`, engines, package-lock và kiểm cả CI macOS/Linux. Không nâng bản khóa chỉ để bỏ qua thông báo lỗi.
+Đổi gói có chủ đích: sửa file đầu vào, tạo lại lock có hash, chạy bootstrap/test trước khi phát hành. Không bỏ hash hoặc nâng Python/package chỉ để né lỗi.
 
 
 ```

@@ -53,8 +53,8 @@ class Ctx:
             return []
         return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
 
-    def sh(self, *command, timeout=600):
-        out = subprocess.run([str(c) for c in command], capture_output=True, text=True, timeout=timeout)
+    def sh(self, *command, timeout=600, env=None):
+        out = subprocess.run([str(c) for c in command], capture_output=True, text=True, timeout=timeout, env=env)
         if out.returncode != 0:
             raise RuntimeError(f"{Path(str(command[0])).name} lỗi: {out.stderr.strip()[-400:]}")
         return out.stdout
@@ -229,14 +229,16 @@ def run_voice(ctx):
         fake_voice(ctx)
     if not ctx.cfg.dry:
         ensure_online("tạo giọng Vbee (tốn credit)")
+        from .voice import preflight
+        tts_bin, _, tts_env = preflight(ctx.cfg)
         tts = ctx.cfg.channel["tts"]
-        command = ["tts", "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
+        command = [tts_bin, "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
                    "--file", ctx.ep.file("script_tts.txt"), "--out", audio, "--project", tts["project"], "--srt"]
         if tts.get("pauses"):
             command += ["--pauses", ",".join(f"{k}={v}" for k, v in tts["pauses"].items())]
-        said = ctx.sh(*command, timeout=1800)
-        ctx.sh("tts", "align", "--audio", audio, "--text", ctx.ep.file("script_tts.txt"),
-               "--out", ctx.ep.file("audio/voice.srt"), "--words", ctx.ep.file("audio/voice.words.json"), timeout=1800)
+        said = ctx.sh(*command, timeout=1800, env=tts_env)
+        ctx.sh(tts_bin, "align", "--audio", audio, "--text", ctx.ep.file("script_tts.txt"),
+               "--out", ctx.ep.file("audio/voice.srt"), "--words", ctx.ep.file("audio/voice.words.json"), timeout=1800, env=tts_env)
         if "dùng lại kết quả cũ" in said:
             ctx.ep.log("giọng: dùng lại kết quả cũ của platform/tts, không tính tiền")
         else:

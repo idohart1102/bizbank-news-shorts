@@ -1,17 +1,18 @@
-# Cấu hình riêng của máy (chép thành config/machine.yaml, KHÔNG vào Git). Bỏ trống dòng nào thì dùng mặc định.
+# Cấu hình máy: xem docs/INSTALL.md. Bỏ hẳn khóa để dùng mặc định; không ghi null/rỗng.
 data_dir: episodes                 # nơi lưu dữ liệu các tập (không vào Git); NEWS_DATA_DIR ghi đè
 tts:
-  backend: platform_tts            # platform_tts: dịch vụ TTS dùng chung trên máy | vbee_direct: (G5) gọi Vbee trực tiếp, key trong .env
-  platform_tts_url: http://127.0.0.1:8791
+  backend: platform_tts            # backend duy nhất đã triển khai; cần CLI + dịch vụ local + aligner
+  bin: bin/tts                    # CLI đóng gói trong repo; không cài gói PyPI tên tts
+  platform_tts_url: http://127.0.0.1:8791 # cổng được truyền sang CLI bằng TTS_PORT
 agents:
   claude:
-    backend: claude_cli            # claude_cli | (sau) anthropic_api
+    backend: claude_cli            # đã hỗ trợ; anthropic_api chưa triển khai
     bin: claude
     model: claude-opus-5-5
   codex:
-    backend: router                # router: API kiểu OpenAI (9router...) | codex_cli
+    backend: router                # router hoặc codex_cli; ảnh AI vẫn cần router
     url: http://127.0.0.1:20128/v1
-    model: cx/gpt-6.1-sol
+    model: cx/gpt-6.1-sol           # tên dành cho router; codex_cli dùng cấu hình CLI của máy
     key_env: NINEROUTER_API_KEY    # không đặt thì đọc key đang bật trong ~/.9router/db/data.sqlite (chỉ đọc)
     key_db: ~/.9router/db/data.sqlite
     image_model: cx/gpt-image-2.6-sunburst

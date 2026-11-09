@@ -3,6 +3,15 @@
 set -eu
 ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
 cd "$ROOT"
+WITH_TTS=0
+DOWNLOAD_MODEL=1
+for arg in "$@"; do
+  case "$arg" in
+    --with-tts) WITH_TTS=1 ;;
+    --skip-tts-model) DOWNLOAD_MODEL=0 ;;
+    *) echo "Cách dùng: bin/bootstrap [--with-tts [--skip-tts-model]]" >&2; exit 1 ;;
+  esac
+done
 for tool in git uv node npm ffmpeg ffprobe; do
   command -v "$tool" >/dev/null 2>&1 || {
     echo "Thiếu $tool. Xem phần cài máy mới trong README.md, rồi chạy lại bin/bootstrap." >&2
@@ -17,15 +26,20 @@ case "$NPM_VERSION" in
 esac
 # Không chọn Python mặc định của máy. uv tự tải 3.12 nếu chưa có.
 PY_VERSION="$(cat .python-version)"
-if [ -e .venv ] || [ -L .venv ]; then
-  if ! [ -x .venv/bin/python ] || ! .venv/bin/python -I -c 'import sys; from pathlib import Path; assert sys.version_info[:2] == (3, 12); assert Path(".venv/.news-root").read_text().strip() == str(Path.cwd())' 2>/dev/null; then
-    mkdir -p .cache/venv-backups
-    BACKUP="$(mktemp -d .cache/venv-backups/old-XXXXXX)"
-    mv .venv "$BACKUP/venv"
-    echo "Đã giữ môi trường cũ tại $BACKUP/venv; tạo lại cho máy này."
+ensure_venv() {
+  ENV_PATH="$1"
+  if [ -e "$ENV_PATH" ] || [ -L "$ENV_PATH" ]; then
+    if ! [ -x "$ENV_PATH/bin/python" ] || ! "$ENV_PATH/bin/python" -I -c 'import sys; from pathlib import Path; assert sys.version_info[:2] == (3, 12); assert Path(sys.argv[1], ".news-root").read_text().strip() == str(Path.cwd())' "$ENV_PATH" 2>/dev/null; then
+      mkdir -p .cache/venv-backups
+      BACKUP="$(mktemp -d .cache/venv-backups/old-XXXXXX)"
+      mv "$ENV_PATH" "$BACKUP/venv"
+      echo "Đã giữ môi trường cũ tại $BACKUP/venv; tạo lại cho máy này."
+    fi
   fi
-fi
-[ -x .venv/bin/python ] || uv venv --python "$PY_VERSION" .venv
+  [ -x "$ENV_PATH/bin/python" ] || uv venv --python "$PY_VERSION" "$ENV_PATH"
+  printf '%s\n' "$ROOT" > "$ENV_PATH/.news-root"
+}
+ensure_venv .venv
 uv pip sync --python .venv/bin/python --require-hashes requirements.lock
 printf '%s\n' "$ROOT" > .venv/.news-root
 .venv/bin/python -I core/news/runtime.py "$ROOT"
@@ -36,4 +50,10 @@ uv pip check --python .venv/bin/python
 (cd core/remotion && npm ci --no-audit --no-fund)
 (cd core/remotion && ./node_modules/.bin/remotion browser ensure)
 .venv/bin/python -I core/scripts/fetch_sfx.py
+if [ "$WITH_TTS" = 1 ]; then
+  ensure_venv .venv-align
+  uv pip sync --python .venv-align/bin/python --require-hashes core/tts/requirements-align.lock
+  uv pip check --python .venv-align/bin/python
+  [ "$DOWNLOAD_MODEL" = 0 ] || bin/tts model download
+fi
 echo "Xong. Sửa config/machine.yaml và .env cho máy này, rồi chạy: bin/news doctor"

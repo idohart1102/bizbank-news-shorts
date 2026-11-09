@@ -70,25 +70,27 @@ def check(cfg, local=False):
             path = hook_dir / hook
             report(f'git hook {hook}', path.exists() and 'guard_repo.py' in path.read_text(encoding='utf-8'), 'chạy bin/bootstrap hoặc tích hợp hook theo README.md')
     if not local:
-        tts = cfg.machine['tts']
-        if tts['backend'] == 'platform_tts':
-            try:
-                with urllib.request.urlopen(tts['platform_tts_url'].rstrip('/') + '/health', timeout=5) as response:
-                    health = json.loads(response.read())
-                report('tts', health.get('vbee_configured') and health.get('align_ready'), 'Vbee + căn mốc từ')
-            except (OSError, ValueError) as error:
-                report('tts', False, str(error))
+        from .voice import preflight
+        try:
+            binary, url, _ = preflight(cfg)
+            report('tts CLI', True, binary + ' (say + align --words)')
+            with urllib.request.urlopen(url + '/health', timeout=5) as response:
+                health = json.loads(response.read())
+            report('tts service', health.get('service') == 'bizbank-news-tts' and health.get('vbee_configured') and health.get('align_ready'),
+                   'cần service=bizbank-news-tts, Vbee key và aligner; nếu cổng có dịch vụ khác, chọn cổng riêng')
+        except (OSError, ValueError) as error:
+            report('tts', False, str(error))
         for role, conf in cfg.machine['agents'].items():
             if any(conf.get(k, '').endswith('_cli') for k in ('backend', 'fallback', 'agentic_backend')):
                 binary = conf.get('bin', role)
                 report(f'agent {role}', bool(shutil.which(binary)), shutil.which(binary) or 'chưa cài/đăng nhập CLI')
-            if conf['backend'] == 'router':
+            if conf['backend'] == 'router' or role == 'codex':
                 try:
                     from .agents import router_key
                     request = urllib.request.Request(conf['url'].rstrip('/') + '/models',
                                                     headers={'Authorization': f'Bearer {router_key(conf)}'})
                     with urllib.request.urlopen(request, timeout=5):
-                        report(f'router {role}', True, conf['url'])
+                        report(f'router {role}', True, conf['url'] + ' (cần cả ảnh AI cho codex)')
                 except Exception as error:
                     # Không in response/secret của nhà cung cấp trong báo cáo máy.
                     report(f'router {role}', False, f'kiểm URL/key trong .env ({type(error).__name__})')

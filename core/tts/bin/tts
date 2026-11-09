@@ -1,0 +1,1091 @@
+#!/usr/bin/env python3
+"""API text-to-speech dùng chung, chạy tại 127.0.0.1, đi qua KingCong Studio hoặc Vbee.
+
+Chỉ dùng thư viện chuẩn. Tài liệu ở core/tts/README.md. API key nằm trong Keychain
+(macOS) hoặc file local quyền 0600 (Linux), không ghi vào log/DB; nội dung text cũng không được lưu.
+"""
+import argparse
+import concurrent.futures
+import getpass
+import hashlib
+import json
+import os
+import plistlib
+import re
+import runpy
+import shutil
+import sqlite3
+import subprocess
+import sys
+import threading
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+import uuid
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+REPO = ROOT.parents[1]
+INITIAL_ENV = dict(os.environ)
+# Dịch vụ tự đọc cấu hình riêng, không phụ thuộc shell hay repo video load .env.
+ENV_FILE = Path(os.environ.get('TTS_ENV_FILE', REPO / 'local/tts.env')).expanduser()
+if not ENV_FILE.is_absolute():
+    ENV_FILE = REPO / ENV_FILE
+if ENV_FILE.is_file():
+    for line in ENV_FILE.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if line and not line.startswith('#') and '=' in line:
+            key, value = line.split('=', 1)
+            os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+BASE_URL = os.environ.get("KINGCONG_BASE_URL", "https://api.kingcongstudio.com").rstrip("/")
+DATA_DIR = Path(os.environ.get("TTS_DATA_DIR", REPO / "local" / "tts")).expanduser()
+if not DATA_DIR.is_absolute():
+    DATA_DIR = REPO / DATA_DIR
+HOST = "127.0.0.1"
+PORT = int(os.environ.get("TTS_PORT", "8791"))
+POLL_INTERVAL = float(os.environ.get("TTS_POLL_INTERVAL", "2"))
+POLL_TIMEOUT = float(os.environ.get("TTS_POLL_TIMEOUT", "1800"))
+HTTP_TIMEOUT = float(os.environ.get("TTS_HTTP_TIMEOUT", "60"))
+MAX_CHARS = int(os.environ.get("TTS_MAX_CHARS", "100000"))
+WORKERS = 8
+KEYCHAIN_SERVICE = os.environ.get("TTS_KEYCHAIN_SERVICE", "bizbank-news-tts-kingcong")
+KEYCHAIN_ACCOUNT = "api-key"
+LAUNCHD_LABEL = "vn.bizbank.news-tts"
+VBEE_BASE_URL = os.environ.get("VBEE_BASE_URL", "https://api.vbee.vn").rstrip("/")
+VBEE_VOICES_URL = os.environ.get("VBEE_VOICES_URL", "https://vbee.vn/api/public/v1/voices")
+# Batch API của Vbee bắt buộc có webhookUrl nhưng dịch vụ chỉ nghe ở 127.0.0.1, nên kết quả
+# được lấy bằng cách hỏi Get Request. Tên miền .invalid không bao giờ phân giải được, nên
+# Vbee không gửi được kết quả (gồm link audio) tới bên thứ ba.
+VBEE_WEBHOOK_URL = os.environ.get("VBEE_WEBHOOK_URL", "https://idohart-tts.invalid/vbee-webhook")
+VBEE_KEYCHAIN_SERVICE = os.environ.get("TTS_VBEE_KEYCHAIN_SERVICE", "bizbank-news-tts-vbee")
+DEFAULT_VBEE_VOICE = "hn_female_ngochuyen_full_48k-fhg"  # HN - Ngọc Huyền
+VBEE_SPEED = (0.25, 1.9)
+ALIGN_PYTHON = Path(os.environ.get("TTS_ALIGN_PYTHON", REPO / ".venv-align" / "bin" / "python")).expanduser()
+if not ALIGN_PYTHON.is_absolute():
+    ALIGN_PYTHON = REPO / ALIGN_PYTHON
+ALIGN_SCRIPT = ROOT / "bin" / "align.py"
+ALIGN_STATE = runpy.run_path(str(ROOT / 'bin/align_state.py'))
+ALIGN_TIMEOUT = float(os.environ.get("TTS_ALIGN_TIMEOUT", "900"))
+USER_AGENT = "idohart-tts/1.0"
+
+PROVIDERS = {"kingcong", "elevenlabs", "minimax", "edge_tts", "kokoro", "vbee"}
+KINGCONG_PROVIDERS = PROVIDERS - {"vbee"}  # các engine đi qua KingCong Studio
+KINGCONG_MIN_CHARS = 100
+DEFAULT_KINGCONG_MODEL = "vieten_speech"
+DEFAULT_KINGCONG_VOICE = "BGC20Gf5f36lf17lw2Y1N"  # CD Team 2, theo tài liệu API v1.0
+RANGES = {"speed": (0.5, 2.0), "pitch": (0.5, 1.5), "vol": (0.1, 2.0)}
+VOICE_SETTINGS = ("stability", "similarity", "style")  # 0 đến 1, chỉ gửi khi được truyền
+ALLOWED_FIELDS = {
+    "text", "provider", "model_id", "voice_id", "voice_name",
+    "speed", "pitch", "vol", "export_srt", "project", "force", "pauses", *VOICE_SETTINGS,
+}
+AUDIO_TYPES = {".mp3": "audio/mpeg", ".wav": "audio/wav", ".ogg": "audio/ogg",
+               ".m4a": "audio/mp4", ".flac": "audio/flac"}
+
+# Vòng đời job:
+#   queued -> submitting -> polling -> downloading -> done
+# failed:    chắc chắn thất bại, gửi lại sẽ tạo job mới.
+# uncertain: yêu cầu đã gửi nhưng không rõ kết quả, có thể đã bị trừ credit.
+# stalled:   đã có task bên KingCong nhưng chưa lấy được kết quả, dùng /resume.
+IN_PROGRESS = ("queued", "submitting", "polling", "downloading")
+NEEDS_DECISION = ("uncertain", "stalled")
+
+
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Không theo redirect để API key không bị gửi sang host khác."""
+
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+API_OPENER = urllib.request.build_opener(NoRedirect)
+
+
+class ApiError(Exception):
+    def __init__(self, status, code, message, job=None):
+        super().__init__(message)
+        self.status, self.code, self.message, self.job = status, code, message, job
+
+
+class NetworkError(Exception):
+    """Không có phản hồi HTTP hợp lệ, không biết phía kia đã xử lý hay chưa."""
+
+
+class UpstreamError(Exception):
+    def __init__(self, status, payload):
+        super().__init__(f"KingCong trả HTTP {status}")
+        self.status, self.payload = status, payload
+
+    @property
+    def message(self):
+        detail = self.payload.get("message") or self.payload.get("error") or self.payload.get("detail")
+        return f"KingCong trả HTTP {self.status}" + (f": {detail}" if detail else "")
+
+
+class VbeeError(UpstreamError):
+    @property
+    def message(self):
+        detail = self.payload.get("error")
+        if isinstance(detail, dict):
+            detail = " ".join(str(detail.get(k)) for k in ("code", "message") if detail.get(k))
+        detail = detail or self.payload.get("error_message") or self.payload.get("message")
+        return f"Vbee trả HTTP {self.status}" + (f": {detail}" if detail else "")
+
+
+def now():
+    return time.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+
+# --- API key ---------------------------------------------------------------
+
+
+def read_secret(service, account):
+    if sys.platform != 'darwin':
+        path = DATA_DIR / 'credentials.json'
+        try:
+            return json.loads(path.read_text(encoding='utf-8')).get(service + '/' + account)
+        except FileNotFoundError:
+            return None
+    try:
+        out = subprocess.run(
+            ["/usr/bin/security", "find-generic-password", "-s", service, "-a", account, "-w"],
+            capture_output=True, text=True, timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return (out.stdout.strip() or None) if out.returncode == 0 else None
+
+
+def write_secret(service, account, value, pattern, label):
+    if not re.fullmatch(pattern, value):
+        raise SystemExit(f"{label} không đúng định dạng.")
+    if sys.platform != 'darwin':
+        DATA_DIR.mkdir(mode=0o700, parents=True, exist_ok=True)
+        path = DATA_DIR / 'credentials.json'
+        data = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
+        data[service + '/' + account] = value
+        temporary = path.with_suffix('.tmp')
+        fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, 'w', encoding='utf-8') as handle:
+            json.dump(data, handle)
+        temporary.chmod(0o600)
+        temporary.replace(path)
+        return
+    # Chuyển qua stdin của `security -i` để key không xuất hiện trong danh sách tiến trình.
+    command = f'add-generic-password -U -s "{service}" -a "{account}" -w "{value}"\n'
+    out = subprocess.run(["/usr/bin/security", "-i"], input=command, capture_output=True, text=True, timeout=15)
+    if out.returncode != 0 or read_secret(service, account) != value:
+        raise SystemExit(f"Không ghi được {label} vào Keychain.")
+
+
+def get_key():
+    return os.environ.get("KINGCONG_API_KEY") or read_secret(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT)
+
+
+def set_key(key):
+    write_secret(KEYCHAIN_SERVICE, KEYCHAIN_ACCOUNT, key, r"[A-Za-z0-9_-]{16,256}", "API key")
+
+
+def get_vbee():
+    """(app_id, token) của Vbee, hoặc None nếu thiếu một trong hai."""
+    app_id = os.environ.get("VBEE_APP_ID") or read_secret(VBEE_KEYCHAIN_SERVICE, "app-id")
+    token = os.environ.get("VBEE_TOKEN") or read_secret(VBEE_KEYCHAIN_SERVICE, "token")
+    return (app_id, token) if app_id and token else None
+
+
+def set_vbee(app_id, token):
+    write_secret(VBEE_KEYCHAIN_SERVICE, "app-id", app_id, r"[A-Za-z0-9_-]{8,128}", "Vbee App ID")
+    write_secret(VBEE_KEYCHAIN_SERVICE, "token", token, r"[A-Za-z0-9_.-]{16,4096}", "Vbee token")
+
+
+# --- Gọi KingCong ----------------------------------------------------------
+
+
+def call_upstream(method, path, body=None, timeout=None):
+    key = get_key()
+    if not key:
+        raise ApiError(503, "no_api_key", "Chưa có API key. Chạy: tts key set")
+    headers = {"xi-api-key": key, "User-Agent": USER_AGENT, "Accept": "application/json"}
+    data = None
+    if body is not None:
+        data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    request = urllib.request.Request(BASE_URL + path, data=data, headers=headers, method=method)
+    try:
+        with API_OPENER.open(request, timeout=timeout or HTTP_TIMEOUT) as response:
+            return parse_json(response.read())
+    except urllib.error.HTTPError as error:
+        raise UpstreamError(error.code, parse_json(error.read())) from None
+    except OSError as error:  # gồm URLError, timeout, lỗi kết nối
+        raise NetworkError(str(error)) from None
+
+
+def call_vbee(method, url, body=None, timeout=None):
+    credentials = get_vbee()
+    if not credentials:
+        raise ApiError(503, "no_api_key", "Chưa có App ID/token Vbee. Chạy: tts key set --provider vbee")
+    app_id, token = credentials
+    headers = {"Authorization": f"Bearer {token}", "App-Id": app_id, "User-Agent": USER_AGENT,
+               "Accept": "application/json"}
+    data = None
+    if body is not None:
+        data = json.dumps(body, ensure_ascii=False).encode("utf-8")
+        headers["Content-Type"] = "application/json"
+    request = urllib.request.Request(url, data=data, headers=headers, method=method)
+    try:
+        with API_OPENER.open(request, timeout=timeout or HTTP_TIMEOUT) as response:
+            return parse_json(response.read())
+    except urllib.error.HTTPError as error:
+        raise VbeeError(error.code, parse_json(error.read())) from None
+    except OSError as error:
+        raise NetworkError(str(error)) from None
+
+
+def parse_json(raw):
+    try:
+        value = json.loads(raw.decode("utf-8"))
+    except ValueError:
+        return {}
+    return value if isinstance(value, dict) else {"data": value}
+
+
+def flatten(payload):
+    """Một số endpoint bọc kết quả trong `data`, số khác trả phẳng."""
+    inner = payload.get("data")
+    return {**payload, **inner} if isinstance(inner, dict) else payload
+
+
+def task_state(payload):
+    # `status: success` chỉ nói lời gọi thành công, không phải task đã xong.
+    state = payload.get("task_status")
+    if not state and payload.get("status") != "success":
+        state = payload.get("status")
+    return str(state).lower() if state else None
+
+
+def download(url, destination):
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme != "https" and parsed.netloc != urllib.parse.urlsplit(BASE_URL).netloc:
+        raise ValueError(f"URL tải file không hợp lệ: {parsed.scheme}://{parsed.netloc}")
+    # URL tải là file công khai, không gửi API key.
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+    temporary = destination.with_name(destination.name + ".part")
+    with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response, temporary.open("wb") as handle:
+        shutil.copyfileobj(response, handle)
+    if temporary.stat().st_size == 0:
+        temporary.unlink()
+        raise ValueError("File tải về rỗng")
+    temporary.replace(destination)
+
+
+# --- Lưu trữ job -----------------------------------------------------------
+
+SCHEMA = """
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY, request_hash TEXT NOT NULL, state TEXT NOT NULL,
+  project TEXT NOT NULL, provider TEXT NOT NULL, model_id TEXT, voice_id TEXT NOT NULL,
+  chars INTEGER NOT NULL, export_srt INTEGER NOT NULL, remote_task_id TEXT,
+  credit_cost REAL, new_balance REAL, audio_path TEXT, srt_path TEXT, error TEXT,
+  created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS jobs_hash ON jobs (request_hash, created_at);
+"""
+
+
+class Store:
+    def __init__(self, directory):
+        self.directory = Path(directory)
+        self.media = self.directory / "media"
+        self.media.mkdir(parents=True, exist_ok=True)
+        self.lock = threading.RLock()
+        self.db = sqlite3.connect(self.directory / "jobs.sqlite3", check_same_thread=False, isolation_level=None)
+        self.db.row_factory = sqlite3.Row
+        self.db.executescript(SCHEMA)
+
+    def get(self, job_id):
+        with self.lock:
+            row = self.db.execute("SELECT * FROM jobs WHERE id = ?", (job_id,)).fetchone()
+        return dict(row) if row else None
+
+    def update(self, job_id, **fields):
+        fields["updated_at"] = now()
+        names = ", ".join(f"{name} = ?" for name in fields)
+        with self.lock:
+            self.db.execute(f"UPDATE jobs SET {names} WHERE id = ?", (*fields.values(), job_id))
+
+    def by_state(self, *states):
+        marks = ",".join("?" * len(states))
+        with self.lock:
+            rows = self.db.execute(f"SELECT * FROM jobs WHERE state IN ({marks})", states).fetchall()
+        return [dict(row) for row in rows]
+
+    def latest_by_hash(self, request_hash):
+        with self.lock:
+            row = self.db.execute(
+                "SELECT * FROM jobs WHERE request_hash = ? AND state != 'failed' ORDER BY rowid DESC LIMIT 1",
+                (request_hash,),
+            ).fetchone()
+        return dict(row) if row else None
+
+    def insert(self, job):
+        columns = ", ".join(job)
+        marks = ", ".join("?" * len(job))
+        with self.lock:
+            self.db.execute(f"INSERT INTO jobs ({columns}) VALUES ({marks})", tuple(job.values()))
+
+    def usage(self):
+        with self.lock:
+            rows = self.db.execute(
+                "SELECT project, provider, COUNT(*) AS jobs, SUM(chars) AS chars, SUM(credit_cost) AS credits "
+                "FROM jobs WHERE state = 'done' GROUP BY project, provider ORDER BY project, provider"
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+
+# --- Xử lý job -------------------------------------------------------------
+
+
+def validate(payload):
+    if not isinstance(payload, dict):
+        raise ApiError(400, "invalid_request", "Body phải là JSON object")
+    unknown = set(payload) - ALLOWED_FIELDS
+    if unknown:
+        raise ApiError(400, "invalid_request", f"Trường không hỗ trợ: {', '.join(sorted(unknown))}")
+    text = payload.get("text")
+    if not isinstance(text, str) or not text.strip():
+        raise ApiError(400, "invalid_request", "Thiếu text")
+    if len(text) > MAX_CHARS:
+        raise ApiError(400, "text_too_long", f"text dài {len(text)} ký tự, vượt giới hạn {MAX_CHARS}")
+    provider = payload.get("provider", "kingcong")
+    if provider not in PROVIDERS:
+        raise ApiError(400, "invalid_request", f"provider phải thuộc: {', '.join(sorted(PROVIDERS))}")
+    if provider == "vbee":
+        validate_vbee(payload)
+    elif payload.get("pauses") is not None:
+        raise ApiError(400, "invalid_request", "pauses chỉ dùng với provider vbee")
+    if provider == "kingcong" and len(text) < KINGCONG_MIN_CHARS:
+        raise ApiError(400, "text_too_short", f"Engine kingcong cần ít nhất {KINGCONG_MIN_CHARS} ký tự")
+    voice_id = payload.get("voice_id") or {"kingcong": DEFAULT_KINGCONG_VOICE, "vbee": DEFAULT_VBEE_VOICE}.get(provider)
+    if not voice_id:
+        raise ApiError(400, "invalid_request", f"provider {provider} cần voice_id")
+    if not isinstance(voice_id, str) or not re.fullmatch(r"[A-Za-z0-9_.:-]{1,128}", voice_id):
+        raise ApiError(400, "invalid_request", "voice_id không hợp lệ")
+    model_id = payload.get("model_id") or (DEFAULT_KINGCONG_MODEL if provider == "kingcong" else None)
+    for name in ("model_id", "voice_name", "project"):
+        value = payload.get(name)
+        if value is not None and not isinstance(value, str):
+            raise ApiError(400, "invalid_request", f"{name} phải là chuỗi")
+    settings = {}
+    for name, (low, high) in RANGES.items():
+        if provider == "vbee" and name == "speed":
+            low, high = VBEE_SPEED
+        value = payload.get(name, 1.0)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not low <= value <= high:
+            raise ApiError(400, "invalid_request", f"{name} phải trong khoảng {low} đến {high}")
+        settings[name] = float(value)
+    for name in VOICE_SETTINGS:
+        value = payload.get(name)
+        if value is None:
+            continue
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not 0 <= value <= 1:
+            raise ApiError(400, "invalid_request", f"{name} phải trong khoảng 0 đến 1")
+        settings[name] = float(value)
+    for name in ("export_srt", "force"):
+        if not isinstance(payload.get(name, False), bool):
+            raise ApiError(400, "invalid_request", f"{name} phải là true hoặc false")
+    return {
+        "text": text, "provider": provider, "model_id": model_id, "voice_id": voice_id,
+        "voice_name": payload.get("voice_name"), "export_srt": payload.get("export_srt", False),
+        "project": payload.get("project") or "unknown", "force": payload.get("force", False),
+        "pauses": validate_pauses(payload.get("pauses")), **settings,
+    }
+
+
+# Ngắt nghỉ của Vbee (clientPause, giây): tên ngắn → (tên Vbee, nhỏ nhất, lớn nhất).
+VBEE_PAUSES = {"sentence": ("sentenceBreak", 0.1, 10), "major": ("majorBreak", 0.1, 10),
+               "medium": ("mediumBreak", 0.1, 10), "paragraph": ("paragraphBreak", 0.0, 10)}
+
+
+def validate_pauses(value):
+    if value is None:
+        return None
+    if not isinstance(value, dict) or set(value) - set(VBEE_PAUSES):
+        raise ApiError(400, "invalid_request", f"pauses phải là object với khóa: {', '.join(VBEE_PAUSES)}")
+    out = {}
+    for name, number in value.items():
+        _, low, high = VBEE_PAUSES[name]
+        if isinstance(number, bool) or not isinstance(number, (int, float)) or not low <= number <= high:
+            raise ApiError(400, "invalid_request", f"pauses.{name} phải trong khoảng {low} đến {high} giây")
+        out[name] = float(number)
+    return dict(sorted(out.items()))
+
+
+def validate_vbee(payload):
+    """Vbee không có pitch, vol và thông số kiểu ElevenLabs: từ chối thay vì âm thầm bỏ qua."""
+    for name in ("model_id", "voice_name", *VOICE_SETTINGS):
+        if payload.get(name) is not None:
+            raise ApiError(400, "invalid_request", f"Vbee không hỗ trợ {name}")
+    for name in ("pitch", "vol"):
+        if payload.get(name, 1.0) != 1.0:
+            raise ApiError(400, "invalid_request", f"Vbee không hỗ trợ {name}")
+    speed = payload.get("speed", 1.0)
+    low, high = VBEE_SPEED
+    if isinstance(speed, (int, float)) and not isinstance(speed, bool) and not low <= speed <= high:
+        raise ApiError(400, "invalid_request", f"speed của Vbee phải trong khoảng {low} đến {high}")
+
+
+class Service:
+    def __init__(self, store):
+        self.store = store
+        self.pool = concurrent.futures.ThreadPoolExecutor(WORKERS, thread_name_prefix="tts-job")
+        # Text chỉ giữ trong RAM để căn phụ đề Vbee, không ghi xuống đĩa.
+        self.texts = {}
+
+    def recover(self):
+        """Khôi phục sau khi dịch vụ bị ngắt mà không gửi lại yêu cầu tính tiền."""
+        for job in self.store.by_state("queued"):
+            self.store.update(job["id"], state="failed", error="Dịch vụ dừng trước khi gửi, chưa bị trừ credit")
+        for job in self.store.by_state("submitting"):
+            self.store.update(job["id"], state="uncertain", error="Dịch vụ dừng khi đang gửi, có thể đã bị trừ credit")
+        for job in self.store.by_state("polling", "downloading"):
+            self.pool.submit(self.track, job["id"])
+
+    def create(self, payload):
+        request = validate(payload)
+        identity = {name: request[name] for name in
+                    ("text", "provider", "model_id", "voice_id", "speed", "pitch", "vol", "export_srt")}
+        if request["provider"] == "vbee":
+            del identity["export_srt"]  # SRT của Vbee tạo tại máy, không đổi audio, không tính tiền
+        identity.update({name: request[name] for name in VOICE_SETTINGS if name in request})
+        if request["pauses"]:
+            identity["pauses"] = request["pauses"]  # chỉ thêm khi có, để mã băm yêu cầu cũ không đổi
+        request_hash = hashlib.sha256(json.dumps(identity, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+        with self.store.lock:  # kiểm tra và tạo phải liền nhau để không gửi trùng
+            if not request["force"]:
+                previous = self.store.latest_by_hash(request_hash)
+                if previous:
+                    if previous["state"] in NEEDS_DECISION:
+                        raise ApiError(
+                            409, "needs_decision",
+                            f"Yêu cầu giống hệt đang ở trạng thái {previous['state']}. Kiểm tra credit, "
+                            "rồi dùng /resume nếu stalled hoặc gửi force=true để tạo mới và chấp nhận tính tiền lại",
+                            previous,
+                        )
+                    if previous["state"] in IN_PROGRESS:
+                        if request["export_srt"] and previous["provider"] == "vbee":
+                            self.texts.setdefault(previous["id"], request["text"])
+                            self.store.update(previous["id"], export_srt=1)
+                        return self.store.get(previous["id"]), True
+                    if self.files_exist(previous):
+                        if request["export_srt"] and previous["provider"] == "vbee" and not previous["srt_path"]:
+                            self.store.update(previous["id"], state="downloading", export_srt=1, error=None)
+                            self.pool.submit(self.make_srt, previous["id"], request["text"])
+                            return self.store.get(previous["id"]), True
+                        return previous, True
+            job_id = uuid.uuid4().hex
+            stamp = now()
+            self.store.insert({
+                "id": job_id, "request_hash": request_hash, "state": "queued", "project": request["project"],
+                "provider": request["provider"], "model_id": request["model_id"], "voice_id": request["voice_id"],
+                "chars": len(request["text"]), "export_srt": int(request["export_srt"]),
+                "created_at": stamp, "updated_at": stamp,
+            })
+        if request["provider"] == "vbee" and request["export_srt"]:
+            self.texts[job_id] = request["text"]
+        self.pool.submit(self.submit_and_track, job_id, request)
+        return self.store.get(job_id), False
+
+    @staticmethod
+    def files_exist(job):
+        if job["state"] != "done" or not job["audio_path"] or not os.path.exists(job["audio_path"]):
+            return False
+        return not job["srt_path"] or os.path.exists(job["srt_path"])
+
+    def resume(self, job_id):
+        job = self.store.get(job_id)
+        if not job:
+            raise ApiError(404, "not_found", "Không có job này")
+        if job["state"] != "stalled":
+            raise ApiError(409, "not_resumable", f"Job đang ở trạng thái {job['state']}", job)
+        self.store.update(job_id, state="polling", error=None)
+        self.pool.submit(self.track, job_id)
+        return self.store.get(job_id)
+
+    def submit_and_track(self, job_id, request):
+        try:
+            if self.submit(job_id, request):
+                self.track(job_id)
+        except Exception as error:  # luồng nền không được chết im lặng
+            self.store.update(job_id, state="uncertain", error=f"Lỗi nội bộ khi gửi: {error}")
+
+    def submit(self, job_id, request):
+        if request["provider"] == "vbee":
+            return self.submit_vbee(job_id, request)
+        body = {name: request[name] for name in ("text", "provider", "speed", "pitch", "vol", "export_srt")}
+        body.update({name: request[name] for name in VOICE_SETTINGS if name in request})
+        for name in ("model_id", "voice_name"):
+            if request[name]:
+                body[name] = request[name]
+        self.store.update(job_id, state="submitting")
+        path = "/v1/text-to-speech/" + urllib.parse.quote(request["voice_id"], safe="")
+        try:
+            payload = flatten(call_upstream("POST", path, body))
+        except ApiError as error:
+            self.store.update(job_id, state="failed", error=error.message)
+            return False
+        except UpstreamError as error:
+            self.store.update(job_id, state="failed", error=error.message)
+            return False
+        except NetworkError as error:
+            # Không tự gửi lại: yêu cầu có thể đã tới nơi và đã bị trừ credit.
+            self.store.update(job_id, state="uncertain", error=f"Mất kết nối khi gửi: {error}")
+            return False
+        task_id = payload.get("task_id")
+        if not task_id:
+            self.store.update(job_id, state="uncertain", error="KingCong trả 200 nhưng không có task_id")
+            return False
+        self.store.update(
+            job_id, state="polling", remote_task_id=str(task_id),
+            credit_cost=payload.get("credit_cost"), new_balance=payload.get("new_balance"),
+        )
+        return True
+
+    def submit_vbee(self, job_id, request):
+        body = {"text": request["text"], "voiceCode": request["voice_id"], "mode": "async",
+                **({"clientPause": {VBEE_PAUSES[k][0]: v for k, v in request["pauses"].items()}} if request["pauses"] else {}),
+                "outputFormat": "mp3", "bitrate": 128, "speed": request["speed"], "webhookUrl": VBEE_WEBHOOK_URL}
+        self.store.update(job_id, state="submitting")
+        try:
+            payload = call_vbee("POST", VBEE_BASE_URL + "/v1/tts", body)
+        except (ApiError, UpstreamError) as error:
+            self.store.update(job_id, state="failed", error=error.message)
+            return False
+        except NetworkError as error:
+            self.store.update(job_id, state="uncertain", error=f"Mất kết nối khi gửi: {error}")
+            return False
+        task_id = payload.get("requestId") or payload.get("request_id")
+        if not task_id:
+            self.store.update(job_id, state="uncertain", error="Vbee trả 200 nhưng không có requestId")
+            return False
+        self.store.update(job_id, state="polling", remote_task_id=str(task_id))
+        return True
+
+    def poll_vbee(self, job):
+        """Trả (state, payload) theo cách gọi của KingCong để dùng chung vòng hỏi."""
+        url = VBEE_BASE_URL + "/v1/tts/requests/" + urllib.parse.quote(job["remote_task_id"], safe="")
+        payload = call_vbee("GET", url)
+        state = str(payload.get("status") or "").upper()
+        if state == "COMPLETED":
+            return "done", {"audio_url": payload.get("audioLink") or payload.get("audio_link")}
+        if state == "FAILED":
+            detail = payload.get("error_message") or payload.get("error") or "không rõ lý do"
+            return "failed", {"error": f"Vbee báo lỗi: {detail}"}
+        return None, payload
+
+    def track(self, job_id):
+        try:
+            self.poll_until_done(job_id)
+        except Exception as error:
+            self.store.update(job_id, state="stalled", error=f"Lỗi nội bộ khi theo dõi: {error}")
+
+    def poll_until_done(self, job_id):
+        job = self.store.get(job_id)
+        path = "/v1/task/" + urllib.parse.quote(job["remote_task_id"], safe="")
+        vbee = job["provider"] == "vbee"
+        deadline = time.monotonic() + POLL_TIMEOUT
+        last_error = None
+        while time.monotonic() < deadline:
+            try:
+                if vbee:
+                    state, payload = self.poll_vbee(job)
+                else:
+                    payload = flatten(call_upstream("GET", path))
+                    state = task_state(payload)
+            except (NetworkError, ApiError) as error:
+                last_error = str(error)
+            except UpstreamError as error:
+                if error.status == 404:
+                    self.store.update(job_id, state="failed", error=error.message)
+                    return
+                last_error = error.message
+            else:
+                if state in ("done", "completed"):
+                    self.finish(job_id, payload)
+                    return
+                if state == "failed":
+                    detail = payload.get("error") or payload.get("message") or "không rõ lý do"
+                    message = detail if vbee else f"KingCong báo lỗi: {detail}"
+                    self.store.update(job_id, state="failed", error=message)
+                    return
+            time.sleep(POLL_INTERVAL)
+        suffix = f"; lỗi gần nhất: {last_error}" if last_error else ""
+        self.store.update(job_id, state="stalled", error=f"Hết {POLL_TIMEOUT:.0f} giây vẫn chưa xong{suffix}")
+
+    def finish(self, job_id, payload):
+        job = self.store.get(job_id)
+        audio_url = payload.get("audio_url")
+        if not audio_url:
+            self.store.update(job_id, state="stalled", error="Task đã xong nhưng không có audio_url")
+            return
+        self.store.update(job_id, state="downloading", credit_cost=payload.get("credit_cost", job["credit_cost"]))
+        suffix = Path(urllib.parse.urlsplit(audio_url).path).suffix.lower()
+        audio_path = self.store.media / f"{job_id}{suffix if suffix in AUDIO_TYPES else '.mp3'}"
+        srt_url = payload.get("srt_url")
+        srt_path = self.store.media / f"{job_id}.srt" if srt_url else None
+        try:
+            download(audio_url, audio_path)
+            if srt_path:
+                download(srt_url, srt_path)
+        except (OSError, ValueError) as error:
+            self.store.update(job_id, state="stalled", error=f"Chưa tải được file: {error}")
+            return
+        if job["provider"] == "vbee":
+            self.store.update(job_id, audio_path=str(audio_path))
+            if job["export_srt"]:
+                self.make_srt(job_id, self.texts.pop(job_id, None))
+            else:
+                self.store.update(job_id, state="done", error=None)
+            return
+        error = "Đã yêu cầu SRT nhưng KingCong không trả srt_url" if job["export_srt"] and not srt_path else None
+        self.store.update(job_id, state="done", audio_path=str(audio_path),
+                          srt_path=str(srt_path) if srt_path else None, error=error)
+
+    def make_srt(self, job_id, text):
+        """Vbee không trả phụ đề: căn chữ gốc với audio bằng Whisper tại máy. Lỗi ở đây
+        không làm mất audio đã trả tiền; job vẫn done, kèm lỗi để chạy `tts align` sau."""
+        job = self.store.get(job_id)
+        srt_path = self.store.media / f"{job_id}.srt"
+        if text is None:
+            error = "Chưa tạo SRT vì dịch vụ khởi động lại và không giữ text. Chạy: tts align"
+        else:
+            error = run_align(Path(job["audio_path"]), text, srt_path)
+        self.store.update(job_id, state="done", srt_path=str(srt_path) if srt_path.exists() else None, error=error)
+
+
+def run_align(audio_path, text, srt_path):
+    """Trả None nếu thành công, ngược lại là thông báo lỗi."""
+    if not ALIGN_PYTHON.exists():
+        return f"Chưa có venv căn phụ đề tại {ALIGN_PYTHON}. Xem README, mục Vbee"
+    text_path = srt_path.with_name(srt_path.stem + ".txt.part")
+    try:
+        text_path.write_text(text, encoding="utf-8")
+        # launchd chạy với PATH tối giản; Whisper cần ffmpeg để đọc audio.
+        env = dict(os.environ)
+        out = subprocess.run([str(ALIGN_PYTHON), "-I", str(ALIGN_SCRIPT), "--audio", str(audio_path),
+                              "--text", str(text_path), "--out", str(srt_path)],
+                             capture_output=True, text=True, timeout=ALIGN_TIMEOUT, env=env)
+    except (OSError, subprocess.SubprocessError) as error:
+        return f"Căn phụ đề lỗi: {error}"
+    finally:
+        text_path.unlink(missing_ok=True)  # không giữ text trên đĩa
+    if out.returncode not in (0, 3) or not srt_path.exists():
+        return "Căn phụ đề lỗi: " + (out.stderr.strip().splitlines() or ["không rõ"])[-1][:300]
+    if out.returncode == 3:
+        return "SRT đã tạo nhưng khớp thấp: " + out.stderr.strip()[:300]
+    return None
+
+
+def public_job(job, reused=None):
+    result = {name: job[name] for name in (
+        "id", "state", "project", "provider", "model_id", "voice_id", "chars", "remote_task_id",
+        "credit_cost", "new_balance", "error", "created_at", "updated_at", "audio_path", "srt_path")}
+    result["export_srt"] = bool(job["export_srt"])
+    result["audio_url"] = f"/v1/jobs/{job['id']}/audio" if job["audio_path"] else None
+    result["srt_url"] = f"/v1/jobs/{job['id']}/srt" if job["srt_path"] else None
+    if reused is not None:
+        result["reused"] = reused
+    return result
+
+
+# --- HTTP ------------------------------------------------------------------
+
+PROXIED = {"/v1/credits": "/v1/credits", "/v1/providers": "/v1/providers", "/v1/models": "/v1/models",
+           "/v1/voices": "/v1/voices", "/v1/upstream-health": "/v1/health-check"}
+MAX_BODY = MAX_CHARS * 4 + 4096
+
+
+def vbee_voices(query):
+    """Danh sách giọng Vbee tiếng Việt; `search` lọc theo tên hoặc mã ngay tại máy."""
+    params = {"voice_ownership": (query.get("ownership") or ["VBEE"])[0], "language_code": "vi-VN", "limit": 100}
+    search = (query.get("search") or [""])[0].casefold()
+    limit = int((query.get("limit") or ["20"])[0])
+    voices, cursor = [], None
+    for _ in range(10):  # tối đa 1.000 giọng
+        if cursor:
+            params["cursor"] = cursor
+        result = call_vbee("GET", VBEE_VOICES_URL + "?" + urllib.parse.urlencode(params)).get("result") or {}
+        voices += result.get("voices") or []
+        cursor = (result.get("pagination") or {}).get("next_cursor")
+        if not cursor or not (result.get("pagination") or {}).get("has_next_page"):
+            break
+    if search:
+        voices = [v for v in voices if search in f"{v.get('name', '')} {v.get('code', '')}".casefold()]
+    return {"provider": "vbee", "voices": voices[:limit]}
+
+
+class Handler(BaseHTTPRequestHandler):
+    server_version = "idohart-tts"
+    sys_version = ""
+    service = None
+
+    def log_message(self, fmt, *args):
+        sys.stderr.write(f"{now()} {fmt % args}\n")
+
+    def respond(self, status, value):
+        body = json.dumps(value, ensure_ascii=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def dispatch(self, action):
+        try:
+            # Chặn trang web độc hại gọi dịch vụ bằng DNS rebinding để tiêu credit.
+            if self.headers.get("Host", "") not in (f"{HOST}:{self.server.server_port}", f"localhost:{self.server.server_port}"):
+                raise ApiError(403, "forbidden_host", "Chỉ nhận yêu cầu tới 127.0.0.1 hoặc localhost")
+            action()
+        except ApiError as error:
+            value = {"error": {"code": error.code, "message": error.message}}
+            if error.job:
+                value["job"] = public_job(error.job)
+            self.respond(error.status, value)
+        except UpstreamError as error:
+            self.respond(error.status, {"error": {"code": "upstream_error", "message": error.message}})
+        except NetworkError as error:
+            self.respond(502, {"error": {"code": "upstream_unreachable", "message": str(error)}})
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        except Exception:
+            self.log_message("Lỗi nội bộ tại %s", self.path.split("?")[0])
+            self.respond(500, {"error": {"code": "internal_error", "message": "Lỗi nội bộ, xem log dịch vụ"}})
+
+    def do_GET(self):
+        self.dispatch(self.route_get)
+
+    def do_POST(self):
+        self.dispatch(self.route_post)
+
+    def route_get(self):
+        parsed = urllib.parse.urlsplit(self.path)
+        path = parsed.path
+        if path == "/health":
+            self.respond(200, {"ok": True, "service": "bizbank-news-tts", "key_configured": bool(get_key()),
+                               "vbee_configured": bool(get_vbee()), "align_ready": ALIGN_STATE["ready"](ALIGN_PYTHON)})
+        elif path == "/v1/voices" and urllib.parse.parse_qs(parsed.query).get("provider") == ["vbee"]:
+            self.respond(200, vbee_voices(urllib.parse.parse_qs(parsed.query)))
+        elif path in PROXIED:
+            query = f"?{parsed.query}" if parsed.query else ""
+            self.respond(200, call_upstream("GET", PROXIED[path] + query))
+        elif path == "/v1/usage":
+            self.respond(200, {"usage": self.service.store.usage()})
+        else:
+            match = re.fullmatch(r"/v1/jobs/([0-9a-f]{32})(?:/(audio|srt))?", path)
+            if not match:
+                raise ApiError(404, "not_found", "Không có đường dẫn này")
+            job = self.service.store.get(match.group(1))
+            if not job:
+                raise ApiError(404, "not_found", "Không có job này")
+            if match.group(2):
+                self.send_media(job, match.group(2))
+            else:
+                self.respond(200, public_job(job))
+
+    def send_media(self, job, kind):
+        stored = job["audio_path"] if kind == "audio" else job["srt_path"]
+        if not stored or not os.path.exists(stored):
+            raise ApiError(404, "not_ready", f"Job chưa có file {kind}, trạng thái {job['state']}")
+        target = Path(stored)
+        content_type = AUDIO_TYPES.get(target.suffix, "application/octet-stream") if kind == "audio" else "application/x-subrip"
+        self.send_response(200)
+        self.send_header("Content-Type", content_type)
+        self.send_header("Content-Length", str(target.stat().st_size))
+        self.end_headers()
+        with target.open("rb") as handle:
+            shutil.copyfileobj(handle, self.wfile)
+
+    def route_post(self):
+        path = urllib.parse.urlsplit(self.path).path
+        # Bắt buộc JSON để trình duyệt phải preflight, và dịch vụ không trả CORS nên bị chặn.
+        if self.headers.get_content_type() != "application/json":
+            raise ApiError(415, "unsupported_media_type", "Content-Type phải là application/json")
+        length = int(self.headers.get("Content-Length") or 0)
+        if length > MAX_BODY:
+            raise ApiError(413, "body_too_large", "Body quá lớn")
+        raw = self.rfile.read(length)
+        if path == "/v1/speech":
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except ValueError:
+                raise ApiError(400, "invalid_request", "Body không phải JSON hợp lệ") from None
+            job, reused = self.service.create(payload)
+            self.respond(200 if reused else 202, public_job(job, reused))
+            return
+        match = re.fullmatch(r"/v1/jobs/([0-9a-f]{32})/resume", path)
+        if not match:
+            raise ApiError(404, "not_found", "Không có đường dẫn này")
+        self.respond(202, public_job(self.service.resume(match.group(1))))
+
+
+def serve(_args):
+    service = Service(Store(DATA_DIR))
+    service.recover()
+    Handler.service = service
+    server = ThreadingHTTPServer((HOST, PORT), Handler)
+    server.daemon_threads = True
+    print(f"idohart-tts tại http://{HOST}:{PORT}", file=sys.stderr, flush=True)
+    server.serve_forever()
+
+
+# --- CLI -------------------------------------------------------------------
+
+
+def local_call(method, path, body=None):
+    data = json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None
+    request = urllib.request.Request(f"http://{HOST}:{PORT}{path}", data=data, method=method)
+    if data is not None:
+        request.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
+            return response.read()
+    except urllib.error.HTTPError as error:
+        return raise_cli_error(error)
+    except OSError as error:
+        raise SystemExit(f"Không gọi được dịch vụ TTS ({error}). Kiểm tra: tts service status") from None
+
+
+def raise_cli_error(error):
+    payload = parse_json(error.read())
+    detail = payload.get("error", {})
+    message = detail.get("message", f"HTTP {error.code}") if isinstance(detail, dict) else str(detail)
+    job = payload.get("job")
+    raise SystemExit(f"Lỗi: {message}" + (f"\nJob: {job['id']}" if job else ""))
+
+
+def print_json(raw):
+    print(json.dumps(json.loads(raw), ensure_ascii=False, indent=2))
+
+
+def write_atomic(raw, destination):
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_name(destination.name + ".part")
+    temporary.write_bytes(raw)
+    temporary.replace(destination)
+
+
+def cmd_say(args):
+    health = json.loads(local_call('GET', '/health'))
+    if health.get('service') != 'bizbank-news-tts':
+        raise SystemExit('Cổng đang do TTS khác quản lý. Chọn cổng riêng trong local/tts.env và machine.yaml; không tự dừng dịch vụ khác.')
+    if args.provider == 'vbee' and args.srt and not health.get('align_ready'):
+        raise SystemExit('Chưa sẵn sàng căn từ offline; chạy bin/bootstrap --with-tts trước khi tạo giọng.')
+    text = Path(args.file).read_text(encoding="utf-8") if args.file else args.text
+    if not text:
+        raise SystemExit("Cần nội dung text hoặc --file")
+    body = {"text": text, "project": args.project, "export_srt": args.srt, "force": args.force,
+            "speed": args.speed, "pitch": args.pitch, "vol": args.vol}
+    if args.pauses:
+        body["pauses"] = {k: float(v) for k, v in (item.split("=", 1) for item in args.pauses.split(","))}
+    for name in ("provider", "model_id", "voice_id", "voice_name", *VOICE_SETTINGS):
+        value = getattr(args, name)
+        if value is not None and value != "":
+            body[name] = value
+    job = json.loads(local_call("POST", "/v1/speech", body))
+    deadline = time.monotonic() + POLL_TIMEOUT + 60
+    while job["state"] in IN_PROGRESS and time.monotonic() < deadline:
+        time.sleep(1)
+        job = json.loads(local_call("GET", f"/v1/jobs/{job['id']}"))
+    if job["state"] != "done":
+        raise SystemExit(f"Job {job['id']} ở trạng thái {job['state']}: {job.get('error')}")
+    out = Path(args.out).expanduser()
+    write_atomic(local_call("GET", job["audio_url"]), out)
+    print(f"Âm thanh: {out}")
+    if job["srt_url"]:
+        srt = out.with_suffix(".srt")
+        write_atomic(local_call("GET", job["srt_url"]), srt)
+        print(f"Phụ đề: {srt}")
+    elif args.srt:
+        print(f"Cảnh báo: {job.get('error')}", file=sys.stderr)
+    print(f"Job: {job['id']}; credit: {job['credit_cost']}" + ("; dùng lại kết quả cũ, không tính tiền" if job.get("reused") else ""))
+
+
+def cmd_key(args):
+    if args.action == "status":
+        print("KingCong:", "đã có API key" if get_key() else "chưa có API key")
+        print("Vbee:", "đã có App ID và token" if get_vbee() else "chưa có App ID/token")
+        return
+    ask = getpass.getpass if sys.stdin.isatty() else (lambda _prompt: sys.stdin.readline())
+    if args.provider == "vbee":
+        app_id = (input("Vbee App ID: ") if sys.stdin.isatty() else sys.stdin.readline()).strip()
+        set_vbee(app_id, ask("Vbee token: ").strip())
+        print("Đã lưu App ID và token Vbee vào kho bí mật của máy. Dịch vụ đọc key mỗi lần gọi, không cần khởi động lại.")
+        return
+    set_key(ask("KingCong API key: ").strip())
+    print("Đã lưu API key vào kho bí mật của máy.")
+
+
+def cmd_align(args):
+    """Tạo SRT cho audio đã có, không gọi API trả tiền."""
+    audio = Path(args.audio).expanduser()
+    out = Path(args.out).expanduser() if args.out else audio.with_suffix(".srt")
+    text = Path(args.text).expanduser().read_text(encoding="utf-8")
+    if not ALIGN_PYTHON.exists():
+        raise SystemExit(f"Chưa có venv căn phụ đề tại {ALIGN_PYTHON}")
+    command = [str(ALIGN_PYTHON), "-I", str(ALIGN_SCRIPT), "--audio", str(audio), "--text", str(Path(args.text).expanduser()),
+               "--out", str(out)]
+    if args.words:
+        command += ["--words", str(Path(args.words).expanduser())]
+    result = subprocess.run(command, timeout=ALIGN_TIMEOUT)
+    if result.returncode not in (0, 3):
+        raise SystemExit(result.returncode)
+    if result.returncode:
+        raise SystemExit(result.returncode)
+    print(f"Phụ đề: {out} ({len(text.split())} từ)")
+
+
+def plist_path():
+    return Path.home() / "Library/LaunchAgents" / f"{LAUNCHD_LABEL}.plist"
+
+
+def service_environment():
+    # Chỉ lưu cấu hình không bí mật; credentials ở Keychain/file riêng, không vào unit/plist.
+    names = ('TTS_PORT', 'TTS_DATA_DIR', 'TTS_ALIGN_PYTHON', 'TTS_ALIGN_BACKEND', 'TTS_ALIGN_MODEL',
+             'HF_HOME', 'HUGGINGFACE_HUB_CACHE', 'SSL_CERT_FILE', 'SSL_CERT_DIR', 'TTS_POLL_TIMEOUT', 'TTS_ALIGN_TIMEOUT')
+    env = {'PATH': INITIAL_ENV.get('PATH', '/usr/bin:/bin'), 'TTS_ENV_FILE': str(ENV_FILE.resolve()),
+           **{name: INITIAL_ENV[name] for name in names if name in INITIAL_ENV}}
+    # Cấu hình từ env file sẽ được đọc lại lúc start; không đóng băng nó vào unit.
+    for name, value in (('TTS_DATA_DIR', DATA_DIR), ('TTS_ALIGN_PYTHON', ALIGN_PYTHON)):
+        if name in INITIAL_ENV:
+            env[name] = str(value)
+    for name in ('HF_HOME', 'HUGGINGFACE_HUB_CACHE', 'SSL_CERT_FILE', 'SSL_CERT_DIR'):
+        if name in env:
+            env[name] = str(Path(env[name]).expanduser().resolve())
+    return env
+
+
+def cmd_service(args):
+    if args.action == 'status':
+        try:
+            print_json(local_call('GET', '/health'))
+        except SystemExit as error:
+            print(error)
+            raise SystemExit(1) from None
+        return
+    if sys.platform != 'darwin':
+        if not shutil.which('systemctl'):
+            raise SystemExit('Máy không có systemd user. Dùng bin/tts serve trong terminal hoặc bật systemd trong WSL2.')
+        target = Path.home() / '.config/systemd/user/bizbank-news-tts.service'
+        if args.action == 'uninstall':
+            subprocess.run(['systemctl', '--user', 'disable', '--now', target.name], check=True)
+            target.unlink(missing_ok=True)
+            subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True)
+        else:
+            def quote(value):
+                return '"' + str(value).replace('\\', '\\\\').replace('"', '\\"').replace('%', '%%') + '"'
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text('[Unit]\nDescription=BizBank News TTS (localhost)\n[Service]\n'
+                              + 'ExecStart=:' + ' '.join(quote(v) for v in (sys.executable, Path(__file__).resolve(), 'serve')) + '\n'
+                              + ''.join('Environment=' + quote(k + '=' + v) + '\n' for k, v in service_environment().items())
+                              + 'Restart=on-failure\n[Install]\nWantedBy=default.target\n', encoding='utf-8')
+            subprocess.run(['systemctl', '--user', 'daemon-reload'], check=True)
+            subprocess.run(['systemctl', '--user', 'enable', target.name], check=True)
+            subprocess.run(['systemctl', '--user', 'restart', target.name], check=True)
+        print(f'{args.action}: {target}; dữ liệu và key được giữ tại máy.')
+        return
+    domain = f'gui/{os.getuid()}'
+    target = plist_path()
+    if args.action == 'install':
+        logs = REPO / 'local' / 'logs' / 'tts.log'
+        logs.parent.mkdir(parents=True, exist_ok=True)
+        config = {'Label': LAUNCHD_LABEL, 'ProgramArguments': [sys.executable, str(Path(__file__).resolve()), 'serve'],
+                  'EnvironmentVariables': service_environment(),
+                  'RunAtLoad': True, 'KeepAlive': True, 'ThrottleInterval': 10,
+                  'StandardOutPath': str(logs), 'StandardErrorPath': str(logs)}
+        subprocess.run(['launchctl', 'bootout', f'{domain}/{LAUNCHD_LABEL}'], capture_output=True)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with target.open('wb') as handle:
+            plistlib.dump(config, handle)
+        subprocess.run(['launchctl', 'bootstrap', domain, str(target)], check=True)
+    elif args.action == 'uninstall':
+        subprocess.run(['launchctl', 'bootout', f'{domain}/{LAUNCHD_LABEL}'], capture_output=True)
+        target.unlink(missing_ok=True)
+    print(f'{args.action}: {LAUNCHD_LABEL}; dữ liệu và key được giữ tại máy.')
+
+
+def cmd_voices(args):
+    query = {name: value for name, value in (("provider", args.provider), ("search", args.search)) if value}
+    query["limit"] = args.limit
+    print_json(local_call("GET", "/v1/voices?" + urllib.parse.urlencode(query)))
+
+
+def cmd_model(args):
+    if not ALIGN_PYTHON.exists():
+        raise SystemExit('Chưa có môi trường căn từ. Chạy bin/bootstrap --with-tts.')
+    command = [str(ALIGN_PYTHON), '-I', str(ROOT / 'bin/model.py')]
+    if args.action == 'download':
+        command.append('--download')
+    raise SystemExit(subprocess.run(command, env=os.environ).returncode)
+
+
+def main():
+    parser = argparse.ArgumentParser(prog="tts", description=__doc__.splitlines()[0])
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("serve", help="chạy API, thường do launchd gọi").set_defaults(func=serve)
+
+    model = commands.add_parser('model', help='kiểm cache offline hoặc tải model (không tạo giọng)')
+    model.add_argument('action', choices=['status', 'download'])
+    model.set_defaults(func=cmd_model)
+
+    say = commands.add_parser("say", help="tạo giọng đọc và lưu ra file")
+    say.add_argument("text", nargs="?")
+    say.add_argument("--file", help="đọc text từ file UTF-8")
+    say.add_argument("--out", required=True, help="file âm thanh đầu ra")
+    say.add_argument("--project", default="cli", help="dự án để thống kê credit")
+    say.add_argument("--provider")
+    say.add_argument("--model", dest="model_id")
+    say.add_argument("--voice", dest="voice_id")
+    say.add_argument("--voice-name", dest="voice_name")
+    say.add_argument("--speed", type=float, default=1.0)
+    say.add_argument("--pitch", type=float, default=1.0)
+    say.add_argument("--vol", type=float, default=1.0)
+    say.add_argument("--stability", type=float, help="độ ổn định, 0 đến 1")
+    say.add_argument("--similarity", type=float, help="độ tương đồng, 0 đến 1")
+    say.add_argument("--style", type=float, help="phóng đại phong cách, 0 đến 1")
+    say.add_argument("--srt", action="store_true", help="xuất phụ đề, giá nhân 1,15")
+    say.add_argument("--force", action="store_true", help="tạo mới dù đã có kết quả giống hệt, sẽ tính tiền")
+    say.add_argument("--pauses", help="Vbee: ngắt nghỉ (giây), ví dụ sentence=0.1,major=0.1,medium=0.1,paragraph=0")
+    say.set_defaults(func=cmd_say)
+
+    key = commands.add_parser("key", help="quản lý API key trong Keychain")
+    key.add_argument("action", choices=["set", "status"])
+    key.add_argument("--provider", choices=["kingcong", "vbee"], default="kingcong")
+    key.set_defaults(func=cmd_key)
+
+    service = commands.add_parser("service", help="quản lý dịch vụ launchd")
+    service.add_argument("action", choices=["install", "uninstall", "status"])
+    service.set_defaults(func=cmd_service)
+
+    align = commands.add_parser("align", help="tạo SRT từ audio và văn bản gốc, chạy tại máy, không tốn credit")
+    align.add_argument("--audio", required=True)
+    align.add_argument("--text", required=True, help="file UTF-8 chứa đúng văn bản đã đọc")
+    align.add_argument("--out", help="mặc định: cạnh file audio, đuôi .srt")
+    align.add_argument("--words", help="ghi thêm mốc thời gian từng từ ra file .json")
+    align.set_defaults(func=cmd_align)
+
+    voices = commands.add_parser("voices", help="tìm giọng đọc")
+    voices.add_argument("--provider")
+    voices.add_argument("--search")
+    voices.add_argument("--limit", type=int, default=20)
+    voices.set_defaults(func=cmd_voices)
+
+    commands.add_parser("credits", help="xem số dư").set_defaults(func=lambda _: print_json(local_call("GET", "/v1/credits")))
+    commands.add_parser("usage", help="credit đã dùng theo dự án").set_defaults(func=lambda _: print_json(local_call("GET", "/v1/usage")))
+
+    args = parser.parse_args()
+    args.func(args)
+
+
+if __name__ == "__main__":
+    main()
