@@ -5,7 +5,7 @@ import os
 import sys
 import time
 
-from . import lessons, pipeline, steps
+from . import lessons, pipeline, sources, steps
 from .config import Config
 from .episode import Episode
 
@@ -70,6 +70,18 @@ def cmd_lessons(cfg, args):
             print(f"{c['id']:14} {c['status']:9} {len(c['episodes'])} tập  {c['rule']}")
 
 
+def cmd_sources(cfg, args):
+    if args.action == "pending":
+        requests = sources.read_requests(cfg)
+        for r in requests:
+            print(f"{r['domain']:30} {r.get('publisher') or ''}  {r['url']}  (tập {r['episode']})")
+        return print("Không có nguồn nào chờ duyệt") if not requests else None
+    if not args.domain:
+        raise SystemExit("Cần tên miền, ví dụ: news sources approve vietnamplus.vn")
+    host = sources.decide(args.domain, "approved" if args.action == "approve" else "rejected", args.note)
+    print(f"Đã {'duyệt' if args.action == 'approve' else 'từ chối'} {host}. Tiếp tục tập: bin/news run --resume last")
+
+
 def cmd_doctor(cfg, args):
     from .doctor import check
     sys.exit(0 if check(cfg, local=args.local) else 1)
@@ -92,6 +104,10 @@ def main():
     feedback.add_argument("text")
     les = sub.add_parser("lessons", help="bài học")
     les.add_argument("action", choices=["show", "distill"])
+    src = sub.add_parser("sources", help="duyệt nguồn ngoài danh sách ưu tiên")
+    src.add_argument("action", choices=["pending", "approve", "reject"])
+    src.add_argument("domain", nargs="?")
+    src.add_argument("--note", default="", help="ghi chú lý do")
     doctor = sub.add_parser("doctor", help="kiểm máy đủ điều kiện chạy")
     doctor.add_argument("--local", action="store_true", help="chỉ kiểm cài đặt, không gọi TTS/AI/router")
     args = parser.parse_args()
@@ -99,7 +115,7 @@ def main():
         os.environ["NEWS_DRY"] = "1"
     cfg = Config()
     {"run": cmd_run, "status": cmd_status, "feedback": cmd_feedback, "lessons": cmd_lessons,
-     "doctor": cmd_doctor}[args.command](cfg, args)
+     "sources": cmd_sources, "doctor": cmd_doctor}[args.command](cfg, args)
 
 
 if __name__ == "__main__":

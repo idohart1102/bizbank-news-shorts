@@ -12,7 +12,7 @@ import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from . import agents, checks
+from . import agents, checks, sources
 from .config import ROOT, ensure_online
 from .episode import read_json, write_json, write_text
 
@@ -20,7 +20,7 @@ FIXTURE = ROOT / "tests" / "fixtures" / "sample"
 
 
 class NotReady(Exception):
-    """Bước chưa được xây ở bản thật."""
+    """Cần người: bước chưa được xây ở bản thật, hoặc chờ Sếp duyệt (nguồn ngoài danh sách)."""
 
 
 @dataclass
@@ -76,6 +76,23 @@ def next_version(ctx, prefix):
     return len(list(ctx.ep.path.glob(f"qa/{prefix}_v*.json"))) + 1
 
 
+def source_guide():
+    from . import feeds
+    return feeds.source_guide()
+
+
+def gate_sources(ctx, items):
+    """Nguồn ngoài danh sách ưu tiên phải được Sếp duyệt: nguồn lạ → dừng chờ; nguồn bị từ chối → lỗi để làm lại."""
+    if ctx.cfg.dry:
+        return []
+    errors, pending = sources.review(ctx.cfg, ctx.ep.id, items)
+    if pending:
+        raise NotReady(f"Nguồn ngoài danh sách cần Sếp duyệt: {', '.join(pending)}. "
+                       "Duyệt: bin/news sources approve <tên miền>; từ chối: bin/news sources reject <tên miền>; "
+                       "rồi bin/news run --resume last")
+    return errors
+
+
 # --- 1. Gom tin -------------------------------------------------------------
 
 def run_collect(ctx):
@@ -86,8 +103,8 @@ def run_collect(ctx):
     write_json(ctx.ep.file("raw_feed.json"), raw)
     if not raw["items"]:
         raise RuntimeError("RSS không có tin nào sau lọc: " + json.dumps(raw["feeds"], ensure_ascii=False)[:300])
-    items = [{k: i[k] for k in ("title", "url", "summary", "published_at", "publisher", "tier")} for i in raw["items"]]
-    inbox = agents.run(ctx.cfg, ctx.ep, "codex", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Bài RSS": items}, "inbox")
+    items = [{k: i[k] for k in ("title", "url", "summary", "published_at", "publisher", "tier", "group")} for i in raw["items"]]
+    inbox = agents.run(ctx.cfg, ctx.ep, "codex", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Nhóm nguồn": source_guide(), "Bài RSS": items}, "inbox")
     known = {i["url"] for i in raw["items"]}
     for story in inbox["stories"]:  # AI không được bịa link: chỉ giữ link có trong RSS
         story["sources"] = [s for s in story["sources"] if s["url"] in known]
@@ -111,7 +128,7 @@ def run_pick(ctx):
     else:
         used = sorted({u for h in ctx.history() for u in h.get("urls", [])})
         ctx_data = {"Tin trong ngày (inbox.json)": ctx.json("inbox.json"), "Link đã làm (không chọn lại)": used,
-                    "Lỗi lần trước": ctx.feedback("pick")}
+                    "Lỗi lần trước": ctx.feedback("pick"), "Nhóm nguồn": source_guide()}
         write_json(ctx.ep.file("brief.json"), agents.run(ctx.cfg, ctx.ep, "claude", "pick", ctx_data, "brief"))
     ctx.ep.rename_with_slug(ctx.json("brief.json")["story_ids"][0])
 
@@ -122,6 +139,7 @@ def check_pick(ctx):
     if errors:
         return errors
     errors += checks.source_rule(brief["sources"])
+    errors += gate_sources(ctx, brief["sources"])
     used = {u for h in ctx.history() for u in h.get("urls", [])}
     repeated = [s["url"] for s in brief["sources"] if s["url"] in used]
     if repeated:
@@ -138,7 +156,7 @@ def run_write(ctx):
         ctx_data = {"Brief": ctx.json("brief.json"), "Văn bản nguồn": source_texts(ctx, ctx.json("brief.json")["sources"]),
                     "Chuẩn kịch bản": (ROOT / "core/standard/script.md").read_text(encoding="utf-8"),
                     "Bản trước": ctx.json("script.json") if ctx.ep.file("script.json").exists() else "chưa có",
-                    "Cần sửa": ctx.feedback("write")}
+                    "Cần sửa": ctx.feedback("write"), "Nhóm nguồn": source_guide()}
         write_json(ctx.ep.file("script.json"), agents.run(ctx.cfg, ctx.ep, "claude", "write", ctx_data, "script"))
     derive_script_files(ctx)
 
@@ -153,7 +171,8 @@ def derive_script_files(ctx):
 
 
 def check_write(ctx):
-    return checks.lint_script(ctx.json("script.json"))
+    script = ctx.json("script.json")
+    return checks.lint_script(script) + gate_sources(ctx, script["sources"])
 
 
 # --- 4. Duyệt + kiểm fact -----------------------------------------------------
@@ -166,7 +185,7 @@ def run_review(ctx):
         return
     script = ctx.json("script.json")
     sources = source_texts(ctx, script["sources"])
-    facts = agents.run(ctx.cfg, ctx.ep, "codex", "factcheck", {"Kịch bản": script, "Văn bản nguồn": sources}, "factcheck")
+    facts = agents.run(ctx.cfg, ctx.ep, "codex", "factcheck", {"Kịch bản": script, "Văn bản nguồn": sources, "Nhóm nguồn": source_guide()}, "factcheck")
     write_json(ctx.ep.file(f"qa/factcheck_v{version}.json"), facts)
     review = agents.run(ctx.cfg, ctx.ep, "claude", "review",
                         {"Kịch bản": script, "Kết quả đối chiếu nguồn của Codex": facts}, "review")

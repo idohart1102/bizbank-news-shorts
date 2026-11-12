@@ -5,6 +5,7 @@ So **từng** con số, ngày, đối tượng áp dụng, mức phạt, tên v�
 - Fact đúng khi nguồn nói **đúng như vậy** (cho phép diễn đạt lại, không cho phép đổi số, đổi ngày, mở rộng/thu hẹp đối tượng).
 - Fact không tìm thấy trong nguồn nào → ghi lỗi ("không có trong nguồn").
 - `quote` trong `sources` không có nguyên văn trong văn bản nguồn → ghi lỗi.
+- Số liệu/ngày/mức phạt chỉ có trong nguồn nhóm 3/0 hoặc CafeF (xem "Nhóm nguồn") → ghi lỗi "số liệu từ nguồn không dùng để trích dẫn".
 - `say` đọc sai số so với `show` (ví dụ show "15/11", say "mười lăm tháng mười") → ghi lỗi.
 - Nguồn tải lỗi ("[không tải được…]") thì dựa vào `quote` và ghi chú trong `checked`, không tự kết luận sai.
 

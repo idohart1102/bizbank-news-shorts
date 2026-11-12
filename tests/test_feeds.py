@@ -30,6 +30,18 @@ class FeedsTest(unittest.TestCase):
         self.assertTrue(rule.search(feeds.plain("tăng phí giao hàng")))
         self.assertFalse(rule.search(feeds.plain("phiên chợ")))
 
+    def test_sources_config_groups(self):
+        config = feeds.load_config()
+        groups = set(config["groups"])
+        names = [s["name"] for s in config["press"]]
+        self.assertEqual(len(names), len(set(names)))
+        for source in config["press"]:
+            self.assertIn(source["tier"], (1, 2, 3), source["name"])
+            self.assertIn(source["group"], groups, source["name"])
+            self.assertTrue(all(u.startswith("https://") for u in source.get("rss", [])), source["name"])
+        guide = feeds.source_guide()
+        self.assertEqual(guide["Báo theo nhóm"]["CafeF"]["tier"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()

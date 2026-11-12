@@ -1,6 +1,6 @@
 # Chuẩn kịch bản short tin tức (dưới 60s)
 
-- `hook_text`: một câu < 100 ký tự, hiện suốt video dưới khung ảnh.
+- `hook_text`: một câu < 100 ký tự, hiện suốt video dưới khung ảnh. Gây tò mò (hé lộ quyền lợi/rủi ro, giữ lại chi tiết để video trả lời), ngôn ngữ tự nhiên: không xuồng xã, không khô cứng kiểu công văn; đúng sự thật, không giật tít sai.
 
 Cấu trúc (mốc thời gian gần đúng):
 1. **Hook 0–3s**: một câu đánh vào quyền lợi. Ví dụ: "Từ 1/7, hộ kinh doanh doanh thu trên 1 tỷ phải dùng hóa đơn điện tử."

@@ -24,3 +24,7 @@
 - 2026-11-09: Theo yêu cầu Sếp, bộ cài dùng uv quản lý Python 3.12 riêng, khóa thư viện theo hash, kiểm Node 22/npm trước khi cài; thêm doctor --local, test cài mới macOS/Linux và phát hành v1.1.0. Windows dùng WSL2.
 
 - 2026-11-09: Sếp yêu cầu rà lại và hướng dẫn AI cài đầy đủ trên máy mới; chọn đưa source TTS sạch vào cùng repo. Dùng bin/tts, source core/tts; key/job/audio/model cache vẫn local. MLX Apple Silicon, faster-whisper CPU Linux/Intel. Lịch được sinh riêng và chỉ bật sau nghiệm thu, không mặc định có scheduler sau bootstrap.
+
+- 2026-11-12: Cập nhật nguồn ưu tiên theo tài liệu Sếp "BizBank Academy - List nguồn lấy tin" (`config/sources.yaml`, trường `group`). Nhóm 1 cơ quan nhà nước (Thời báo Tài chính VN, Tạp chí Kinh tế - Tài chính, NHNN, Báo Chính phủ, Tạp chí Công Thương) tính là nguồn chính thống (tier 1). Nhóm 2 báo kinh tế SME, nhóm 4 chuyên hộ kinh doanh (VINASME, Cục Thuế, VCCI) dùng làm nguồn số liệu. Nhóm 3 báo đại chúng chỉ bắt mạch, không làm nguồn số liệu; CafeF là aggregator, tier 3, không tính nguồn độc lập.
+- 2026-11-12: Danh sách nguồn là ưu tiên, không phải giới hạn. Được tham khảo nguồn khác nhưng phải Sếp duyệt: nguồn lạ làm tập dừng chờ (`bin/news sources pending|approve|reject`, lưu `config/sources_approved.yaml`). Tin mới nhất được ưu tiên (tính thời sự khi chấm và chọn tin).
+- 2026-11-12: Hook text trên video phải gây tò mò, ngôn ngữ tự nhiên: không xuồng xã, không khô cứng quá mức; vẫn đúng sự thật, không giật tít sai.

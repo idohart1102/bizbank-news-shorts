@@ -14,6 +14,7 @@ from datetime import datetime, timedelta, timezone
 
 import yaml
 
+from . import sources
 from .config import ROOT, ensure_online
 
 UA = "Mozilla/5.0 (compatible; news-video/1.0)"
@@ -54,7 +55,7 @@ def fetch(url, timeout=20):
     ensure_online(f"tải RSS {url}")
     request = urllib.request.Request(url, headers={"User-Agent": UA})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        raw = response.read(5_000_000)
+        raw = response.read(10_000_000)  # theleader.vn ~5,4 MB
     if raw[:2] == b"\x1f\x8b":
         import gzip
         raw = gzip.decompress(raw)
@@ -71,12 +72,27 @@ def parse_feed(raw, source):
         get = lambda tag: (item.findtext(tag) or "").strip()
         items.append({"title": clean(get("title")), "url": get("link"), "summary": clean(get("description"))[:400],
                       "published_at": parse_date(get("pubDate")), "publisher": source["name"], "tier": source["tier"],
+                      "group": source.get("group", 0),
                       "image": (item.find("enclosure").get("url") if item.find("enclosure") is not None else None)})
     return items
 
 
+def load_config():
+    return yaml.safe_load((ROOT / "config" / "sources.yaml").read_text(encoding="utf-8"))
+
+
+def source_guide():
+    """Nhóm ưu tiên nguồn (danh sách của Sếp) để đưa vào prompt: vai trò từng nhóm + báo thuộc nhóm nào."""
+    config = load_config()
+    return {"Vai trò nhóm": {str(k): v for k, v in config.get("groups", {}).items()},
+            "Báo theo nhóm": {s["name"]: {"group": s.get("group", 0), "tier": s["tier"], "url": s["url"]}
+                              for s in config["press"]},
+            "Nguồn ngoài đã được Sếp duyệt": [d["domain"] for d in sources.load_decisions()["approved"]],
+            "Nguồn Sếp đã từ chối (không dùng)": [d["domain"] for d in sources.load_decisions()["rejected"]]}
+
+
 def collect(now=None):
-    config = yaml.safe_load((ROOT / "config" / "sources.yaml").read_text(encoding="utf-8"))
+    config = load_config()
     now = now or datetime.now(VN)
     since = now - timedelta(hours=config.get("window_hours", 48))
     keywords = [re.compile(rf"\b{re.escape(plain(k))}\b") for k in config.get("keywords", [])]
