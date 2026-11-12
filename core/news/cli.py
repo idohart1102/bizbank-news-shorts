@@ -28,6 +28,8 @@ def cmd_run(cfg, args):
     with pipeline.Lock(cfg.data_dir):
         episode = find_episode(cfg, args.resume) if args.resume else Episode.create(
             cfg.data_dir, time.strftime("%Y-%m-%d-%H%M"), args.trigger)
+        if args.story:
+            choose_story(episode, args.story)
         print(f"Tập: {episode.path}")
         pipeline.run(cfg, episode, until=args.until)
         if not args.no_distill:
@@ -39,6 +41,46 @@ def cmd_run(cfg, args):
                 print(f"Chưng cất bài học lỗi: {error}", file=sys.stderr)
         print(f"Trạng thái: {episode.state['status']}" + (f" — {episode.state['blocker']}" if episode.state["blocker"] else ""))
         sys.exit(0 if episode.state["status"] in ("done", "paused") else 2)
+
+
+def choose_story(episode, story_id):
+    """Sếp chọn tin (từ inbox.json của tập): làm lại từ bước pick với đúng tin này."""
+    inbox = episode.file("inbox.json")
+    ids = [s["id"] for s in json.loads(inbox.read_text(encoding="utf-8"))["stories"]] if inbox.exists() else []
+    if story_id not in ids:
+        raise SystemExit(f"Không có tin '{story_id}' trong inbox.json của tập. Có: {', '.join(ids[:15]) or 'chưa gom tin'}")
+    if episode.state.get("story_choice") != story_id:
+        episode.state["story_choice"] = story_id
+        for name in steps.ORDER[steps.ORDER.index("pick"):]:
+            episode.step(name)["state"] = "pending"
+        episode.save()
+
+
+def cmd_topics(cfg, args):
+    """Chủ đề trong inbox.json của tập: điểm, độ mới, số báo cùng đưa (tín hiệu trend), nhóm nguồn, đã làm chưa."""
+    from . import feeds
+    episode = find_episode(cfg, args.episode)
+    inbox = episode.file("inbox.json")
+    if not inbox.exists():
+        raise SystemExit("Tập chưa gom tin: bin/news run --until collect")
+    groups = {s["name"]: s.get("group", 0) for s in feeds.load_config()["press"]}
+    used = {u for h in steps.Ctx(cfg, episode).history() for u in h.get("urls", [])}
+    now = time.time()
+    print(f"Tập: {episode.id}")
+    for story in json.loads(inbox.read_text(encoding="utf-8"))["stories"][: args.limit]:
+        newest = max(s["published_at"] for s in story["sources"])
+        try:
+            from datetime import datetime
+            hours = f"{(now - datetime.fromisoformat(newest).timestamp()) / 3600:.0f}h trước"
+        except ValueError:
+            hours = newest
+        publishers = sorted({s["publisher"] for s in story["sources"]})
+        best = min((groups.get(p, 0) or 9) for p in publishers)
+        flag = "  [ĐÃ LÀM]" if any(s["url"] in used for s in story["sources"]) else ""
+        print(f"- {story['id']}  | điểm {story['score']} | {hours} | {len(publishers)} báo | nhóm tốt nhất {best if best != 9 else 0}{flag}")
+        print(f"    {story['title']}")
+        print(f"    Ảnh hưởng: {story['impact']}")
+        print(f"    Nguồn: {', '.join(publishers)}")
 
 
 def cmd_status(cfg, args):
@@ -94,6 +136,7 @@ def main():
     run.add_argument("--resume", metavar="TAP", help="tiếp tục tập (tên thư mục hoặc 'last')")
     run.add_argument("--until", choices=steps.ORDER, help="dừng sau bước này")
     run.add_argument("--dry", action="store_true", help="dữ liệu mẫu, không tốn tiền")
+    run.add_argument("--story", metavar="ID", help="id tin trong inbox.json Sếp chọn (dùng với --resume)")
     run.add_argument("--trigger", default="manual", choices=["manual", "schedule"])
     run.add_argument("--no-distill", action="store_true")
     status = sub.add_parser("status", help="trạng thái các tập")
@@ -104,6 +147,9 @@ def main():
     feedback.add_argument("text")
     les = sub.add_parser("lessons", help="bài học")
     les.add_argument("action", choices=["show", "distill"])
+    topics = sub.add_parser("topics", help="chủ đề đã gom của tập (mặc định tập mới nhất)")
+    topics.add_argument("episode", nargs="?", default="last")
+    topics.add_argument("--limit", type=int, default=10)
     src = sub.add_parser("sources", help="duyệt nguồn ngoài danh sách ưu tiên")
     src.add_argument("action", choices=["pending", "approve", "reject"])
     src.add_argument("domain", nargs="?")
@@ -115,7 +161,7 @@ def main():
         os.environ["NEWS_DRY"] = "1"
     cfg = Config()
     {"run": cmd_run, "status": cmd_status, "feedback": cmd_feedback, "lessons": cmd_lessons,
-     "sources": cmd_sources, "doctor": cmd_doctor}[args.command](cfg, args)
+     "sources": cmd_sources, "topics": cmd_topics, "doctor": cmd_doctor}[args.command](cfg, args)
 
 
 if __name__ == "__main__":

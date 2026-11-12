@@ -129,6 +129,8 @@ def run_pick(ctx):
         used = sorted({u for h in ctx.history() for u in h.get("urls", [])})
         ctx_data = {"Tin trong ngày (inbox.json)": ctx.json("inbox.json"), "Link đã làm (không chọn lại)": used,
                     "Lỗi lần trước": ctx.feedback("pick"), "Nhóm nguồn": source_guide()}
+        if ctx.ep.state.get("story_choice"):
+            ctx_data["Tin Sếp đã chọn (bắt buộc làm tin này, story_ids[0] = id này)"] = ctx.ep.state["story_choice"]
         write_json(ctx.ep.file("brief.json"), agents.run(ctx.cfg, ctx.ep, "claude", "pick", ctx_data, "brief"))
     ctx.ep.rename_with_slug(ctx.json("brief.json")["story_ids"][0])
 
@@ -140,6 +142,9 @@ def check_pick(ctx):
         return errors
     errors += checks.source_rule(brief["sources"])
     errors += gate_sources(ctx, brief["sources"])
+    choice = ctx.ep.state.get("story_choice")
+    if choice and brief["story_ids"][:1] != [choice]:
+        errors.append(f"Sếp đã chọn tin '{choice}', story_ids[0] phải là tin này")
     used = {u for h in ctx.history() for u in h.get("urls", [])}
     repeated = [s["url"] for s in brief["sources"] if s["url"] in used]
     if repeated:

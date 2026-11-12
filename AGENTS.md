@@ -21,7 +21,8 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 2. Mở đúng `core/skills/<skill>/SKILL.md` theo bảng, chỉ đọc các file skill nêu.
 3. Luồng đầy đủ: `core/standard/pipeline.md`. Lộ trình xây hệ thống, input/output từng bước: `docs/roadmap.md`.
 4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Nguồn ngoài danh sách ưu tiên chờ Sếp duyệt: `bin/news sources pending|approve|reject <tên miền>`. Máy mới/cài lại/chuyển máy: đọc `docs/INSTALL.md` trước khi chạy; prompt bàn giao ở `docs/AI_SETUP_PROMPT.md`. TTS sạch ở `core/tts`; `bin/bootstrap --with-tts` cài đủ môi trường, chưa tự bật dịch vụ/lịch.
-5. Bài học: luật đã rút ra nằm ở `lessons/rules/<bước>.md`, bắt buộc tuân theo. Góp ý của Sếp: `bin/news feedback <tap> <bước> "<nội dung>"`.
+5. Lệnh nhanh cho Sếp: `/chonchude` (tìm 3–5 chủ đề hợp trend, dừng chờ chọn), `/taovideo [id]` (chạy hết tới bước package). Skill ở `.claude/skills/`; AI khác đọc trực tiếp file `SKILL.md` ở đó.
+6. Bài học: luật đã rút ra nằm ở `lessons/rules/<bước>.md`, bắt buộc tuân theo. Góp ý của Sếp: `bin/news feedback <tap> <bước> "<nội dung>"`.
 
 | Việc | Skill | Người làm |
 |---|---|---|
