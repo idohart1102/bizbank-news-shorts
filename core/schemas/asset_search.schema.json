@@ -35,7 +35,9 @@
         "page_url",
         "credit",
         "kind",
-        "why"
+        "why",
+        "subject",
+        "relevance"
        ],
        "properties": {
         "image_url": {
@@ -56,6 +58,16 @@
         },
         "why": {
          "type": "string"
+        },
+        "subject": {
+         "type": "string",
+         "description": "chủ thể chính nhìn thấy trong ảnh, vài chữ"
+        },
+        "relevance": {
+         "type": "integer",
+         "minimum": 0,
+         "maximum": 10,
+         "description": "mức khớp với lời đang đọc của đoạn (show), 0–10"
         }
        }
       }

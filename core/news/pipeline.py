@@ -36,7 +36,9 @@ class Lock:
 
 
 def input_hash(ctx, step):
-    files = [ctx.ep.file(name) for name in step.inputs] + [steps.ROOT / "lessons" / "rules" / f"{step.name}.md"]
+    # Không tính lessons/rules: luật mới áp cho lần chạy sau của bước, không làm bước đã xong (có thể đã trả tiền
+    # giọng đọc ở sau nó) chạy lại giữa chừng.
+    files = [ctx.ep.file(name) for name in step.inputs]
     feedback = ctx.ep.file(f"qa/feedback_{step.name}.json")
     return hash_files(files + [feedback], base=ctx.ep.path)
 

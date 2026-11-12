@@ -90,3 +90,17 @@ class PortableTtsTest(unittest.TestCase):
             self.assertEqual(service.PORT, 8802)
             self.assertNotIn('TTS_PORT', service.service_environment())
             self.assertEqual(Path(service.service_environment()['TTS_ENV_FILE']).resolve(), path.resolve())
+
+
+class AlignMatchTest(unittest.TestCase):
+    def test_numbers_heard_as_digits_count_as_matched(self):
+        import runpy
+        align = runpy.run_path(str(Path(__file__).resolve().parents[1] / "bin" / "align.py"), run_name="align_test")["align"]
+        script = "giá còn mười chín nghìn đồng hôm nay".split()
+        heard = [{"text": t, "start": i * 0.3, "end": i * 0.3 + 0.25}
+                 for i, t in enumerate(["giá", "còn", "19", ".000", "đồng", "hôm", "nay"])]
+        _, ratio = align(script, heard)
+        self.assertEqual(ratio, 1.0)
+        wrong = [dict(w, text=t) for w, t in zip(heard, ["giá", "còn", "mười", "tám", "nghìn", "hôm", "nay"])]
+        _, ratio = align(script, wrong)
+        self.assertLess(ratio, 1.0)

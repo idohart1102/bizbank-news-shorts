@@ -6,6 +6,7 @@ Luật (code kiểm, sai là bị trả lại):
 - Cảnh phủ kín từ 0 tới hết audio, liền nhau (end cảnh trước = start cảnh sau), không hở, không chồng.
 - Mỗi cảnh 1,5–4 giây; cảnh `static` không quá 2,5 giây. Cảnh nằm trong một đoạn (`segment`) và dùng hình của đúng đoạn đó (`asset` là id trong danh sách ảnh).
 - **Mỗi ảnh chỉ dùng cho đúng một cảnh trong cả video, tuyệt đối không dùng lại.** Số cảnh của một đoạn không vượt số ảnh của đoạn đó; thiếu ảnh thì kéo dài cảnh (tối đa 4 giây, có chuyển động) hoặc mượn ảnh chưa dùng của đoạn kề có nội dung phù hợp.
+- `note` của ảnh có mức `[liên quan x/10]` so với lời của đoạn. Cảnh có thẻ số liệu dùng ảnh liên quan cao nhất; mượn ảnh của đoạn kề chỉ khi ảnh đó cũng đúng với lời đang đọc (ảnh shipper không đi với tin giá dầu diesel). Thiếu ảnh hợp thì kéo dài cảnh (≤ 4 giây) chứ không dùng ảnh lạc đề.
 - `motion`: zoom-in, zoom-out, pan-left, pan-right, ken-burns, static, split. Xen kẽ, không lặp một kiểu quá 2 cảnh liền. Ảnh `doc`/`chart` dùng zoom-in chậm hoặc static.
 - `headline`: luôn null; `highlight_words`: luôn []. Không có phụ đề; thẻ chữ/số và cutout do hệ thống tự hiện theo lời (xem danh sách kèm mốc), đã có tiếng động riêng.
 - Ảnh nền chỉ nằm ở vùng ảnh (nửa trên); thẻ hiện ở phần dưới vùng ảnh, cutout đứng ở cạnh trái/phải. Trong lúc có thẻ/cutout, chọn ảnh nền thoáng (không nhiều chữ nhỏ), không trùng chủ thể với cutout đang hiện (cutout sổ thì nền không phải ảnh cuốn sổ), chuyển động nhẹ (zoom-in/ken-burns).

@@ -8,4 +8,5 @@ Kiểm và ghi `issues` (time = giây của khung lỗi):
 - `major`: thẻ chữ/số bị tràn, bị cắt, chữ đè nhau hoặc sai chính tả tiếng Việt; thẻ/cutout che nhãn "Nguồn…" góc trên phải; cutout lỗi (mất đầu, rìa bẩn, sai người/sai vật so với lời); hình nền không liên quan/ngược nghĩa với lời đang đọc; khung đen/trắng/ảnh lỗi; ảnh AI trông như ảnh thật của người/sự kiện có thật; nội dung phản cảm.
 - `minor`: ảnh mờ, bố cục chưa đẹp, thẻ hơi sớm/muộn, cutout che mất chủ thể của ảnh nền.
 
+`kind`: `background` (ảnh nền lạc đề, ngược nghĩa, gây hiểu sai với lời), `card`, `cutout`, `cta`, `frame`, `ai_realism`, `other`.
 `fix`: sửa cụ thể trong edit_plan.json (đổi asset nền của cảnh t=…, đổi motion…). Lỗi nằm ở thẻ/cutout thì ghi rõ để người bảo trì sửa kịch bản/asset. `pass` = không có lỗi `major`.

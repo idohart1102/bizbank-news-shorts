@@ -72,6 +72,8 @@ def merge_candidates(cfg, new_items, episode_ids, source):
                       "first_seen": now()[:10]}
             candidates.append(target)
             by_id[target["id"]] = target
+        elif source == "owner":  # góp ý của chủ kênh thay chữ luật cũ, không để luật cũ nuốt mất ý chủ kênh
+            target["rule"], target["why"] = item["rule"], item["why"]
         target["episodes"] = sorted(set(target["episodes"]) | set(episode_ids))
         target["from_owner"] = target["from_owner"] or source == "owner"
         target["last_seen"] = now()[:10]

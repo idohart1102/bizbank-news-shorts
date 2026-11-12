@@ -9,6 +9,7 @@ import json
 import os
 import subprocess
 import time
+import uuid
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -20,6 +21,28 @@ from .episode import write_text
 
 class AgentError(Exception):
     pass
+
+
+# Trường chỉ để mô tả, AI hay bỏ sót khi không ép được schema (tìm web qua router): tự điền "" thay vì bỏ cả kết quả.
+SOFT_FIELDS = {"asset_search": {"why", "credit", "subject"}}
+
+
+def fill_soft_fields(schema_name, value, node=None):
+    soft = SOFT_FIELDS.get(schema_name)
+    if not soft:
+        return value
+    node = node or agent_schema(schema_name)
+    if isinstance(value, dict) and node.get("type") == "object":
+        for key in node.get("required", []):
+            if key in soft and key not in value:
+                value[key] = ""
+        for key, child in node.get("properties", {}).items():
+            if key in value:
+                fill_soft_fields(schema_name, value[key], child)
+    elif isinstance(value, list) and "items" in node:
+        for item in value:
+            fill_soft_fields(schema_name, item, node["items"])
+    return value
 
 
 def agent_schema(name):
@@ -92,6 +115,8 @@ def router_post(conf, path, body, timeout):
 def router(conf, prompt, schema_name, workdir, tools, timeout):
     """API kiểu OpenAI. Có tool web_search thì dùng Responses API (tìm web), không thì chat completions."""
     if "web_search" in tools:
+        # Responses API có web_search không ép được schema: đưa schema vào prompt để AI trả đủ trường.
+        prompt += "\n\n## JSON schema bắt buộc\n" + json.dumps(agent_schema(schema_name), ensure_ascii=False)
         body = {"model": conf["model"], "input": prompt, "tools": [{"type": "web_search"}]}
         payload = router_post(conf, "/responses", body, timeout)
         text = payload.get("output_text") or "".join(
@@ -122,8 +147,9 @@ def generate_image(cfg, prompt, size="1024x1536", transparent=False):
 
 def codex_cli(conf, prompt, schema_name, workdir, tools, timeout):
     """Codex tác tử: được ghi file trong thư mục tập (tải ảnh), trả JSON theo schema."""
-    schema_file = Path(workdir) / "logs" / f".schema-{schema_name}.json"
-    last = Path(workdir) / "logs" / f".codex-{schema_name}-{int(time.time())}.txt"
+    tag = uuid.uuid4().hex[:6]  # gọi song song: mỗi lượt file riêng, không đè nhau
+    schema_file = Path(workdir) / "logs" / f".schema-{schema_name}-{tag}.json"
+    last = Path(workdir) / "logs" / f".codex-{schema_name}-{int(time.time())}-{tag}.txt"
     write_text(schema_file, json.dumps(agent_schema(schema_name)))
     command = [conf.get("bin", "codex"), "exec", "--skip-git-repo-check", "--ephemeral", "-s", "workspace-write",
                "-C", str(workdir), "--output-schema", str(schema_file), "-o", str(last), *conf.get("cli_args", []), "-"]
@@ -149,12 +175,12 @@ def build_prompt(step, context):
     return "\n\n".join(parts)
 
 
-def run(cfg, episode, role, step, context, schema_name, tools=(), timeout=900, agentic=False):
+def run(cfg, episode, role, step, context, schema_name, tools=(), timeout=900, agentic=False, label=None):
     ensure_online(f"gọi AI ({role}/{step})")
     conf = dict(cfg.machine["agents"][role])
     backend = conf.get("agentic_backend", "codex_cli") if agentic else conf["backend"]
     prompt = build_prompt(step, context)
-    stamp = time.strftime("%H%M%S")
+    stamp = time.strftime("%H%M%S") + (f"-{label}" if label else "")
     log_dir = episode.file("logs/agents")
     write_text(log_dir / f"{stamp}-{step}-{role}.prompt.md", prompt)
     attempts = [backend] + ([conf["fallback"]] if conf.get("fallback") and conf["fallback"] != backend else [])
@@ -165,7 +191,7 @@ def run(cfg, episode, role, step, context, schema_name, tools=(), timeout=900, a
         except (AgentError, subprocess.TimeoutExpired, ValueError, KeyError) as error:
             errors.append(f"{name}: {error}")
             continue
-        problems = validate_schema(schema_name, result)
+        problems = validate_schema(schema_name, fill_soft_fields(schema_name, result))
         write_text(log_dir / f"{stamp}-{step}-{role}.{name}.json", json.dumps(result, ensure_ascii=False, indent=1))
         if problems:
             errors.append(f"{name}: sai schema: {problems[:3]}")

@@ -36,6 +36,18 @@ def numbers(text):
     return re.findall(r"\d+(?:[.,]\d+)*", text)
 
 
+# Một mốc thời gian là một giá trị: «15h», «15h30», «12/11», «1/1/2027», «15h ngày 12/11».
+_TIME = r"\d{1,2}h(?:\d{2})?"
+_DATE = r"\d{1,2}/\d{1,2}(?:/\d{4})?"
+_MOMENT = re.compile(rf"(?<![\d.,])(?:{_TIME}(?:,?\s*(?:ngày\s*)?{_DATE})?|{_DATE})(?![\d.,]\d)", re.IGNORECASE)
+
+
+def card_values(text):
+    """Số giá trị trên thẻ: mỗi mốc giờ/ngày tính là một, còn lại mỗi cụm số là một."""
+    moments = len(_MOMENT.findall(text))
+    return moments + len(numbers(_MOMENT.sub(" ", text)))
+
+
 def lint_script(script):
     """Luật của core/standard/script.md có thể kiểm bằng code."""
     errors = validate_schema("script", script)
@@ -68,8 +80,8 @@ def lint_script(script):
         if missing:
             errors.append(f"{sid}: source_ids {sorted(missing)} không có trong sources")
         for card in segment["cards"]:
-            if len(numbers(card["value"])) > 2:
-                errors.append(f"{sid}: thẻ «{card['value']}» nhồi {len(numbers(card['value']))} con số; mỗi thẻ một giá trị (tối đa 2 số cho khoảng)")
+            if card_values(card["value"]) > 2:
+                errors.append(f"{sid}: thẻ «{card['value']}» nhồi {card_values(card['value'])} giá trị; mỗi thẻ một giá trị (tối đa 2 số cho khoảng)")
         for item in segment["cards"] + segment["cutouts"]:
             if item["trigger"].lower() not in segment["show"].lower():
                 errors.append(f"{sid}: trigger «{item['trigger']}» không có nguyên văn trong show")

@@ -1,0 +1,1 @@
+- [assets-035] Loại khỏi kho asset của tập mọi ảnh không đúng chủ đề tin hoặc là ảnh cũ dễ gây hiểu sai; mỗi đoạn cần có ảnh thật đúng đối tượng được nêu. (vì: Kho asset có ảnh tuyển sinh thời COVID và ảnh không có ảnh diesel phù hợp, nên plan phải dùng ảnh lạc đề.)

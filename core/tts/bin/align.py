@@ -70,6 +70,9 @@ def align(script_tokens, heard):
             matched += i2 - i1
         elif op == "replace":
             # Ví dụ kịch bản "10%" mà Whisper nghe "mười phần trăm": chia đều khoảng thời gian.
+            # Whisper hay ghi số đọc bằng chữ thành chữ số ("mười chín nghìn" → "19 .000"): vẫn tính là khớp.
+            if any(c.isdigit() for k in range(j1, j2) for c in b[k]):
+                matched += i2 - i1
             start, end = heard[j1]["start"], heard[j2 - 1]["end"]
             weights = [max(len(a[i]), 1) for i in range(i1, i2)]
             total, cursor = sum(weights), start

@@ -1,0 +1,2 @@
+- [plan-034] Ảnh nền của mỗi cảnh phải khớp với lời đang đọc và thẻ đang hiện; đối chiếu nội dung ảnh với câu đọc trước khi gán asset, không dùng ảnh lạc đề. (vì: QC hai lần bắt ảnh nền không liên quan: ảnh băng rôn tuyển sinh và ảnh ứng dụng mua sắm hiện trong lúc đọc giá xăng, giá dầu.)
+- [plan-036] Tắt thẻ ngay sau từ cuối của câu chứa nó, lấy theo mốc từng từ; thẻ không được kéo sang câu kế tiếp. (vì: QC bắt thẻ con số vẫn hiện khi lời đọc đã chuyển sang ý mới.)

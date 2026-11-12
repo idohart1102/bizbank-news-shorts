@@ -35,7 +35,17 @@
       ]
      },
      "kind": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+       "background",
+       "card",
+       "cutout",
+       "cta",
+       "frame",
+       "ai_realism",
+       "other"
+      ],
+      "description": "background: ảnh nền lạc đề/ngược nghĩa với lời; card: thẻ chữ/số; cutout; cta: cảnh kêu gọi trống; frame: khung đen/lỗi; ai_realism: ảnh AI giống ảnh thật"
      },
      "problem": {
       "type": "string"

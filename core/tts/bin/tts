@@ -877,7 +877,8 @@ def write_atomic(raw, destination):
 
 def cmd_say(args):
     health = json.loads(local_call('GET', '/health'))
-    if health.get('service') != 'bizbank-news-tts':
+    # Chấp nhận TTS riêng của dự án hoặc TTS dùng chung trên máy (cùng API, decisions 2026-11-07).
+    if health.get('service') not in ('bizbank-news-tts', 'idohart-tts'):
         raise SystemExit('Cổng đang do TTS khác quản lý. Chọn cổng riêng trong local/tts.env và machine.yaml; không tự dừng dịch vụ khác.')
     if args.provider == 'vbee' and args.srt and not health.get('align_ready'):
         raise SystemExit('Chưa sẵn sàng căn từ offline; chạy bin/bootstrap --with-tts trước khi tạo giọng.')

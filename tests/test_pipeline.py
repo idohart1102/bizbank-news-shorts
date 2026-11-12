@@ -128,6 +128,65 @@ class PlanRulesTest(unittest.TestCase):
         self.assertTrue(any("không được kéo sang cảnh sau" in e for e in errors), "cắt cảnh 0,5s sau khi thẻ hiện")
 
 
+class AssetRelevanceTest(Base):
+    def test_low_relevance_images_dropped_and_short_segments_searched_again(self):
+        from news import media
+        episode = self.new()
+        pipeline.run(self.cfg, episode, until="voice")
+        ctx = steps.Ctx(self.cfg, episode)
+        calls = []
+
+        def fake_run(cfg, ep, role, step, context, schema_name, **kwargs):
+            seg = context["Các đoạn"][0]["segment"]
+            calls.append(kwargs.get("label"))
+            bad = {"image_url": f"https://x/{seg}-bad.jpg", "page_url": "https://x", "credit": "x", "kind": "real",
+                   "why": "", "subject": "app mua sắm", "relevance": 3}
+            good = dict(bad, image_url=f"https://x/{kwargs.get('label')}-good.jpg", subject="cột bơm", relevance=8)
+            return {"segments": [{"segment": seg, "ai_prompt": "p", "candidates": [bad, good]}], "cutouts": []}
+
+        with mock.patch.object(media.agents, "run", fake_run), \
+                mock.patch.object(media, "download", lambda url, referer=None: url.encode()), \
+                mock.patch.object(media, "probe_image", lambda path, ffprobe="ffprobe": (1920, 1440)), \
+                mock.patch.object(media, "normalize", lambda raw, target, *a: (target.write_bytes(raw), (1920, 1440))[1]), \
+                mock.patch.object(media, "og_image", lambda url: None), \
+                mock.patch.object(media.agents, "generate_image", lambda *a, **k: b"ai-" + os.urandom(4)), \
+                mock.patch.object(media, "gather_cutouts", lambda *a: None):
+            media.gather(ctx)
+        items = read_json(episode.file("assets.json"))["items"]
+        self.assertFalse([i for i in items if "app mua sắm" in i["note"]], "ảnh liên quan thấp không được vào assets")
+        self.assertTrue(all("liên quan 8/10" in i["note"] for i in items if i["kind"] == "real"))
+        self.assertTrue(any(label and label.endswith("-bu") for label in calls), "đoạn thiếu ảnh phải được tìm bù")
+
+
+class AiBackgroundTest(Base):
+    def test_qc_background_issue_adds_ai_image_for_that_segment(self):
+        from news import media
+        episode = self.new()
+        pipeline.run(self.cfg, episode)
+        ctx = steps.Ctx(self.cfg, episode)
+        scene = read_json(episode.file("edit_plan.json"))["scenes"][1]
+        qc = {"pass": False, "issues": [
+            {"time": scene["start"] + 0.1, "severity": "major", "kind": "background", "problem": "lạc đề", "fix": "đổi ảnh"},
+            {"time": 0.5, "severity": "minor", "kind": "background", "problem": "hơi mờ", "fix": ""}]}
+        before = len(read_json(episode.file("assets.json"))["items"])
+        with mock.patch.object(media.agents, "generate_image", lambda *a, **k: b"img"), \
+                mock.patch.object(media, "normalize", lambda raw, target, *a: (target.write_bytes(raw), (1536, 1024))[1]):
+            self.assertEqual(media.add_ai_backgrounds(ctx, qc), 1)
+        items = read_json(episode.file("assets.json"))["items"]
+        self.assertEqual(len(items), before + 1)
+        self.assertEqual((items[-1]["segment"], items[-1]["kind"]), (scene["segment"], "ai"))
+
+
+class CardRulesTest(unittest.TestCase):
+    def test_time_and_date_count_as_one_value(self):
+        from news.checks import card_values
+        for value in ("15h ngày 12/11", "Từ 15h 12/11", "1/1/2027", "15h30", "19.399 đồng/lít"):
+            self.assertEqual(card_values(value), 1, value)
+        self.assertEqual(card_values("40–150 triệu"), 2)
+        self.assertEqual(card_values("5,7/5,08/4,45"), 3)
+        self.assertEqual(card_values("19.399 và 19.845 từ 15h 12/11"), 3)
+
+
 class LessonsTest(Base):
     def test_promotion_and_privacy(self):
         item = {"step": "write", "rule": "Giải thích viết tắt BHXH ở lần đầu", "why": "chủ shop không hiểu", "merge_with": None}
@@ -146,6 +205,24 @@ class LessonsTest(Base):
         promoted = lessons.merge_candidates(self.cfg, [leaky, owner], ["tap-a"], "owner")
         self.assertEqual(len(promoted), 1)
         self.assertNotIn("example.org", (lessons.LESSONS / "rules" / "pick.md").read_text())
+
+    def test_owner_feedback_replaces_wording_of_merged_rule(self):
+        old = {"step": "write", "rule": "Thẻ giờ chỉ ghi giờ, bỏ ngày", "why": "gate chặn", "merge_with": None}
+        lessons.merge_candidates(self.cfg, [old], ["tap-a"], "gate")
+        owner = {"step": "write", "rule": "Thẻ được ghi giờ kèm ngày", "why": "chủ kênh chấp nhận", "merge_with": "write-001"}
+        lessons.merge_candidates(self.cfg, [owner], ["tap-b"], "owner")
+        rules = (lessons.LESSONS / "rules" / "write.md").read_text()
+        self.assertIn("giờ kèm ngày", rules)
+        self.assertNotIn("bỏ ngày", rules)
+
+    def test_new_rule_does_not_rerun_finished_step(self):
+        episode = self.new()
+        pipeline.run(self.cfg, episode)
+        before = read_json(episode.file("state.json"))["steps"]["write"]["input_hash"]
+        (lessons.LESSONS / "rules").mkdir(parents=True, exist_ok=True)
+        (lessons.LESSONS / "rules" / "write.md").write_text("- [write-999] luật mới\n")
+        ctx = steps.Ctx(self.cfg, episode)
+        self.assertEqual(pipeline.input_hash(ctx, steps.BY_NAME["write"]), before)
 
 
 class GuardTest(unittest.TestCase):

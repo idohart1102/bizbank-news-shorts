@@ -5,9 +5,13 @@ Mỗi đoạn kịch bản có `visual` mô tả hình cần. Dùng web_search t
 2. Ảnh chụp/trang văn bản chính thống (cổng Chính phủ, Bộ, Cục Thuế) khi đoạn nói về văn bản.
 3. Ảnh báo chí cùng chủ đề (chợ, cửa hàng, quầy thu ngân, người lao động…) nếu không có ảnh sự kiện.
 
-Mỗi cảnh trong video dùng một ảnh riêng, **không dùng lại ảnh**, nên cần khoảng 1 ảnh cho mỗi 3,5 giây lời đọc. Với mỗi đoạn, trả 4–8 `candidates` khác nhau (không trùng ảnh, không cùng ảnh ở cỡ khác):
+Mỗi cảnh trong video dùng một ảnh riêng, **không dùng lại ảnh**, nên cần khoảng 1 ảnh cho mỗi 3,5 giây lời đọc (`seconds` của đoạn, nếu có). Có thể chỉ nhận một phần các đoạn: chỉ trả đúng các đoạn được đưa. Với mỗi đoạn, trả 4–8 `candidates` khác nhau (không trùng ảnh, không cùng ảnh ở cỡ khác):
 - `image_url`: link **trực tiếp** tới file ảnh (.jpg/.jpeg/.png/.webp), lấy đúng từ trang bạn đã mở (thẻ og:image hoặc ảnh trong bài). Không bịa, không đoán đường dẫn.
 - `page_url`: trang chứa ảnh; `credit`: tên báo/cơ quan; `kind`: `real` (ảnh chụp) hoặc `doc` (ảnh văn bản, bảng, website).
+- `subject`: chủ thể chính thấy trong ảnh, vài chữ ("nhân viên bơm xăng cho xe máy", "điện thoại mở app mua sắm").
+- `relevance` (0–10): ảnh khớp **lời đang đọc** (`show`) của đoạn tới đâu, chấm khắt khe như người xem nhìn ảnh lúc nghe câu đó:
+  9–10 đúng sự vật/sự kiện được nói (tin giá dầu diesel → cột bơm dầu, xe tải đổ dầu); 6–8 cùng bối cảnh, không gây hiểu sai (cây xăng nói chung);
+  ≤ 5 chỉ liên quan gián tiếp hoặc dễ hiểu sai (shipper, shop online, app mua sắm cho tin giá xăng). Hệ thống **bỏ ảnh < 6**, nên cố tìm đủ ảnh ≥ 6; không thổi điểm.
 - Khung hiển thị là **4:3 ngang (1080×810)**. Ưu tiên ảnh ngang **độ phân giải cao: rộng ≥ 1920px** (tối thiểu phủ được 1080×810); lấy bản gốc lớn nhất của ảnh (không lấy thumbnail, ảnh thu nhỏ trong danh sách). Ảnh nhỏ hơn chỉ đưa vào khi không còn ảnh nào khác. Tránh ảnh có watermark to, ảnh chân dung lãnh đạo không liên quan, ảnh quảng cáo.
 
 Đoạn `cta` (lời mời theo dõi) cũng cần ảnh có **chủ thể rõ** (người dùng điện thoại xem video, chủ shop tại quầy, cửa hàng có khách), không lấy ảnh tường, bàn trống, không gian không người.

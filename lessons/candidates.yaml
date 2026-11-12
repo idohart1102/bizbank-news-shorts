@@ -187,20 +187,20 @@ candidates:
   why: Câu hook nghe như shop phải tự xử lý trong 1 ngày, và chưa nêu rủi ro tiền
     bạc.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
-  last_seen: '2026-11-08'
-  evidence: 1
+  last_seen: '2026-11-12'
+  evidence: 2
 - id: write-019
   step: write
   rule: Mỗi ý chỉ nói một lần trong toàn bài; không lặp cùng con số hay cụm từ ở nhiều
     đoạn, bỏ câu lạc khỏi mạch chính.
   why: Ý '1 ngày làm việc' lặp lại 3 lần, lời kêu gọi cuối lặp ý, làm bài mất nhịp.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
-  last_seen: '2026-11-08'
-  evidence: 1
+  last_seen: '2026-11-12'
+  evidence: 2
 - id: write-020
   step: write
   rule: Lời kêu gọi cuối phải nêu cụ thể tên hồ sơ cần nộp, nộp ở đâu và việc cần
@@ -208,7 +208,184 @@ candidates:
   why: Kết bài chỉ ghi 'nộp đủ hồ sơ' mà không nói hồ sơ gì. Các thuật ngữ 'chấm dứt
     hiệu lực' và 'bù trừ' cũng chưa được giải thích.
   from_owner: false
-  status: candidate
+  status: active
   first_seen: '2026-11-08'
-  last_seen: '2026-11-08'
+  last_seen: '2026-11-12'
+  evidence: 2
+- id: write-021
+  step: write
+  rule: Thẻ thời điểm được ghi giờ kèm ngày như «15h ngày 12/11»; một mốc giờ/ngày
+    tính là một giá trị.
+  why: Chủ kênh chấp nhận thẻ «15h ngày 12/11»; gate đếm mốc thời gian là một giá
+    trị.
+  from_owner: true
+  status: active
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-022
+  step: write
+  rule: Đoạn nào nêu số liệu, ngày hay quy định phải gắn `source_ids` trỏ tới nguồn
+    chứa đúng fact đó; rà toàn bộ đoạn trước khi nộp.
+  why: Gate báo có đoạn chứa fact mà không có source_ids.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-023
+  step: write
+  rule: Kiểm ngày đăng và kỳ áp dụng của từng nguồn khớp đúng sự kiện đang viết; không
+    dùng trích dẫn bị cắt [...] hoặc bài của kỳ trước làm bằng chứng.
+  why: Kịch bản lấy số của kỳ điều hành trước gán cho kỳ hiện tại, trích dẫn bị cắt
+    không chứng minh được fact.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-024
+  step: write
+  rule: Trước khi viết «về», «lần đầu», «tiếp tục» trong tiêu đề hay hook, đối chiếu
+    kỳ trước để xác nhận đó thật là diễn biến mới.
+  why: Tiêu đề nói xăng «về dưới 20.000» trong khi mốc này có thể đã đạt ở kỳ trước.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-025
+  step: write
+  rule: Hook đặt câu hỏi thì video phải trả lời bằng con số cụ thể tính từ số đã kiểm;
+    không trả lời được thì đổi hook.
+  why: Hook hỏi chi phí giảm bao nhiêu nhưng video không đưa ra con số đó.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-026
+  step: write
+  rule: Giải thích thuật ngữ bằng một vế đời thường ngay lần đầu xuất hiện; các lần
+    sau chỉ dùng tên gọn, không giải thích lại.
+  why: «Giá bán tối đa» khó hiểu với chủ tiệm và chưa được giải thích.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-027
+  step: write
+  rule: Mỗi đoạn tối đa 2 thẻ; trigger của thẻ phải là cụm từ thật sự được đọc trong
+    `say`, và con số trên thẻ phải được đọc lên.
+  why: Đoạn ngắn có 3 thẻ, một thẻ bắt theo trigger mà con số không được đọc.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-028
+  step: write
+  rule: '`say` có thể đọc gọn tên sản phẩm/ký hiệu, nhưng `show` và nhãn thẻ phải
+    ghi đúng tên đầy đủ như nguồn.'
+  why: Đọc «E10 RON95» trong khi tên chuẩn theo nguồn là E10 RON95-III, show và card
+    không khớp.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-029
+  step: write
+  rule: Đoạn hành động nêu tối đa một câu ngắn; `show` không chép nguyên `say` mà
+    rút thành vài gạch đầu dòng dưới 5 từ.
+  why: Đoạn hành động dài 33 từ, 3 ý, show chép nguyên lời nên chữ dày trên màn hình.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-030
+  step: write
+  rule: Câu đầu tiên của đoạn mở phải nói ngay ý gây chú ý nhất, trùng ý tiêu đề và
+    hook_text; không để ý đó xuống các đoạn sau.
+  why: Hook 3 giây đầu chỉ có số khô, ý chính của tiêu đề để tận đoạn giữa.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-031
+  step: write
+  rule: Mỗi đoạn lời đọc chỉ nêu tối đa hai con số; số phụ để trên thẻ, và quy đổi
+    chuỗi số thành lợi ích cụ thể cho hộ kinh doanh.
+  why: Sáu con số giá đọc liên tiếp khiến người nghe khó nhớ, chưa quy ra tiền tiết
+    kiệm cụ thể.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-032
+  step: write
+  rule: Đoạn khuyến nghị do kênh tự đưa ra để `source_ids` rỗng; chỉ gắn nguồn khi
+    nguồn thật sự nêu nội dung đó.
+  why: Đoạn lời khuyên gắn source_ids trỏ tới nguồn không chứa lời khuyên.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-033
+  step: write
+  rule: Ghi `tier` của từng nguồn trong `script.json` đúng phân loại nhóm nguồn từ
+    bước gom tin; không tự nâng tier.
+  why: Nguồn bị ghi tier cao hơn phân loại của bước gom tin.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: plan-034
+  step: plan
+  rule: Ảnh nền của mỗi cảnh phải khớp với lời đang đọc và thẻ đang hiện; đối chiếu
+    nội dung ảnh với câu đọc trước khi gán asset, không dùng ảnh lạc đề.
+  why: 'QC hai lần bắt ảnh nền không liên quan: ảnh băng rôn tuyển sinh và ảnh ứng
+    dụng mua sắm hiện trong lúc đọc giá xăng, giá dầu.'
+  from_owner: true
+  status: active
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: assets-035
+  step: assets
+  rule: Loại khỏi kho asset của tập mọi ảnh không đúng chủ đề tin hoặc là ảnh cũ dễ
+    gây hiểu sai; mỗi đoạn cần có ảnh thật đúng đối tượng được nêu.
+  why: Kho asset có ảnh tuyển sinh thời COVID và ảnh không có ảnh diesel phù hợp,
+    nên plan phải dùng ảnh lạc đề.
+  from_owner: true
+  status: active
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: plan-036
+  step: plan
+  rule: Tắt thẻ ngay sau từ cuối của câu chứa nó, lấy theo mốc từng từ; thẻ không
+    được kéo sang câu kế tiếp.
+  why: QC bắt thẻ con số vẫn hiện khi lời đọc đã chuyển sang ý mới.
+  from_owner: true
+  status: active
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
+  evidence: 1
+- id: write-037
+  step: write
+  rule: Giữ mỗi câu trong `say` tối đa 20 âm tiết, đếm cả số đọc thành chữ; câu dài
+    thì tách đôi hoặc chuyển số phụ, ngày áp dụng lên thẻ.
+  why: Gate check_write trả lại nhiều đoạn vì câu vượt 20 âm tiết; con số và ký hiệu
+    đọc thành chữ làm câu phình ra.
+  from_owner: false
+  status: candidate
+  first_seen: '2026-11-12'
+  last_seen: '2026-11-12'
   evidence: 1

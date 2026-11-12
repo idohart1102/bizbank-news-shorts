@@ -2,3 +2,7 @@
 - [write-011] Nhãn thẻ và lời đọc giữ đúng tiêu chí của nguồn (đối tượng đếm, điều kiện áp dụng); không tự diễn giải lại làm đổi nghĩa. (vì: Nhãn thẻ đổi 'số lao động bị vi phạm' thành 'số người vi phạm', sai đối tượng đếm.)
 - [write-012] Mức phạt và quy định pháp lý phải dẫn văn bản gốc (số nghị định/luật, điều, khoản) kèm quote nguyên văn; không dựa duy nhất vào một bài báo. (vì: Mức phạt chỉ có một nguồn báo tier 2, không đạt luật cứng về nguồn.)
 - [write-014] Mỗi thẻ phải mang con số hoặc thông tin cụ thể; bỏ thẻ chỉ lặp lại lời đọc mà không có số. (vì: Thẻ 'Tăng theo' không có số, gần như lặp câu đọc.)
+- [write-018] Hook nói rõ ai phải làm gì và tác động đến tiền của hộ kinh doanh; không để người nghe hiểu nhầm chủ thể. (vì: Câu hook nghe như shop phải tự xử lý trong 1 ngày, và chưa nêu rủi ro tiền bạc.)
+- [write-019] Mỗi ý chỉ nói một lần trong toàn bài; không lặp cùng con số hay cụm từ ở nhiều đoạn, bỏ câu lạc khỏi mạch chính. (vì: Ý '1 ngày làm việc' lặp lại 3 lần, lời kêu gọi cuối lặp ý, làm bài mất nhịp.)
+- [write-020] Lời kêu gọi cuối phải nêu cụ thể tên hồ sơ cần nộp, nộp ở đâu và việc cần rà soát; giải thích một vế cho mọi thuật ngữ thuế dễ nghe nhầm. (vì: Kết bài chỉ ghi 'nộp đủ hồ sơ' mà không nói hồ sơ gì. Các thuật ngữ 'chấm dứt hiệu lực' và 'bù trừ' cũng chưa được giải thích.)
+- [write-021] Thẻ thời điểm được ghi giờ kèm ngày như «15h ngày 12/11»; một mốc giờ/ngày tính là một giá trị. (vì: Chủ kênh chấp nhận thẻ «15h ngày 12/11»; gate đếm mốc thời gian là một giá trị.)

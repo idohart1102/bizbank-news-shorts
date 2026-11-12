@@ -360,7 +360,12 @@ def check_assets(ctx):
 def run_plan(ctx):
     if ctx.cfg.dry:
         return write_json(ctx.ep.file("edit_plan.json"), simple_plan(ctx))
-    from . import render, timeline
+    from . import media, render, timeline
+    qc_file = latest(ctx, "qa/qc_v*.json")
+    if qc_file and ctx.feedback("plan") and ctx.ep.state.get("ai_backgrounds_for") != qc_file.name:
+        ctx.ep.state["ai_backgrounds_for"] = qc_file.name  # mỗi bản QC chỉ bù ảnh một lần
+        if media.add_ai_backgrounds(ctx, read_json(qc_file)):
+            ctx.ep.log(f"thêm ảnh AI thay ảnh nền QC chê ({qc_file.name})")
     script = ctx.json("script.json")
     seconds = round(checks.duration(ctx.ep.file("audio/voice.mp3"), ctx.cfg.bin("ffprobe")), 3)
     cards, cutouts = timeline.events(script, ctx.json("audio/voice.words.json"), seconds)

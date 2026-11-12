@@ -10,4 +10,11 @@ Thang 10 điểm:
 - `cta` (1): có việc cần làm cụ thể + lời mời theo dõi ngắn.
 Kiểm thêm thẻ chữ/số (`cards`) và `cutouts`: giá trị trên thẻ đúng nguồn, ngắn, dễ nhớ; có đủ thông tin quan trọng; cutout người chỉ cho người được nhắc tên. Thiếu/thừa ghi vào `issues`.
 
+**Luật code kiểm** (cách sửa bạn đề xuất không được vi phạm, nếu không kịch bản sẽ bị trả lại vô ích):
+- Mỗi câu `say` ≤ 20 âm tiết (đếm cả số đọc bằng chữ: "mười chín nghìn ba trăm chín mươi chín" là 9 âm tiết); cả bài ≤ 220 âm tiết.
+- `say` không có chữ số; `show` cùng nội dung với `say`.
+- Thẻ: `value` ≤ 18 ký tự, tối đa 2 giá trị (một mốc giờ/ngày như «15h ngày 12/11» tính là một); `trigger` phải nằm nguyên văn trong `show`.
+- Mỗi đoạn hook/story/action có ít nhất một thẻ hoặc cutout và có `source_ids`.
+Câu dài thì đề xuất tách câu, không đề xuất gộp thêm ý vào câu.
+
 `issues`: lỗi cụ thể kèm cách sửa (đoạn nào, sửa thành gì). `fact_errors`: chỉ ghi lỗi fact **bạn** thấy thêm (lỗi của Codex hệ thống tự gộp). `pass` = score ≥ 8 và không có fact sai.
