@@ -243,3 +243,60 @@ class GuardTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SkipStoryTest(Base):
+    """Kịch bản trượt hết vòng khi chưa tạo giọng: tự bỏ tin, làm tin kế tiếp."""
+
+    def patch_step(self, name, attr, func):
+        patcher = mock.patch.object(steps.BY_NAME[name], attr, func)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def setup_two_stories(self):
+        def collect(ctx):
+            inbox = read_json(steps.FIXTURE / "inbox.json")
+            second = json.loads(json.dumps(inbox["stories"][0]))
+            second.update(id="tin-thu-hai", score=7)
+            for source in second["sources"]:
+                source["url"] += "?2"
+            inbox["stories"].append(second)
+            steps.write_json(ctx.ep.file("inbox.json"), inbox)
+
+        def pick(ctx):
+            skipped = {s["story"] for s in ctx.ep.state.get("skipped_stories", [])}
+            brief = read_json(steps.FIXTURE / "brief.json")
+            story = next(s for s in ctx.json("inbox.json")["stories"] if s["id"] not in skipped)
+            brief["story_ids"] = [story["id"]]
+            brief["sources"] = [dict(s, url=story["sources"][0]["url"]) for s in brief["sources"]]
+            steps.write_json(ctx.ep.file("brief.json"), brief)
+            ctx.ep.rename_with_slug(story["id"])
+
+        self.patch_step("collect", "run", collect)
+        self.patch_step("pick", "run", pick)
+
+    def test_skips_to_next_story(self):
+        self.setup_two_stories()
+        original = steps.BY_NAME["review"].check
+        self.patch_step("review", "check", lambda ctx: ["Fact sai"] if ctx.json("brief.json")["story_ids"] == ["tin-mau-hoa-don"] else original(ctx))
+        episode = self.new()
+        pipeline.run(self.cfg, episode)
+        self.assertEqual(episode.state["status"], "done", episode.state["blocker"])
+        self.assertEqual([s["story"] for s in episode.state["skipped_stories"]], ["tin-mau-hoa-don"])
+        self.assertTrue(episode.path.name.endswith("tin-thu-hai"))
+
+    def test_stops_when_no_story_left(self):
+        self.patch_step("review", "check", lambda ctx: ["Fact sai"])
+        episode = self.new()
+        pipeline.run(self.cfg, episode)
+        self.assertEqual(episode.state["status"], "needs_human")
+        self.assertIn("không còn tin", episode.state["blocker"])
+
+    def test_owner_choice_is_not_skipped(self):
+        self.setup_two_stories()
+        self.patch_step("review", "check", lambda ctx: ["Fact sai"])
+        episode = self.new()
+        episode.state["story_choice"] = "tin-mau-hoa-don"
+        pipeline.run(self.cfg, episode)
+        self.assertEqual(episode.state["status"], "needs_human")
+        self.assertIn("tin do Sếp chọn", episode.state["blocker"])

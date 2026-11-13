@@ -2,6 +2,7 @@
 
 Trạng thái tập: running → done | needs_human | failed. Chạy lại `news run --resume <tap>` thì tiếp đúng chỗ.
 needs_human: hệ thống tự dừng ở cổng an toàn (hết vòng sửa, hết ngân sách, bước chưa xây, credit không rõ).
+Kịch bản trượt hết vòng (write/review) khi chưa tạo giọng: tự bỏ tin, làm tin xếp hạng kế tiếp (tối đa MAX_SKIPS lần).
 """
 import json
 import os
@@ -33,6 +34,47 @@ class Lock:
 
     def __exit__(self, *exc):
         self.path.unlink(missing_ok=True)
+
+
+MAX_SKIPS = 2
+SKIPPABLE = ("write", "review")
+RESTART_FILES = ("brief.json", "script.json", "script_tts.txt", "sources.md", "sources_text.json")
+
+
+def next_story(ctx):
+    """Tin kế tiếp chưa bỏ, chưa làm, score ≥ 6 (xếp theo điểm); None nếu hết."""
+    skipped = {s["story"] for s in ctx.ep.state.get("skipped_stories", [])}
+    used = {u for h in ctx.history() for u in h.get("urls", [])}
+    stories = [s for s in ctx.json("inbox.json")["stories"]
+               if s["score"] >= 6 and s["id"] not in skipped and not {x["url"] for x in s["sources"]} & used]
+    return max(stories, key=lambda s: s["score"])["id"] if stories else None
+
+
+def skip_story(ctx, step, errors):
+    """Bỏ tin hiện tại và quay về bước pick. Trả lý do không bỏ được (rỗng = đã bỏ)."""
+    ep = ctx.ep
+    if step.name not in SKIPPABLE:
+        return "không phải bước kịch bản"
+    if ep.state.get("story_choice"):
+        return "tin do Sếp chọn"
+    if ep.step("voice")["state"] == "done" or ep.file("audio/voice.mp3").exists():
+        return "đã tạo giọng"
+    skipped = ep.state.setdefault("skipped_stories", [])
+    if len(skipped) >= MAX_SKIPS:
+        return f"đã bỏ {len(skipped)} tin"
+    story = ctx.json("brief.json")["story_ids"][0] if ep.file("brief.json").exists() else None
+    skipped.append({"story": story, "step": step.name, "reason": "; ".join(errors[:3])[:500], "at": now()})
+    if not next_story(ctx):
+        return "không còn tin score ≥ 6"
+    for name in RESTART_FILES:
+        ep.file(name).unlink(missing_ok=True)
+    for path in ep.path.glob("qa/feedback_*.json"):
+        path.unlink()
+    for name in steps.ORDER[steps.ORDER.index("pick"):]:
+        ep.state["steps"].pop(name, None)
+    ep.save()
+    ep.log(f"↷ bỏ tin {story} ({step.name} trượt hết vòng), chọn tin kế tiếp")
+    return ""
 
 
 def input_hash(ctx, step):
@@ -96,7 +138,13 @@ def run(cfg, episode, until=None):
             target = step.retry_to or step.name
             if st["rounds"] >= step.max_rounds:
                 st["state"] = "failed_gate"
-                return stop(ctx, "needs_human", f"{step.name} trượt {st['rounds']} vòng: " + "; ".join(errors[:3]))
+                why_not = skip_story(ctx, step, errors)
+                if not why_not:
+                    episode = ctx.ep
+                    index = steps.ORDER.index("pick")
+                    continue
+                return stop(ctx, "needs_human", f"{step.name} trượt {st['rounds']} vòng ({why_not}, không tự chuyển tin): "
+                            + "; ".join(errors[:3]))
             write_json(episode.file(f"qa/feedback_{target}.json"), errors)
             episode.log(f"✗ {step.name}: {len(errors)} lỗi → làm lại từ {target}")
             st["state"] = "retry"

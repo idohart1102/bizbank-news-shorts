@@ -29,3 +29,4 @@
 - 2026-11-12: Danh sách nguồn là ưu tiên, không phải giới hạn. Được tham khảo nguồn khác nhưng phải Sếp duyệt: nguồn lạ làm tập dừng chờ (`bin/news sources pending|approve|reject`, lưu `config/sources_approved.yaml`). Tin mới nhất được ưu tiên (tính thời sự khi chấm và chọn tin).
 - 2026-11-12: Hook text trên video phải gây tò mò, ngôn ngữ tự nhiên: không xuồng xã, không khô cứng quá mức; vẫn đúng sự thật, không giật tít sai.
 - 2026-11-13: Thẻ chữ/số được tối đa 3 giá trị (một mốc giờ/ngày như «15h ngày 12/11» tính là một), vẫn ≤ 18 ký tự. Kiểm nguồn chỉ áp cho nguồn tin; nguồn lấy ảnh không giới hạn tên miền.
+- 2026-11-13: Kịch bản trượt hết vòng sửa khi chưa tạo giọng thì tự bỏ tin, làm tin xếp hạng kế tiếp (tối đa 2 tin/tập, chỉ tin score ≥ 6 chưa làm); tin Sếp tự chọn bằng `/taovideo <id>` thì vẫn dừng báo Sếp.

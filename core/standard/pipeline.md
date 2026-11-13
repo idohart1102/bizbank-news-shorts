@@ -2,7 +2,7 @@
 
 Cài/chuyển máy: theo `docs/INSTALL.md`; source TTS ở `core/tts`. `schedule` trong YAML không tự bật lịch hệ điều hành.
 
-Chạy tự động bằng `bin/news run` (lịch 10:30, 19:00 hoặc khi được yêu cầu). Mỗi bước có cổng kiểm bằng code; trượt thì tự sửa có giới hạn vòng, hết vòng thì dừng `needs_human`. Chi tiết input/output: `docs/roadmap.md`. Mẫu đạt chuẩn: tập demo 2026-11-08 (mã số thuế trạng thái 06).
+Chạy tự động bằng `bin/news run` (lịch 10:30, 19:00 hoặc khi được yêu cầu). Mỗi bước có cổng kiểm bằng code; trượt thì tự sửa có giới hạn vòng, hết vòng thì dừng `needs_human`. Riêng kịch bản (viết/duyệt) trượt hết vòng khi chưa tạo giọng: tự bỏ tin, chọn tin xếp hạng kế tiếp (tối đa 2 lần; tin Sếp chọn bằng `--story` thì vẫn dừng). Chi tiết input/output: `docs/roadmap.md`. Mẫu đạt chuẩn: tập demo 2026-11-08 (mã số thuế trạng thái 06).
 
 | # | Bước | Người làm | Đầu ra trong `<tap>/` | Cổng kiểm soát |
 |---|---|---|---|---|
