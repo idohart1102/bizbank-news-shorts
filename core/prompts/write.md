@@ -21,5 +21,5 @@ Yêu cầu bắt buộc:
 - Nguồn ngoài "Nhóm nguồn" chỉ dùng khi đã có trong "Nguồn ngoài đã được Sếp duyệt"; nguồn lạ làm hệ thống dừng chờ duyệt.
 - `quote` chứa số liệu/ngày/mức phạt lấy từ nguồn nhóm 1, 2 hoặc 4 trong "Nhóm nguồn"; ưu tiên văn bản gốc nhóm 1. Báo nhóm 3/0 và CafeF chỉ để hiểu bối cảnh, cách nói của khách hàng, không làm nguồn số liệu.
 - Số liệu, ngày hiệu lực, mức phạt **khớp nguyên văn nguồn**. Không suy đoán, không khuyên pháp lý/đầu tư chắc chắn ("nên hỏi kế toán/cơ quan thuế").
-- `cta`: một câu ngắn mời theo dõi kênh; không cần nguồn. `visual` của cta phải có chủ thể rõ (ví dụ "chủ shop cầm điện thoại xem tin"), không mô tả không gian trống.
+- `cta`: một câu ngắn mời theo dõi kênh, tự nhiên như người Việt nói, ví dụ «Theo dõi kênh để không bỏ lỡ tin giá cả và chính sách.» (viết «không bỏ lỡ», không viết «không lỡ»); không cần nguồn. `visual` của cta phải có chủ thể rõ (ví dụ "chủ shop cầm điện thoại xem tin"), không mô tả không gian trống.
 - Có "Cần sửa": sửa **đúng** từng lỗi, giữ phần đã ổn của "Bản trước".

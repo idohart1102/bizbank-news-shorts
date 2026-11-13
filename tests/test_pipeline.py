@@ -186,6 +186,14 @@ class CardRulesTest(unittest.TestCase):
         self.assertEqual(card_values("5,7/5,08/4,45"), 3)
         self.assertEqual(card_values("19.399 và 19.845 từ 15h 12/11"), 3)
 
+    def test_cta_wording(self):
+        from news.checks import lint_script
+        script = read_json(steps.FIXTURE / "script.json")
+        script["segments"][-1]["say"] = "Theo dõi kênh để không lỡ tin chính sách."
+        self.assertTrue(any("không bỏ lỡ" in e for e in lint_script(script)))
+        script["segments"][-1]["say"] = "Theo dõi kênh để không bỏ lỡ tin chính sách."
+        self.assertFalse(any("không bỏ lỡ" in e for e in lint_script(script)))
+
     def test_card_allows_three_values(self):
         from news.checks import MAX_CARD_VALUES
         self.assertEqual(MAX_CARD_VALUES, 3)

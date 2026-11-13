@@ -67,6 +67,8 @@ def lint_script(script):
         errors.append("Thiếu đoạn action (chủ shop cần làm gì)")
     for segment in script["segments"]:
         sid = segment["id"]
+        if re.search(r"không\s+lỡ", segment["say"], re.IGNORECASE):
+            errors.append(f"{sid}: viết «không bỏ lỡ», không viết «không lỡ» (nghe không tự nhiên)")
         for sentence in re.split(r"(?<=[.!?…])\s+", segment["say"]):
             count = len(syllables(sentence))
             if count > MAX_SENTENCE_SYLLABLES:

@@ -6,7 +6,7 @@ Cấu trúc (mốc thời gian gần đúng):
 1. **Hook 0–3s**: một câu đánh vào quyền lợi. Ví dụ: "Từ 1/7, hộ kinh doanh doanh thu trên 1 tỷ phải dùng hóa đơn điện tử."
 2. **Tin 3–45s**: 1 tin sâu (3 ý) hoặc 3–4 tin ngắn (mỗi tin 8–12s: chuyện gì, áp dụng cho ai, khi nào).
 3. **Việc cần làm 45–55s**: chủ shop cần làm gì ngay.
-4. **Kết 55–58s**: lời kêu gọi ngắn (theo dõi để không lỡ tin chính sách).
+4. **Kết 55–58s**: lời kêu gọi ngắn (theo dõi để không bỏ lỡ tin chính sách; viết «không bỏ lỡ», không viết «không lỡ»).
 
 Luật:
 - Tổng ≤ 220 âm tiết. Câu ≤ 20 âm tiết, đọc một hơi.
