@@ -12,6 +12,7 @@ from .config import ROOT
 
 MAX_SYLLABLES = 220
 MAX_SENTENCE_SYLLABLES = 20
+MAX_CARD_VALUES = 3  # Sếp chốt 13/11: một thẻ tối đa 3 giá trị
 
 
 @lru_cache(maxsize=None)
@@ -80,8 +81,8 @@ def lint_script(script):
         if missing:
             errors.append(f"{sid}: source_ids {sorted(missing)} không có trong sources")
         for card in segment["cards"]:
-            if card_values(card["value"]) > 2:
-                errors.append(f"{sid}: thẻ «{card['value']}» nhồi {card_values(card['value'])} giá trị; mỗi thẻ một giá trị (tối đa 2 số cho khoảng)")
+            if card_values(card["value"]) > MAX_CARD_VALUES:
+                errors.append(f"{sid}: thẻ «{card['value']}» nhồi {card_values(card['value'])} giá trị; mỗi thẻ tối đa {MAX_CARD_VALUES} giá trị")
         for item in segment["cards"] + segment["cutouts"]:
             if item["trigger"].lower() not in segment["show"].lower():
                 errors.append(f"{sid}: trigger «{item['trigger']}» không có nguyên văn trong show")

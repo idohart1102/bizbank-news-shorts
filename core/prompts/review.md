@@ -13,7 +13,7 @@ Kiểm thêm thẻ chữ/số (`cards`) và `cutouts`: giá trị trên thẻ đ
 **Luật code kiểm** (cách sửa bạn đề xuất không được vi phạm, nếu không kịch bản sẽ bị trả lại vô ích):
 - Mỗi câu `say` ≤ 20 âm tiết (đếm cả số đọc bằng chữ: "mười chín nghìn ba trăm chín mươi chín" là 9 âm tiết); cả bài ≤ 220 âm tiết.
 - `say` không có chữ số; `show` cùng nội dung với `say`.
-- Thẻ: `value` ≤ 18 ký tự, tối đa 2 giá trị (một mốc giờ/ngày như «15h ngày 12/11» tính là một); `trigger` phải nằm nguyên văn trong `show`.
+- Thẻ: `value` ≤ 18 ký tự, tối đa 3 giá trị (một mốc giờ/ngày như «15h ngày 12/11» tính là một); `trigger` phải nằm nguyên văn trong `show`.
 - Mỗi đoạn hook/story/action có ít nhất một thẻ hoặc cutout và có `source_ids`.
 Câu dài thì đề xuất tách câu, không đề xuất gộp thêm ý vào câu.
 

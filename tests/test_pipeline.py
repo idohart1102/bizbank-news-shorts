@@ -186,6 +186,10 @@ class CardRulesTest(unittest.TestCase):
         self.assertEqual(card_values("5,7/5,08/4,45"), 3)
         self.assertEqual(card_values("19.399 và 19.845 từ 15h 12/11"), 3)
 
+    def test_card_allows_three_values(self):
+        from news.checks import MAX_CARD_VALUES
+        self.assertEqual(MAX_CARD_VALUES, 3)
+
 
 class LessonsTest(Base):
     def test_promotion_and_privacy(self):
