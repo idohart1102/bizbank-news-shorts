@@ -1,5 +1,5 @@
 # News video — bản đồ định tuyến
-`CLAUDE.md` và `AGENTS.md` phải giống hệt nhau: sửa file này thì chép sang file kia.
+`AGENTS.md` là bản duy nhất; `CLAUDE.md` chỉ chứa dòng `@AGENTS.md`.
 Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SME. "Sếp" là người dùng. `<tap>` = `episodes/<YYYY-MM-DD>-<slug>`.
 
 ## Ai làm gì
