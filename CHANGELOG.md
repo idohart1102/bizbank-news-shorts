@@ -1,5 +1,15 @@
 # Thay đổi
 
+## v1.3.0 — 2026-11-17
+
+- Phân vai mới: Claude Sonnet 5.5 gom tin, kiểm fact kịch bản và tìm ảnh thật (WebSearch/WebFetch); Codex cx/gpt-6.1-sol chỉ còn tạo ảnh/asset minh họa AI.
+- Skill /chonchude (tìm 3–5 chủ đề, chờ Sếp chọn) và /taovideo (chạy tới bước package); lệnh `news topics`, cờ `run --story`.
+- Nguồn ưu tiên theo danh sách Sếp, nguồn ngoài chờ duyệt (`news sources pending|approve|reject`); ưu tiên tin mới, luật hook.
+- Kịch bản trượt hết vòng sửa khi chưa tạo giọng thì tự chuyển sang tin kế tiếp, không tốn credit Vbee.
+- Thẻ chữ/số cho phép tối đa 3 giá trị; câu kết viết «không bỏ lỡ».
+- Tự chạy ổn định hơn: ảnh đúng chủ đề, bài học không phá tập đang chạy, TTS dùng chung.
+- CLAUDE.md trỏ tới AGENTS.md, bỏ bản sao.
+
 ## v1.2.0 — 2026-11-09
 
 - Bàn giao source TTS sạch cùng repo; wrapper bin/tts dùng Python riêng, dữ liệu/key tách ở local và kho key của OS.
