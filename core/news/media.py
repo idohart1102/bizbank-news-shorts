@@ -1,6 +1,6 @@
 """Ảnh cho từng đoạn và khung hình QC.
 
-Ảnh nền: Codex tìm ứng viên (web, song song từng đoạn, chấm `relevance` 0–10 theo lời đọc) → bỏ ảnh < MIN_RELEVANCE
+Ảnh nền: Claude Sonnet tìm ứng viên (web, song song từng đoạn, chấm `relevance` 0–10 theo lời đọc) → bỏ ảnh < MIN_RELEVANCE
 → tải, kiểm (đúng là ảnh, cạnh ngắn ≥ MIN_SIDE, không trùng) → chuẩn hóa JPG.
 Đoạn còn thiếu ảnh thì tìm bù một lượt, rồi og:image của bài nguồn, rồi ảnh AI (ghi rõ kind=ai).
 Cutout (kind=cutout, PNG trong suốt):
@@ -23,7 +23,7 @@ from .episode import write_json
 
 MIN_SIDE = 600               # dưới mức này bỏ hẳn
 MIN_RELEVANCE = 6            # ảnh khớp lời dưới mức này dễ gây hiểu sai (QC bắt lỗi nặng), bỏ trước khi plan
-SEARCH_WORKERS = 3           # số lượt Codex tìm ảnh chạy song song
+SEARCH_WORKERS = 3           # số lượt Sonnet tìm ảnh chạy song song
 FRAME = (1080, 810)          # khung ảnh 4:3 của template: ảnh "chất lượng cao" phải phủ khung này không cần phóng
 
 
@@ -162,18 +162,15 @@ def og_image(url):
 
 
 def search_segments(ctx, segments, people, feedback, label):
-    """Một lượt Codex tìm ảnh cho vài đoạn; lỗi thì trả kết quả rỗng để đoạn đó rơi xuống dự phòng."""
+    """Một lượt Claude Sonnet tìm ảnh cho vài đoạn; lỗi thì trả kết quả rỗng để đoạn đó rơi xuống dự phòng."""
     script = ctx.json("script.json")
     context = {"Các đoạn": segments, "Nguồn bài báo": [{"url": s["url"], "publisher": s["publisher"]} for s in script["sources"]],
                "Người cần ảnh cutout": people or "không có", "Cần sửa": feedback}
-    errors = []
-    for agentic in (True, False):  # Codex CLI mở trang thật, lấy ảnh gốc; lỗi thì thử router có tìm web
-        try:
-            return agents.run(ctx.cfg, ctx.ep, "codex", "assets", context, "asset_search", tools=["web_search"],
-                              timeout=900, label=label, agentic=agentic)
-        except agents.AgentError as error:
-            errors.append(str(error)[:200])
-    return {"segments": [], "cutouts": [], "error": "; ".join(errors)}
+    try:  # Claude Sonnet tìm web, mở trang thật lấy link ảnh gốc
+        return agents.run(ctx.cfg, ctx.ep, "sonnet", "assets", context, "asset_search", tools=["web_search"],
+                          timeout=900, label=label)
+    except agents.AgentError as error:
+        return {"segments": [], "cutouts": [], "error": str(error)[:200]}
 
 
 def parallel_search(ctx, jobs):
@@ -197,11 +194,11 @@ def gather(ctx):
                  "seconds": round(times[s["id"]], 1) if s["id"] in times else None} for s in script["segments"]]
     people = [{"name": c["name"], "search": c["search"]} for s in script["segments"] for c in s["cutouts"] if c["kind"] == "person"]
     feedback = ctx.feedback("assets")
-    # Mỗi đoạn một lượt Codex chạy song song (một lượt cho cả video mất 10–15 phút); người cutout đi cùng đoạn đầu.
+    # Mỗi đoạn một lượt Sonnet chạy song song (một lượt cho cả video mất 10–15 phút); người cutout đi cùng đoạn đầu.
     search = parallel_search(ctx, [([seg], people if i == 0 else [], feedback, seg["segment"])
                                    for i, seg in enumerate(segments)])
     if search["errors"] and not search["segments"]:
-        raise agents.AgentError("Codex không tìm được ảnh: " + "; ".join(search["errors"])[:500])
+        raise agents.AgentError("Sonnet không tìm được ảnh: " + "; ".join(search["errors"])[:500])
     found = {}
     for entry in search["segments"]:
         found.setdefault(entry["segment"], {"candidates": [], "ai_prompt": entry["ai_prompt"]})["candidates"] += entry["candidates"]

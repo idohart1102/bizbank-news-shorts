@@ -1,4 +1,4 @@
-# Bước 4a: Đối chiếu fact (Codex)
+# Bước 4a: Đối chiếu fact (Claude Sonnet)
 
 So **từng** con số, ngày, đối tượng áp dụng, mức phạt, tên văn bản trong kịch bản (`show` và `say` của mọi đoạn) với "Văn bản nguồn".
 

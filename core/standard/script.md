@@ -13,7 +13,7 @@ Luật:
 - Kịch bản là `script.json` (schema `core/schemas/script.schema.json`), chia đoạn. Mỗi đoạn có:
   - `say`: lời đọc cho TTS, số/ký hiệu/viết tắt viết bằng chữ ("một tỷ đồng", "mười phần trăm").
   - `show`: cùng nội dung với `say` nhưng số dạng chữ số ("1 tỷ đồng", "10%"). Không hiển thị thành phụ đề; dùng để canh lúc thẻ/cutout xuất hiện (trigger) và để duyệt.
-  - `visual`: mô tả hình nền để Codex tìm/tạo; `source_ids`: nguồn của fact.
+  - `visual`: mô tả hình nền để Sonnet tìm ảnh thật, Codex tạo ảnh AI; `source_ids`: nguồn của fact.
   - `cards`: thẻ chữ/số (`value` ≤ 18 ký tự, `label` ≤ 40, `trigger` nguyên văn trong `show`); cả video ≥ 3 thẻ.
   - `cutouts`: người nổi tiếng được nhắc tên (`person`) hoặc sự vật quan trọng (`object`), `trigger` nguyên văn trong `show`.
   - Mỗi đoạn tin có ≥ 1 thẻ hoặc cutout. Không có phụ đề; `show` dùng để canh thời điểm thẻ/cutout và để duyệt.

@@ -6,7 +6,7 @@ description: Tìm và đề xuất các chủ đề phù hợp nhất, hợp tre
 
 Làm ở thư mục gốc dự án. Trao đổi tiếng Việt, ngắn gọn.
 
-1. Gom tin: `bin/news run --until collect` (tạo tập mới, đọc RSS nguồn ưu tiên trong `config/sources.yaml`, Codex gộp tin trùng và chấm điểm). Lỗi thì báo nguyên văn dòng lỗi, dừng.
+1. Gom tin: `bin/news run --until collect` (tạo tập mới, đọc RSS nguồn ưu tiên trong `config/sources.yaml`, Claude Sonnet gộp tin trùng và chấm điểm). Lỗi thì báo nguyên văn dòng lỗi, dừng.
    Sếp nói "dùng tập vừa gom" thì bỏ bước này.
 2. Xem chủ đề: `bin/news topics last --limit 15`.
 3. Chọn ra **3–5 chủ đề tốt nhất**, bỏ tin có `[ĐÃ LÀM]`. Xếp theo:

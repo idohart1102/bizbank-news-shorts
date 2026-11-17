@@ -31,3 +31,4 @@
 - 2026-11-13: Thẻ chữ/số được tối đa 3 giá trị (một mốc giờ/ngày như «15h ngày 12/11» tính là một), vẫn ≤ 18 ký tự. Kiểm nguồn chỉ áp cho nguồn tin; nguồn lấy ảnh không giới hạn tên miền.
 - 2026-11-13: Kịch bản trượt hết vòng sửa khi chưa tạo giọng thì tự bỏ tin, làm tin xếp hạng kế tiếp (tối đa 2 tin/tập, chỉ tin score ≥ 6 chưa làm); tin Sếp tự chọn bằng `/taovideo <id>` thì vẫn dừng báo Sếp.
 - 2026-11-13: Câu kết mời theo dõi viết «để không bỏ lỡ…», không viết «không lỡ» (nghe không tự nhiên); lint_script chặn.
+- 2026-11-17: Đổi phân vai: Claude Sonnet 5.5 gom tin (bước 1), kiểm fact (bước 4b), tìm ảnh thật (bước 6); Codex gpt-6.1-sol chỉ còn tạo ảnh/asset AI.

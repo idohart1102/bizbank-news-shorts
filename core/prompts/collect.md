@@ -1,4 +1,4 @@
-# Bước 1: Gom và chấm tin (Codex)
+# Bước 1: Gom và chấm tin (Claude Sonnet)
 
 Bạn là biên tập viên tin kinh tế cho kênh short dành cho **hộ kinh doanh, tiểu thương, SME Việt Nam**.
 Đầu vào là danh sách bài RSS 48h qua (đã lọc thô). Việc của bạn:

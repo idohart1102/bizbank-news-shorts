@@ -104,7 +104,7 @@ def run_collect(ctx):
     if not raw["items"]:
         raise RuntimeError("RSS không có tin nào sau lọc: " + json.dumps(raw["feeds"], ensure_ascii=False)[:300])
     items = [{k: i[k] for k in ("title", "url", "summary", "published_at", "publisher", "tier", "group")} for i in raw["items"]]
-    inbox = agents.run(ctx.cfg, ctx.ep, "codex", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Nhóm nguồn": source_guide(), "Bài RSS": items}, "inbox")
+    inbox = agents.run(ctx.cfg, ctx.ep, "sonnet", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Nhóm nguồn": source_guide(), "Bài RSS": items}, "inbox")
     known = {i["url"] for i in raw["items"]}
     for story in inbox["stories"]:  # AI không được bịa link: chỉ giữ link có trong RSS
         story["sources"] = [s for s in story["sources"] if s["url"] in known]
@@ -196,10 +196,10 @@ def run_review(ctx):
         return
     script = ctx.json("script.json")
     sources = source_texts(ctx, script["sources"])
-    facts = agents.run(ctx.cfg, ctx.ep, "codex", "factcheck", {"Kịch bản": script, "Văn bản nguồn": sources, "Nhóm nguồn": source_guide()}, "factcheck")
+    facts = agents.run(ctx.cfg, ctx.ep, "sonnet", "factcheck", {"Kịch bản": script, "Văn bản nguồn": sources, "Nhóm nguồn": source_guide()}, "factcheck")
     write_json(ctx.ep.file(f"qa/factcheck_v{version}.json"), facts)
     review = agents.run(ctx.cfg, ctx.ep, "claude", "review",
-                        {"Kịch bản": script, "Kết quả đối chiếu nguồn của Codex": facts}, "review")
+                        {"Kịch bản": script, "Kết quả đối chiếu nguồn của Sonnet": facts}, "review")
     review["fact_errors"] = facts["fact_errors"] + review["fact_errors"]
     write_json(target, review)
 

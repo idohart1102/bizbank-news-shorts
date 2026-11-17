@@ -6,7 +6,8 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 | Ai | Việc |
 |---|---|
 | Claude Opus 5.5 | Chọn tin, viết kịch bản, duyệt kịch bản (phiên mới, không chấm bài mình viết), lên plan dựng (`edit_plan.json`), duyệt video, chốt bản cuối |
-| Codex `cx/gpt-6.1-sol` (qua 9router, lỗi thì Codex CLI) | Gom tin từ nguồn, đối chiếu tư liệu, tìm ảnh thật, tạo ảnh/asset minh họa, kiểm fact kịch bản |
+| Claude Sonnet 5.5 | Gom tin từ nguồn, kiểm fact kịch bản (đối chiếu tư liệu), tìm ảnh thật |
+| Codex `cx/gpt-6.1-sol` (qua 9router) | Tạo ảnh/asset minh họa AI |
 | Remotion | Dựng và render; PNG template của Sếp luôn nằm lớp trên cùng; không có phụ đề, thông tin quan trọng đi vào thẻ chữ/số và cutout |
 | `bin/tts` / `core/tts` (provider Vbee) | Giọng đọc + mốc thời gian từng từ (canh thẻ/cutout). Không giữ key Vbee trong repo |
 | Kho `assets/sfx/` (Pixabay) | Tiếng chuyển cảnh, dùng lại mọi tập |
@@ -26,12 +27,12 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 
 | Việc | Skill | Người làm |
 |---|---|---|
-| Gom tin trong ngày | collect-news | Codex |
+| Gom tin trong ngày | collect-news | Claude Sonnet |
 | Chọn tin, viết brief | pick-stories | Claude |
 | Viết kịch bản | write-script | Claude |
-| Duyệt kịch bản + kiểm fact | review-script | Claude (phiên mới) + Codex |
+| Duyệt kịch bản + kiểm fact | review-script | Claude Opus (phiên mới) + Claude Sonnet |
 | Giọng đọc + mốc từng từ | voice | script |
-| Ảnh, asset | gather-assets | Codex |
+| Ảnh, asset | gather-assets | Claude Sonnet (ảnh thật) + Codex (ảnh AI) |
 | Plan dựng | plan-edit | Claude |
 | Render | render | script |
 | QC video | qc-video | script + Claude |

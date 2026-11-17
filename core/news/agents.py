@@ -1,8 +1,9 @@
 """Gọi AI headless qua adapter. Mọi lần gọi ghi prompt + kết quả vào <tap>/logs/agents/.
 
 Vai trò:
-- claude: chọn tin, viết, duyệt, plan, QC, gói, chưng cất bài học.
-- codex: xử lý văn bản tư liệu (router, không cần duyệt web) và việc cần tác tử (codex_cli: tìm/tải ảnh).
+- claude (Opus): chọn tin, viết, duyệt, plan, QC, gói, chưng cất bài học.
+- sonnet (Claude Sonnet): gom tin, kiểm fact, tìm ảnh thật (WebSearch/WebFetch).
+- codex: tạo ảnh minh họa AI qua router (generate_image).
 Backend chọn trong config/machine.yaml; thêm backend mới chỉ cần thêm một hàm vào BACKENDS.
 """
 import json
@@ -60,10 +61,17 @@ def extract_json(text):
     return json.loads(text[start:text.rfind("}") + 1])
 
 
+# Tên tool chung của pipeline → tool Claude Code.
+CLAUDE_TOOLS = {"web_search": ["WebSearch", "WebFetch"]}
+
+
 def claude_cli(conf, prompt, schema_name, workdir, tools, timeout):
+    tools = [name for tool in tools for name in CLAUDE_TOOLS.get(tool, [tool])]
     command = [conf.get("bin", "claude"), "-p", "--output-format", "json", "--no-session-persistence",
                "--model", conf["model"], "--json-schema", json.dumps(agent_schema(schema_name)),
                "--permission-mode", "dontAsk", "--tools", ",".join(tools) if tools else ""]
+    if tools:
+        command += ["--allowedTools", ",".join(tools)]
     if conf.get("max_budget_usd"):
         command += ["--max-budget-usd", str(conf["max_budget_usd"])]
     out = subprocess.run(command, input=prompt, capture_output=True, text=True, timeout=timeout, cwd=workdir)
@@ -178,7 +186,7 @@ def build_prompt(step, context):
 def run(cfg, episode, role, step, context, schema_name, tools=(), timeout=900, agentic=False, label=None):
     ensure_online(f"gọi AI ({role}/{step})")
     conf = dict(cfg.machine["agents"][role])
-    backend = conf.get("agentic_backend", "codex_cli") if agentic else conf["backend"]
+    backend = conf.get("agentic_backend", conf["backend"]) if agentic else conf["backend"]
     prompt = build_prompt(step, context)
     stamp = time.strftime("%H%M%S") + (f"-{label}" if label else "")
     log_dir = episode.file("logs/agents")

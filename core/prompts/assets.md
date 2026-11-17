@@ -1,4 +1,4 @@
-# Bước 6: Tìm ảnh cho từng đoạn (Codex, có tìm web)
+# Bước 6: Tìm ảnh cho từng đoạn (Claude Sonnet, có tìm web)
 
 Mỗi đoạn kịch bản có `visual` mô tả hình cần. Dùng web_search tìm **ảnh thật** cho từng đoạn, ưu tiên:
 1. Ảnh trong chính các bài báo nguồn hoặc bài báo VN khác về cùng sự kiện (ảnh minh họa của báo).
