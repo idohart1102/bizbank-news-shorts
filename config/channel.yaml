@@ -9,13 +9,12 @@ video:
   template: assets/template/overlay.png
   layout: assets/template/layout.json
 tts:
-  service: bundled_tts         # bin/tts, source core/tts; URL ở machine.yaml
-  provider: vbee
-  voice: hn_female_ngochuyen_full_48k-fhg   # HN - Ngọc Huyền (Sếp chọn 2026-11-07)
+  service: local_vieneu        # bin/vieneu tạo giọng, bin/tts align căn từ
+  provider: vieneu
+  voice: Ngọc Huyền            # preset VieNeu, khác giọng Vbee cùng tên; có thể đổi sau khi nghe thử
   speed: 1.0
-  pauses: {sentence: 0.1, major: 0.1, medium: 0.1, paragraph: 0}   # Sếp: đọc liền mạch, ngắt nghỉ ngắn nhất Vbee cho phép
   project: news-video
-  export_srt: true             # Vbee không có SRT; platform/tts căn bằng Whisper tại máy, không tốn credit
+  export_srt: true             # Whisper căn tại máy; chỉ dùng mốc từ, video không có phụ đề
 sfx:
   library: assets/sfx/         # Pixabay, license trong assets/sfx/LICENSES.csv
   transition: whoosh

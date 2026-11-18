@@ -9,7 +9,7 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 | Claude Sonnet 5.5 | Gom tin từ nguồn, kiểm fact kịch bản (đối chiếu tư liệu), tìm ảnh thật |
 | Codex `cx/gpt-6.1-sol` (qua 9router) | Tạo ảnh/asset minh họa AI |
 | Remotion | Dựng và render; PNG template của Sếp luôn nằm lớp trên cùng; không có phụ đề, thông tin quan trọng đi vào thẻ chữ/số và cutout |
-| `bin/tts` / `core/tts` (provider Vbee) | Giọng đọc + mốc thời gian từng từ (canh thẻ/cutout). Không giữ key Vbee trong repo |
+| `bin/vieneu` + `bin/tts align` | VieNeu tạo giọng local, Whisper căn mốc từng từ. Source/model/venv VieNeu ở `local/vieneu`, không vào Git |
 | Kho `assets/sfx/` (Pixabay) | Tiếng chuyển cảnh, dùng lại mọi tập |
 | Sếp | Thiết kế template PNG, đăng YouTube, đổi quyết định trong `docs/decisions.md` |
 
@@ -21,7 +21,7 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 1. Đọc `docs/decisions.md` một lần mỗi phiên; mâu thuẫn thì `decisions.md` thắng.
 2. Mở đúng `core/skills/<skill>/SKILL.md` theo bảng, chỉ đọc các file skill nêu.
 3. Luồng đầy đủ: `core/standard/pipeline.md`. Lộ trình xây hệ thống, input/output từng bước: `docs/roadmap.md`.
-4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Nguồn ngoài danh sách ưu tiên chờ Sếp duyệt: `bin/news sources pending|approve|reject <tên miền>`. Máy mới/cài lại/chuyển máy: đọc `docs/INSTALL.md` trước khi chạy; prompt bàn giao ở `docs/AI_SETUP_PROMPT.md`. TTS sạch ở `core/tts`; `bin/bootstrap --with-tts` cài đủ môi trường, chưa tự bật dịch vụ/lịch.
+4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Nguồn ngoài danh sách ưu tiên chờ Sếp duyệt: `bin/news sources pending|approve|reject <tên miền>`. Máy mới/cài lại/chuyển máy: đọc `docs/INSTALL.md` trước khi chạy; prompt bàn giao ở `docs/AI_SETUP_PROMPT.md`. `bin/bootstrap --with-tts` cài Whisper; `bin/vieneu install` tải VieNeu riêng theo `docs/VIENEU.md`. Chưa tự bật dịch vụ/lịch.
 5. Lệnh nhanh cho Sếp: `/chonchude` (tìm 3–5 chủ đề hợp trend, dừng chờ chọn), `/taovideo [id]` (chạy hết tới bước package). Skill ở `.claude/skills/`; AI khác đọc trực tiếp file `SKILL.md` ở đó.
 6. Bài học: luật đã rút ra nằm ở `lessons/rules/<bước>.md`, bắt buộc tuân theo. Góp ý của Sếp: `bin/news feedback <tap> <bước> "<nội dung>"`.
 
@@ -43,4 +43,4 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 - Số liệu, ngày hiệu lực, mức phạt phải khớp nguyên văn nguồn; ghi link và trích nguyên văn (`quote`) trong `script.json`.
 - Không đọc `node_modules/`, `episodes/*/audio|render|assets`.
 - Repo là hệ độc lập, chuyển giao được: không đường dẫn máy, bí mật, dữ liệu sản phẩm/video. Dữ liệu các tập, hàng chờ đăng, sự kiện bài học thô chỉ ở local; hook `core/scripts/guard_repo.py` chặn khi commit/push.
-- Mỗi lần tạo giọng đều tốn credit: tạo một lần, chỉ dùng `--replace` khi kịch bản đổi.
+- VieNeu chạy local không tốn credit Vbee. Tạo một lần, dùng lại audio đúng yêu cầu; chỉ dùng `--replace` khi kịch bản đổi. Khi chọn Vbee, mỗi lần tạo vẫn tốn credit, không tự gửi lại.

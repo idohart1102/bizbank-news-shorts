@@ -1,5 +1,7 @@
 # TTS đóng gói trong repo
 
+**Mặc định tạo giọng bằng VieNeu local:** [hướng dẫn cài](../../docs/VIENEU.md). `bin/vieneu install` tải source/model vào `local/`, `bin/vieneu say` tạo audio; `bin/tts align` căn từ offline. Không cần server/key Vbee. Phần dịch vụ Vbee bên dưới chỉ dùng khi chủ máy chọn lại provider Vbee.
+
 Điểm bắt đầu: [hướng dẫn cài toàn hệ thống](../../docs/INSTALL.md). Đây là source sạch của dịch vụ TTS dùng chung, được đưa vào repo theo yêu cầu Sếp. Không có key, database job, audio hay cache model của máy cũ.
 
 ## Cài và chạy

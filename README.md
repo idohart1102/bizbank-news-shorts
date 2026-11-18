@@ -6,7 +6,7 @@ Hệ thống tự động làm short tin tức Việt Nam (dưới 60 giây, 9:1
 
 **AI/người nhận repo trên máy mới: đọc [docs/INSTALL.md](docs/INSTALL.md) từ đầu tới cuối.** Có [prompt bàn giao AI](docs/AI_SETUP_PROMPT.md), tiêu chí nghiệm thu, cách cài macOS/Ubuntu/WSL2, TTS, tài khoản model/router, lịch và phục hồi.
 
-Repo có source TTS sạch trong [core/tts](core/tts/README.md). Không kèm key, audio, job database hoặc cache model của máy cũ. Python 3.12 và Node 22 được quản lý riêng; không thay Python mặc định của thiết bị.
+Giọng mặc định dùng [VieNeu local](docs/VIENEU.md); Whisper trong [core/tts](core/tts/README.md) căn mốc từ. Repo chỉ giữ bộ cài/adapter; source VieNeu, môi trường và model tải riêng vào `local/vieneu/`, không vào Git. Python 3.12 và Node 22 được quản lý riêng.
 
 Sau khi cài Git, uv, Node 22 (npm >= 10), FFmpeg và Chrome libraries theo INSTALL:
 
@@ -14,16 +14,16 @@ Sau khi cài Git, uv, Node 22 (npm >= 10), FFmpeg và Chrome libraries theo INST
 git clone https://github.com/idohart1102/bizbank-news-shorts.git
 cd bizbank-news-shorts
 bin/bootstrap --with-tts
+bin/vieneu install
 bin/news doctor --local
 bin/tts model status
 NEWS_OFFLINE=1 NEWS_NOTIFY=0 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-Các lệnh trên không tạo giọng trả phí. Chưa thể chạy thật cho tới khi cấu hình Vbee, Claude/Codex, gateway/model và TTS service. `--with-tts` tải model nhiều GB; nếu chỉ thử dựng dùng `bin/bootstrap`.
+Các lệnh trên không tạo giọng trả phí. VieNeu không cần key/service Vbee. Chạy thật vẫn cần Claude/Codex, gateway/model. Model cần nhiều GB; nếu chỉ thử dựng dùng `bin/bootstrap`.
 
 ```bash
-bin/tts key set --provider vbee  # chủ tài khoản nhập tại terminal an toàn
-bin/tts serve                  # foreground; terminal khác kiểm status/doctor
+bin/vieneu status
 bin/news doctor
 ```
 
@@ -36,6 +36,7 @@ Xem git status trước; không xóa thay đổi của người vận hành. D�
 ```bash
 git pull --ff-only
 bin/bootstrap --with-tts
+bin/vieneu install
 bin/news doctor --local
 bin/tts model status
 ```

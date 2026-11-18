@@ -1,6 +1,6 @@
 ---
 name: taovideo
-description: Chạy trọn quy trình làm video short tin tức tới bước cuối (package: tiêu đề, mô tả, hashtag, vào hàng chờ đăng). Có chủ đề rồi (từ /chonchude hoặc Sếp đưa id) thì làm tiếp tin đó; chưa có thì tự gom tin và chọn tin tốt nhất. Dùng khi Sếp gõ /taovideo [id chủ đề], "làm video", "tạo video". Tốn credit Vbee ở bước giọng đọc.
+description: Chạy trọn quy trình làm video short tin tức tới bước cuối (package: tiêu đề, mô tả, hashtag, vào hàng chờ đăng). Có chủ đề rồi (từ /chonchude hoặc Sếp đưa id) thì làm tiếp tin đó; chưa có thì tự gom tin và chọn tin tốt nhất. Dùng khi Sếp gõ /taovideo [id chủ đề], "làm video", "tạo video". Giọng mặc định VieNeu local; các bước AI vẫn dùng tài khoản đã cấu hình.
 ---
 # Tạo video
 

@@ -42,4 +42,11 @@ def preflight(cfg):
             raise ValueError('Không kiểm được model TTS offline trong 60 giây; kiểm bin/tts model status trước khi tạo giọng.') from None
         if out.returncode:
             raise ValueError('TTS chưa có thư viện/model căn từ offline. Chạy bin/bootstrap --with-tts; bin/tts model status.')
+    if cfg.channel['tts']['provider'] == 'vieneu':
+        try:
+            out = subprocess.run([str(cfg.root / 'bin/vieneu'), 'status'], capture_output=True, text=True, timeout=90)
+        except (OSError, subprocess.TimeoutExpired):
+            raise ValueError('Không kiểm được VieNeu; chạy bin/vieneu install rồi bin/vieneu status.') from None
+        if out.returncode:
+            raise ValueError('VieNeu chưa sẵn sàng offline; chạy bin/vieneu install rồi bin/vieneu status.')
     return binary, url, env

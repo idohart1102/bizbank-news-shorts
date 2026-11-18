@@ -258,18 +258,25 @@ def run_voice(ctx):
     if ctx.cfg.dry:
         fake_voice(ctx)
     if not ctx.cfg.dry:
-        ensure_online("tạo giọng Vbee (tốn credit)")
+        ensure_online("tạo giọng thật")
         from .voice import preflight
         tts_bin, _, tts_env = preflight(ctx.cfg)
         tts = ctx.cfg.channel["tts"]
-        command = [tts_bin, "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
-                   "--file", ctx.ep.file("script_tts.txt"), "--out", audio, "--project", tts["project"], "--srt"]
-        if tts.get("pauses"):
-            command += ["--pauses", ",".join(f"{k}={v}" for k, v in tts["pauses"].items())]
+        if tts['provider'] == 'vieneu':
+            command = [ctx.cfg.root / 'bin/vieneu', 'say', '--voice', tts['voice'],
+                       '--speed', str(tts.get('speed', 1.0)), '--file', ctx.ep.file('script_tts.txt'),
+                       '--out', audio, '--ffmpeg', ctx.cfg.bin('ffmpeg')]
+        else:
+            command = [tts_bin, "say", "--provider", tts["provider"], "--voice", tts["voice"], "--speed", str(tts.get("speed", 1.0)),
+                       "--file", ctx.ep.file("script_tts.txt"), "--out", audio, "--project", tts["project"], "--srt"]
+            if tts.get("pauses"):
+                command += ["--pauses", ",".join(f"{k}={v}" for k, v in tts["pauses"].items())]
         said = ctx.sh(*command, timeout=1800, env=tts_env)
         ctx.sh(tts_bin, "align", "--audio", audio, "--text", ctx.ep.file("script_tts.txt"),
                "--out", ctx.ep.file("audio/voice.srt"), "--words", ctx.ep.file("audio/voice.words.json"), timeout=1800, env=tts_env)
-        if "dùng lại kết quả cũ" in said:
+        if tts['provider'] == 'vieneu':
+            ctx.ep.log('giọng VieNeu local: không dùng credit Vbee')
+        elif "dùng lại kết quả cũ" in said:
             ctx.ep.log("giọng: dùng lại kết quả cũ của platform/tts, không tính tiền")
         else:
             ledger(ctx, len(ctx.ep.file("script_tts.txt").read_text(encoding="utf-8")))

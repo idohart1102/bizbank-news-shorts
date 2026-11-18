@@ -74,10 +74,13 @@ def check(cfg, local=False):
         try:
             binary, url, _ = preflight(cfg)
             report('tts CLI', True, binary + ' (say + align --words)')
-            with urllib.request.urlopen(url + '/health', timeout=5) as response:
-                health = json.loads(response.read())
-            report('tts service', health.get('service') == 'bizbank-news-tts' and health.get('vbee_configured') and health.get('align_ready'),
-                   'cần service=bizbank-news-tts, Vbee key và aligner; nếu cổng có dịch vụ khác, chọn cổng riêng')
+            if cfg.channel['tts']['provider'] == 'vieneu':
+                report('VieNeu local', True, 'ONNX CPU + Whisper offline; không cần service/key Vbee')
+            else:
+                with urllib.request.urlopen(url + '/health', timeout=5) as response:
+                    health = json.loads(response.read())
+                report('tts service', health.get('service') == 'bizbank-news-tts' and health.get('vbee_configured') and health.get('align_ready'),
+                       'cần service=bizbank-news-tts, Vbee key và aligner; nếu cổng có dịch vụ khác, chọn cổng riêng')
         except (OSError, ValueError) as error:
             report('tts', False, str(error))
         for role, conf in cfg.machine['agents'].items():

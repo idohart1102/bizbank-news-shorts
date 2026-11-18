@@ -81,6 +81,7 @@ class PipelineTest(Base):
         self.assertEqual([e["step"] for e in events], ["review"])
 
     def test_budget_stops_paid_step(self):
+        self.cfg.channel['tts']['provider'] = 'vbee'
         self.cfg.enforce_budget = True
         self.cfg.channel["budget"]["vbee_chars_per_day"] = 10
         episode = self.new()

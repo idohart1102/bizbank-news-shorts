@@ -1,0 +1,6 @@
+#!/bin/sh
+# VieNeu được cài riêng dưới local/, không vendor source/model vào Git.
+set -eu
+ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+[ -x "$ROOT/.venv/bin/python" ] || { echo 'Chạy bin/bootstrap trước.' >&2; exit 1; }
+exec "$ROOT/.venv/bin/python" -I "$ROOT/core/tts/bin/vieneu.py" "$@"

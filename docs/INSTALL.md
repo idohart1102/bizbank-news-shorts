@@ -1,5 +1,7 @@
 # Cài đặt và nghiệm thu trên thiết bị mới
 
+**TTS mặc định từ 2026-11-18: VieNeu local + Whisper.** Sau `bin/bootstrap --with-tts`, chạy `bin/vieneu install`, `bin/vieneu status`; xem [VIENEU.md](VIENEU.md). VieNeu không cần key, HTTP service hoặc credit Vbee. Các chỉ dẫn Vbee bên dưới chỉ áp dụng khi chọn lại `tts.provider: vbee`.
+
 Tài liệu dành cho người vận hành và AI có terminal. Đọc `AGENTS.md`/`CLAUDE.md`, `docs/decisions.md`, rồi làm theo thứ tự dưới đây. [Prompt bàn giao cho AI](AI_SETUP_PROMPT.md). Không lấy đường dẫn, key hay data từ máy tác giả.
 
 ## 1. Xác định mức hoàn tất
@@ -7,7 +9,7 @@ Tài liệu dành cho người vận hành và AI có terminal. Đọc `AGENTS.m
 | Mức | Bằng chứng cần có |
 |---|---|
 | Môi trường local đạt | bootstrap, doctor --local, toàn bộ test và render mẫu đều exit 0 |
-| Dịch vụ đạt | TTS CLI + thư viện + model cache offline + service + Vbee key; Claude/Codex đăng nhập; router/model sẵn sàng |
+| Dịch vụ đạt | VieNeu CLI/model offline + Whisper (hoặc Vbee service/key khi chọn Vbee); Claude/Codex đăng nhập; router/model sẵn sàng |
 | Chạy thật đạt | một tập được chủ máy cho phép, vượt cổng kiểm và tạo final.mp4/meta/outbox; không coi test giả là bằng chứng truy cập model thật |
 | Tự động đạt | lịch hệ điều hành đã cài và được kiểm tra bằng tài khoản/PATH dùng khi chạy nền |
 
@@ -139,6 +141,19 @@ Lần đầu kỳ vọng `done`, file `render/final.mp4`, `meta.json` và outbox
 
 ## 7. Thiết lập TTS cùng repo
 
+### Mặc định: VieNeu local
+
+```bash
+bin/vieneu install
+bin/vieneu status
+bin/vieneu voices
+bin/tts model status
+```
+
+Thực hiện phần thử giọng/căn từ và cấu hình theo [VIENEU.md](VIENEU.md). Sau đó sang bước 8; **bỏ qua phần key/service Vbee dưới đây**. `bin/vieneu` tạo giọng trực tiếp, `bin/tts align` không cần server. `tts.backend` vẫn là `platform_tts` để giữ CLI căn từ, còn `tts.provider` trong channel.yaml chọn `vieneu`.
+
+### Tùy chọn: Vbee khi chủ máy chọn lại provider
+
 Xem thêm [core/tts/README.md](../core/tts/README.md). Luôn gọi **`bin/tts`** từ repo, không `pip install tts`, không phụ thuộc binary `tts` của máy cũ.
 
 1. `bin/tts model status` phải exit 0, báo backend đúng CPU, model cache có sẵn. Nếu chưa có: `bin/tts model download`. Không đổi model nhỏ hơn chỉ để chạy qua.
@@ -204,7 +219,7 @@ Mở `config/machine.yaml` do bootstrap sinh; đối chiếu `config/machine.exa
 | Khóa | Cách thiết lập đúng |
 |---|---|
 | `data_dir` | `episodes` hoặc đường dẫn local đã chọn; không dùng thư mục source TTS làm data video |
-| `tts.backend/bin/platform_tts_url` | `platform_tts`, `bin/tts`, URL HTTP local trùng cổng dịch vụ |
+| `tts.backend/bin/platform_tts_url` | `platform_tts`, `bin/tts`; URL HTTP local chỉ cần hoạt động khi provider là Vbee; VieNeu dùng CLI offline |
 | `agents.claude` | backend claude_cli; bin trong PATH hoặc absolute tại máy; model cần quyền thực tế |
 | `agents.codex` | router URL `/v1`, model alias đúng router, fallback/agentic_backend codex_cli và CLI có đăng nhập |
 | `agents.codex.image_model` | model ảnh thật sự được gateway hỗ trợ; ảnh AI vẫn cần router dù text chuyển sang codex_cli |
@@ -228,7 +243,7 @@ bin/news run --until review --no-distill
 bin/news status last
 ```
 
-Đây vẫn là gọi AI trả phí, chỉ chưa tạo giọng. Kỳ vọng `paused` sau duyệt; kiểm brief/script/qa và nguồn. Tới đây chưa được báo hoàn tất video thật. Khi được phép tiếp tục các bước Vbee/ảnh/render:
+Đây vẫn là gọi AI trả phí, chỉ chưa tạo giọng. Kỳ vọng `paused` sau duyệt; kiểm brief/script/qa và nguồn. Tới đây chưa được báo hoàn tất video thật. Khi được phép tiếp tục các bước giọng/ảnh/render:
 
 ```bash
 bin/news run --resume last

@@ -1,7 +1,7 @@
 # Cấu hình máy: xem docs/INSTALL.md. Bỏ hẳn khóa để dùng mặc định; không ghi null/rỗng.
 data_dir: episodes                 # nơi lưu dữ liệu các tập (không vào Git); NEWS_DATA_DIR ghi đè
 tts:
-  backend: platform_tts            # backend duy nhất đã triển khai; cần CLI + dịch vụ local + aligner
+  backend: platform_tts            # CLI căn từ; provider vieneu không cần dịch vụ HTTP/Vbee key
   bin: bin/tts                    # CLI đóng gói trong repo; không cài gói PyPI tên tts
   platform_tts_url: http://127.0.0.1:8791 # cổng được truyền sang CLI bằng TTS_PORT
 agents:
