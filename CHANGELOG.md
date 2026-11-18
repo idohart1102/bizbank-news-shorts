@@ -1,5 +1,13 @@
 # Thay đổi
 
+## v1.5.0 — 2026-11-18
+
+- Chuyển ảnh minh họa, ảnh nền dự phòng và cutout AI từ 9router sang công cụ `image_gen` tích hợp của Codex CLI; dùng đăng nhập Codex tại máy.
+- Cấu hình mặc định bỏ URL/key/model alias của router. Doctor kiểm khả năng CLI hỗ trợ image_generation, không yêu cầu 9router khi dùng Codex CLI.
+- Adapter nhận PNG thực đã lưu, kiểm định dạng bằng FFprobe; không tự fallback qua gateway/API key riêng khi Codex lỗi. Log và file trung gian ở `local/imagegen/`, không vào Git.
+- Cập nhật hướng dẫn cài máy mới và chuyển cấu hình cũ; bổ sung test CLI thành công, lỗi, file thiếu/sai định dạng và chặn gọi trong chế độ offline.
+- Xác minh: 82/82 test đạt; adapter Codex CLI 0.170.0 trên macOS ARM64 tạo được cutout PNG 1024×1024 có alpha thật. Doctor đạt với cấu hình không dùng router.
+
 ## v1.4.0 — 2026-11-18
 
 - Thay giọng mặc định Vbee bằng VieNeu-TTS v3 Turbo chạy local qua ONNX CPU/fp32; giữ Whisper để căn mốc từng từ.

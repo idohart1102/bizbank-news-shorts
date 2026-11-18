@@ -9,11 +9,11 @@ Tài liệu dành cho người vận hành và AI có terminal. Đọc `AGENTS.m
 | Mức | Bằng chứng cần có |
 |---|---|
 | Môi trường local đạt | bootstrap, doctor --local, toàn bộ test và render mẫu đều exit 0 |
-| Dịch vụ đạt | VieNeu CLI/model offline + Whisper (hoặc Vbee service/key khi chọn Vbee); Claude/Codex đăng nhập; router/model sẵn sàng |
+| Dịch vụ đạt | VieNeu CLI/model offline + Whisper (hoặc Vbee service/key khi chọn Vbee); Claude/Codex đăng nhập, Codex có image_gen |
 | Chạy thật đạt | một tập được chủ máy cho phép, vượt cổng kiểm và tạo final.mp4/meta/outbox; không coi test giả là bằng chứng truy cập model thật |
 | Tự động đạt | lịch hệ điều hành đã cài và được kiểm tra bằng tài khoản/PATH dùng khi chạy nền |
 
-`doctor --local` không kiểm tài khoản, model hoặc tạo giọng. `doctor` kiểm CLI, health và router; không chứng minh mọi endpoint/model/quota hoạt động. Không tự chạy bước trả phí để biến báo cáo thành “đạt”. Thiếu quyền/tài khoản thì nêu đúng phần bị chặn, hoàn tất phần độc lập trước.
+`doctor --local` không kiểm tài khoản, model hoặc tạo giọng. `doctor` kiểm CLI, TTS và khả năng CLI hỗ trợ image_generation; không chứng minh quyền tạo ảnh/quota của tài khoản. Không tự chạy bước trả phí để biến báo cáo thành “đạt”. Thiếu quyền/tài khoản thì nêu đúng phần bị chặn, hoàn tất phần độc lập trước.
 
 ## 2. Khảo sát máy và chọn nhánh
 
@@ -185,7 +185,7 @@ macOS: launchd user `vn.bizbank.news-tts`; Linux: systemd user `bizbank-news-tts
 
 Key đã cấu hình không chứng minh có quota. Trước khi bật lịch, cần một phép thử được chủ máy cho phép trên nội dung mới; hoặc clip âm thanh/text đã được chủ máy cung cấp để `bin/tts align` kiểm mốc mà không tốn credit. Kỳ vọng words tăng dần, đúng text, các cổng `check_voice` qua. Không dùng mẫu sin để kết luận Whisper hiểu tiếng Việt.
 
-## 8. Thiết lập Claude, Codex, router và cấu hình máy
+## 8. Thiết lập Claude, Codex và cấu hình máy
 
 Cài CLI theo tài liệu chính thức; không coi ứng dụng desktop có sẵn là đã có lệnh trong PATH. Ví dụ:
 
@@ -208,11 +208,12 @@ Kiểm các cờ adapter thực dùng, không gửi prompt tính phí:
 ```bash
 claude --help
 codex exec --help
+codex features list
 bin/tts say --help
 bin/tts align --help
 ```
 
-Claude cần `-p`, `--output-format json`, `--json-schema`, `--no-session-persistence`, `--permission-mode dontAsk`, `--tools`. Codex cần `exec`, `--ephemeral`, `--skip-git-repo-check`, sandbox workspace-write, `-C`, `--output-schema`, `-o`, đọc stdin `-`. TTS cần `say` và `align --words`. Nếu phiên bản không có cờ, dừng và chọn bản tương thích; không xóa cờ bảo vệ để chạy tạm.
+Claude cần `-p`, `--output-format json`, `--json-schema`, `--no-session-persistence`, `--permission-mode dontAsk`, `--tools`. Codex cần `exec`, `--ephemeral`, `--skip-git-repo-check`, sandbox workspace-write, `-C`, `--output-schema`, `-o`, `--json`, `--enable image_generation`, đọc stdin `-`; global `-a never` để chạy không tương tác. TTS cần `say` và `align --words`. Nếu phiên bản không có cờ, dừng và chọn bản tương thích; không xóa cờ bảo vệ để chạy tạm.
 
 Mở `config/machine.yaml` do bootstrap sinh; đối chiếu `config/machine.example.yaml`. Bỏ hẳn khóa muốn dùng mặc định, không ghi YAML null. Các điểm phải kiểm:
 
@@ -221,18 +222,19 @@ Mở `config/machine.yaml` do bootstrap sinh; đối chiếu `config/machine.exa
 | `data_dir` | `episodes` hoặc đường dẫn local đã chọn; không dùng thư mục source TTS làm data video |
 | `tts.backend/bin/platform_tts_url` | `platform_tts`, `bin/tts`; URL HTTP local chỉ cần hoạt động khi provider là Vbee; VieNeu dùng CLI offline |
 | `agents.claude` | backend claude_cli; bin trong PATH hoặc absolute tại máy; model cần quyền thực tế |
-| `agents.codex` | router URL `/v1`, model alias đúng router, fallback/agentic_backend codex_cli và CLI có đăng nhập |
-| `agents.codex.image_model` | model ảnh thật sự được gateway hỗ trợ; ảnh AI vẫn cần router dù text chuyển sang codex_cli |
+| `agents.codex` | `backend: codex_cli`, `bin: codex`, CLI có đăng nhập |
+| `agents.codex.image_backend` | `codex_cli`; bật image_generation và dùng công cụ image_gen tích hợp; không cần URL/key router |
+| `agents.codex.image_timeout` | mặc định 1800 giây; log/PNG trung gian ở `local/imagegen/` |
 | `bins` | FFmpeg/ffprobe/Node/npx/npm thực tế; Node render phải có trong PATH |
 | `notify.macos` | false trên Linux nếu muốn; Telegram mặc định tắt |
 
-`anthropic_api`, `openai_api`, `vbee_direct` chỉ từng nằm trong roadmap, chưa có backend thực hiện. Không chọn các giá trị này. `agents.codex.model` hiện dùng cho router; Codex CLI lấy model/provider từ cấu hình CLI hoặc cli_args của máy, không tự hiểu tiền tố `cx/`.
+`anthropic_api`, `openai_api`, `vbee_direct` chỉ từng nằm trong roadmap, chưa có backend thực hiện. Không chọn các giá trị này. Codex CLI lấy model/provider từ cấu hình CLI hoặc `cli_args` của máy; không dùng alias router `cx/`.
 
-9router là một gateway ngoài repo, không bắt buộc đúng một bản phân phối: cần HTTP API tương thích `/v1/models`, `/v1/chat/completions` với JSON schema, `/v1/responses` với web_search, và `/v1/images/generations`. Nguồn cài/phiên bản gateway và quyền model phải do chủ máy cung cấp; không cài dự án trùng tên từ kết quả tìm kiếm không xác minh. Repo không mang theo subscription/key của tác giả.
+Ảnh AI và cutout sự vật gọi `codex exec` với `image_gen` tích hợp, yêu cầu lưu PNG trong thư mục làm việc. Không cần cài/chạy 9router hay đặt `OPENAI_API_KEY`/`NINEROUTER_API_KEY`. Repo không mang theo tài khoản hoặc quota của tác giả. Thiếu tool, quyền hoặc quota thì dừng/báo lỗi; không tự chuyển sang gateway/API, không nhận SVG hoặc ảnh placeholder.
 
-Trong `.env` video đặt `NINEROUTER_API_KEY` bằng cách nhập an toàn tại máy; không ghi key vào YAML hay báo cáo. Khuyến nghị key env rõ ràng, không dựa vào DB `~/.9router` chưa tồn tại trên máy mới. `chmod 600 .env` và `local/tts.env` nếu có secret. Không source `.env` như shell script; app đọc định dạng KEY=VALUE.
+Nâng cấp máy đang dùng cấu hình cũ: đổi `agents.codex.backend` và `image_backend` thành `codex_cli`; bỏ các trường `url`, `key_env`, `key_db`, `image_model`, `fallback: router`/`agentic_backend: router` và alias model `cx/` nếu còn. Giữ cấu hình CLI riêng của chủ máy. Không xóa key/dịch vụ 9router dùng cho dự án khác. `chmod 600 .env` và `local/tts.env` nếu có secret; không source `.env` như shell script.
 
-Sau cấu hình: `bin/news doctor`. Phải sửa lỗi thiếu CLI, TTS cache/cổng/key, Node, hooks/router trước khi thử thật. `/models` trả 200 không chứng minh text/web_search/image model đúng quota; kiểm các khả năng đó ở bước nghiệm thu có kiểm soát.
+Sau cấu hình: `bin/news doctor`. Phải sửa lỗi thiếu CLI, TTS/model, Node và hooks trước khi thử thật. Feature `image_generation` có trong CLI không chứng minh tài khoản tạo ảnh được; trước khi bật lịch, nghiệm thu một PNG thật qua Codex trên tài khoản được chủ máy cho phép. Ảnh trong suốt phải có alpha thật. PNG/log ở `local/imagegen/`, không vào Git. Đã kiểm đường này trên Codex CLI 0.170.0/macOS ARM64; máy khác cần kiểm lại.
 
 ## 9. Chạy thật có kiểm soát
 
@@ -322,4 +324,4 @@ Timer không chạy bù các lần máy tắt (`Persistent=false`). Log: `journa
 
 ## 13. Báo cáo bàn giao bắt buộc
 
-Ghi commit/tag; OS/CPU/user/timezone; phiên bản các công cụ; lệnh đã chạy và exit code. Đánh dấu riêng: bootstrap, test/render local, TTS source/deps/model/key/service, Claude/Codex auth, router/model, live video, scheduler. Ghi cái chưa kiểm/đang bị chặn, nơi giữ data/log, cách tắt lịch và phục hồi. Không đưa nội dung `.env`, credentials, auth cache hoặc text/audio của video vào báo cáo.
+Ghi commit/tag; OS/CPU/user/timezone; phiên bản các công cụ; lệnh đã chạy và exit code. Đánh dấu riêng: bootstrap, test/render local, TTS source/deps/model/key/service, Claude/Codex auth, Codex image_gen và PNG thật, live video, scheduler. Ghi cái chưa kiểm/đang bị chặn, nơi giữ data/log, cách tắt lịch và phục hồi. Không đưa nội dung `.env`, credentials, auth cache hoặc text/audio của video vào báo cáo.

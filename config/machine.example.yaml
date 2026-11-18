@@ -14,14 +14,9 @@ agents:
     bin: claude
     model: claude-sonnet-5-5
   codex:
-    backend: router                # chỉ còn tạo ảnh AI (cần router); router hoặc codex_cli
-    url: http://127.0.0.1:20128/v1
-    model: cx/gpt-6.1-sol           # tên dành cho router; codex_cli dùng cấu hình CLI của máy
-    key_env: NINEROUTER_API_KEY    # không đặt thì đọc key đang bật trong ~/.9router/db/data.sqlite (chỉ đọc)
-    key_db: ~/.9router/db/data.sqlite
-    image_model: cx/gpt-image-2.6-sunburst
-    fallback: codex_cli
-    agentic_backend: codex_cli     # việc cần tác tử (tìm và tải ảnh)
+    backend: codex_cli
+    image_backend: codex_cli        # image_gen tích hợp, dùng đăng nhập Codex; không cần 9router/API key ảnh
+    image_timeout: 1800             # giây; model/provider lấy từ cấu hình Codex CLI của máy
     bin: codex
 bins: {ffmpeg: ffmpeg, ffprobe: ffprobe, node: node, npx: npx, npm: npm}
 notify: {macos: true}

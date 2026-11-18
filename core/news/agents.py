@@ -3,7 +3,7 @@
 Vai trò:
 - claude (Opus): chọn tin, viết, duyệt, plan, QC, gói, chưng cất bài học.
 - sonnet (Claude Sonnet): gom tin, kiểm fact, tìm ảnh thật (WebSearch/WebFetch).
-- codex: tạo ảnh minh họa AI qua router (generate_image).
+- codex: tạo ảnh minh họa AI bằng image_gen tích hợp của Codex CLI (generate_image).
 Backend chọn trong config/machine.yaml; thêm backend mới chỉ cần thêm một hàm vào BACKENDS.
 """
 import json
@@ -138,19 +138,10 @@ def router(conf, prompt, schema_name, workdir, tools, timeout):
 
 
 def generate_image(cfg, prompt, size="1024x1536", transparent=False):
-    """Ảnh minh họa AI qua 9router (model cấu hình agents.codex.image_model). Trả bytes PNG."""
+    """Ảnh minh họa AI qua Codex CLI, dùng đăng nhập Codex của máy. Trả bytes PNG."""
     ensure_online("tạo ảnh AI")
-    import base64
-    conf = cfg.machine["agents"]["codex"]
-    body = {"model": conf.get("image_model", "cx/gpt-image-2.6-sunburst"), "prompt": prompt, "size": size, "n": 1,
-            "output_format": "png"}
-    if transparent:
-        body["background"] = "transparent"
-    data = router_post(conf, "/images/generations", body, 300)["data"][0]
-    if data.get("b64_json"):
-        return base64.b64decode(data["b64_json"])
-    with urllib.request.urlopen(data["url"], timeout=120) as response:
-        return response.read()
+    from .images import generate
+    return generate(cfg, prompt, size, transparent)
 
 
 def codex_cli(conf, prompt, schema_name, workdir, tools, timeout):

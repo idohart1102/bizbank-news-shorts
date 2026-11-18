@@ -1,12 +1,12 @@
 # News video
 
-Phiên bản hiện tại: [v1.4.0 — VieNeu-TTS local và tùy chọn giọng đọc](https://github.com/idohart1102/bizbank-news-shorts/releases/tag/v1.4.0). Xem [CHANGELOG.md](CHANGELOG.md).
+Phiên bản hiện tại: [v1.5.0 — Codex tạo ảnh trực tiếp, bỏ phụ thuộc 9router](https://github.com/idohart1102/bizbank-news-shorts/releases/tag/v1.5.0). Xem [CHANGELOG.md](CHANGELOG.md).
 
 Hệ thống tự động làm short tin tức Việt Nam (dưới 60 giây, 9:16) cho hộ kinh doanh và SME: gom tin → chọn → viết → duyệt + kiểm fact → giọng → ảnh → plan dựng → render → QC → gói → hàng chờ đăng.
 
 ## Cài đặt
 
-**AI/người nhận repo trên máy mới: đọc [docs/INSTALL.md](docs/INSTALL.md) từ đầu tới cuối.** Có [prompt bàn giao AI](docs/AI_SETUP_PROMPT.md), tiêu chí nghiệm thu, cách cài macOS/Ubuntu/WSL2, TTS, tài khoản model/router, lịch và phục hồi.
+**AI/người nhận repo trên máy mới: đọc [docs/INSTALL.md](docs/INSTALL.md) từ đầu tới cuối.** Có [prompt bàn giao AI](docs/AI_SETUP_PROMPT.md), tiêu chí nghiệm thu, cách cài macOS/Ubuntu/WSL2, TTS, đăng nhập Claude/Codex, lịch và phục hồi.
 
 Giọng mặc định dùng [VieNeu local](docs/VIENEU.md); Whisper trong [core/tts](core/tts/README.md) căn mốc từ. Repo chỉ giữ bộ cài/adapter; source VieNeu, môi trường và model tải riêng vào `local/vieneu/`, không vào Git. Python 3.12 và Node 22 được quản lý riêng.
 
@@ -22,7 +22,7 @@ bin/tts model status
 NEWS_OFFLINE=1 NEWS_NOTIFY=0 .venv/bin/python -m unittest discover -s tests -v
 ```
 
-Các lệnh trên không tạo giọng trả phí. VieNeu không cần key/service Vbee. Chạy thật vẫn cần Claude/Codex, gateway/model. Model cần nhiều GB; nếu chỉ thử dựng dùng `bin/bootstrap`.
+Các lệnh trên không tạo giọng trả phí. VieNeu không cần key/service Vbee. Chạy thật cần đăng nhập Claude/Codex; ảnh AI dùng `image_gen` tích hợp của Codex CLI, không cần 9router/API key ảnh. Model cần nhiều GB; nếu chỉ thử dựng dùng `bin/bootstrap`.
 
 ```bash
 bin/vieneu status

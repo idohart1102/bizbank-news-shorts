@@ -12,8 +12,7 @@ MACHINE_DEFAULTS = {
     "agents": {
         "claude": {"backend": "claude_cli", "bin": "claude", "model": "claude-opus-5-5"},
         "sonnet": {"backend": "claude_cli", "bin": "claude", "model": "claude-sonnet-5-5"},
-        "codex": {"backend": "router", "url": "http://127.0.0.1:20128/v1", "model": "cx/gpt-6.1-sol",
-                  "fallback": "codex_cli", "bin": "codex"},
+        "codex": {"backend": "codex_cli", "image_backend": "codex_cli", "bin": "codex"},
     },
     "bins": {"ffmpeg": "ffmpeg", "ffprobe": "ffprobe", "node": "node", "npx": "npx"},
     "notify": {"macos": True},

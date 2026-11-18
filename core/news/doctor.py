@@ -87,7 +87,15 @@ def check(cfg, local=False):
             if any(conf.get(k, '').endswith('_cli') for k in ('backend', 'fallback', 'agentic_backend')):
                 binary = conf.get('bin', role)
                 report(f'agent {role}', bool(shutil.which(binary)), shutil.which(binary) or 'chưa cài/đăng nhập CLI')
-            if conf['backend'] == 'router' or role == 'codex':
+            if role == 'codex' and conf.get('image_backend', 'codex_cli') == 'codex_cli':
+                try:
+                    out = subprocess.run([conf.get('bin', 'codex'), 'features', 'list'], capture_output=True, text=True, timeout=15)
+                    available = any(line.split()[0] == 'image_generation' for line in out.stdout.splitlines() if line.split())
+                    report('Codex image_gen', out.returncode == 0 and available,
+                           'CLI hỗ trợ image_generation; cần thử ảnh thật để xác nhận quyền tài khoản')
+                except (OSError, subprocess.TimeoutExpired):
+                    report('Codex image_gen', False, 'không kiểm được tính năng CLI; kiểm codex features list')
+            if any(conf.get(k) == 'router' for k in ('backend', 'fallback', 'agentic_backend')):
                 try:
                     from .agents import router_key
                     request = urllib.request.Request(conf['url'].rstrip('/') + '/models',

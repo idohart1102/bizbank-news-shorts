@@ -7,7 +7,7 @@ Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho
 |---|---|
 | Claude Opus 5.5 | Chọn tin, viết kịch bản, duyệt kịch bản (phiên mới, không chấm bài mình viết), lên plan dựng (`edit_plan.json`), duyệt video, chốt bản cuối |
 | Claude Sonnet 5.5 | Gom tin từ nguồn, kiểm fact kịch bản (đối chiếu tư liệu), tìm ảnh thật |
-| Codex `cx/gpt-6.1-sol` (qua 9router) | Tạo ảnh/asset minh họa AI |
+| Codex CLI (`image_gen` tích hợp) | Tạo ảnh/asset minh họa AI bằng tài khoản Codex của máy; không qua 9router |
 | Remotion | Dựng và render; PNG template của Sếp luôn nằm lớp trên cùng; không có phụ đề, thông tin quan trọng đi vào thẻ chữ/số và cutout |
 | `bin/vieneu` + `bin/tts align` | VieNeu tạo giọng local, Whisper căn mốc từng từ. Source/model/venv VieNeu ở `local/vieneu`, không vào Git |
 | Kho `assets/sfx/` (Pixabay) | Tiếng chuyển cảnh, dùng lại mọi tập |
