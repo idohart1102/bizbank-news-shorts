@@ -36,6 +36,7 @@ export const NewsShort = (props) => {
       </div>
       {props.overlay ? <Img src={staticFile(props.overlay)} style={{position: 'absolute', inset: 0, width: '100%', height: '100%'}} /> : null}
       {props.hook && props.layout.hook ? <Hook text={props.hook} rect={props.layout.hook} /> : null}
+      {props.credit && props.layout.credit ? <Credit credit={props.credit} rect={props.layout.credit} /> : null}
       {props.voice ? <Audio src={staticFile(props.voice)} /> : null}
       {props.sfx.map((item, i) => (
         <Sequence key={`s${i}`} from={at(item.start)}>
@@ -153,6 +154,22 @@ const Hook = ({text, rect}) => {
     <div style={{position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h, opacity: enter,
       transform: `translateY(${(1 - enter) * 20}px)`}}>
       <div style={{color: '#fff', fontWeight: 800, fontSize: size, lineHeight: 1.22, textWrap: 'balance'}}>{text}</div>
+    </div>
+  );
+};
+
+// Nguồn tin + nguồn ảnh góc phải trên, xác định theo từng tập (template không in cứng nữa). Đứng yên suốt video.
+const Credit = ({credit, rect}) => {
+  const longest = Math.max(credit.sources.length, credit.photos.length);
+  const size = Math.max(22, Math.min(26, Math.floor(rect.w / (longest * 0.5))));
+  const line = {maxWidth: '100%', color: '#E8EEF7', fontWeight: 600, fontSize: size, lineHeight: 1.3, textAlign: 'right', textWrap: 'balance'};
+  return (
+    <div style={{position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h,
+      display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-end', gap: 4}}>
+      <div style={line}>{credit.sources.split(', ').map((part, i, all) => (
+        // chỉ ngắt dòng giữa các tên báo, không cắt đôi một tên
+        <span key={i}><span style={{whiteSpace: 'nowrap'}}>{part}{i < all.length - 1 ? ',' : ''}</span>{' '}</span>))}</div>
+      <div style={line}>{credit.photos}</div>
     </div>
   );
 };

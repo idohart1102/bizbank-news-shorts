@@ -4,7 +4,8 @@
   "cards":  {"x": 44, "y": 360, "w": 992,  "h": 686},
   "cutout": {"x": 0,  "y": 330, "w": 1080, "h": 780},
   "hook":   {"x": 64, "y": 1215, "w": 952, "h": 320},
+  "credit": {"x": 400, "y": 110, "w": 628, "h": 170},
   "avoid":  [],
   "brand":  {"navy": "#081840", "navy_deep": "#061230", "lime": "#B8D03E", "blue": "#4AA0EA", "mint": "#B2E0CA"},
-  "note": "Template 2 BizBank: khung ảnh/video 4:3 (1080x810) tại y 300-1110; vùng hoàn toàn trong suốt y 340-1069, hai dải 40px trên/dưới là bóng mờ. Câu hook dưới ba vạch màu."
+  "note": "Template 2 BizBank: khung ảnh/video 4:3 (1080x810) tại y 300-1110; vùng hoàn toàn trong suốt y 340-1069, hai dải 40px trên/dưới là bóng mờ. Câu hook dưới ba vạch màu. Góc phải trên trống: dòng nguồn tin/nguồn ảnh vẽ theo từng tập (credit)."
 }

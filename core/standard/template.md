@@ -7,5 +7,6 @@
 - Ảnh sưu tầm ưu tiên phủ được 1080×810 không cần phóng (≈ ≥ 1080p); nhỏ hơn chỉ khi không có ảnh khác. Ảnh AI tạo ngang 1536×1024.
 - `assets/template/layout.json`: `media` (khung 4:3), `clear` (vùng trong suốt), `cards` (thẻ chữ/số, góc dưới trong vùng trong suốt), `cutout`, `hook` (câu hook dưới ba vạch màu), `brand` (navy #081840, lá mạ #B8D03E, xanh dương #4AA0EA, bạc hà #B2E0CA).
 - Thẻ chữ/số: nền navy, ba vạch lá mạ/xanh/bạc hà như template, số trắng, nhãn bạc hà; bật lên kèm pop/ding. Có cutout thì thẻ né sang phía đối diện.
+- Nguồn (`layout.credit`, góc phải trên): template không in cứng. Render sinh theo từng tập từ `script.sources` và `assets.json`: «Nguồn: VnExpress» + «Nguồn ảnh: Tổng hợp, AI» (chỉ thêm AI khi video có ảnh AI). Ghi `publisher` trong `script.json` đúng tên báo (vd «VnExpress»), vì đây là chữ hiện trên video.
 - Câu hook (`hook_text` trong script.json, < 100 ký tự): chữ trắng đậm, đứng yên suốt video.
 - Font: Be Vietnam Pro (OFL, cài qua npm trong `core/remotion`).

@@ -34,6 +34,20 @@ class TimelineTest(unittest.TestCase):
         self.assertEqual(cutouts[0]["start"], 0.0)
 
 
+
+class CreditTest(unittest.TestCase):
+    def test_credit_names_publisher_and_marks_ai_images(self):
+        from news import render
+        script = {"sources": [{"publisher": "VnExpress.net", "tier": 2}, {"publisher": "CafeF", "tier": 3}]}
+        real, ai = {"kind": "real", "credit": "VnExpress"}, {"kind": "ai", "credit": "Ảnh minh họa AI"}
+        self.assertEqual(render.credit(script, [real]), {"sources": "Nguồn: VnExpress", "photos": "Nguồn ảnh: Tổng hợp"})
+        self.assertEqual(render.credit(script, [real, ai])["photos"], "Nguồn ảnh: Tổng hợp, AI")
+        self.assertEqual(render.credit(script, [ai])["photos"], "Nguồn ảnh: AI")
+        many = {"sources": [{"publisher": n, "tier": 1} for n in ("A", "B", "C", "Xây dựng chính sách (Chính phủ)")]}
+        self.assertEqual(render.credit(many, [real])["sources"], "Nguồn: A, B, tổng hợp")
+        self.assertEqual(render.publisher_name("Xây dựng chính sách (Chính phủ)"), "Xây dựng chính sách")
+
+
 @unittest.skipUnless((ROOT / "core/remotion/node_modules/remotion").exists(), "chưa chạy npm ci trong core/remotion")
 class RemotionRenderTest(unittest.TestCase):
     def test_dry_episode_renders_with_remotion(self):
@@ -48,6 +62,7 @@ class RemotionRenderTest(unittest.TestCase):
             self.assertEqual(props["overlay"], "overlay.png")
             self.assertTrue(props["cards"] and props["cutouts"] and props["sfx"])
             self.assertNotIn("captions", props, "không làm phụ đề")
+            self.assertTrue(props["credit"]["sources"].startswith("Nguồn: "), "nguồn ghi theo từng tập")
             self.assertTrue(all(c["sfx"] for c in props["cards"] + props["cutouts"]), "thẻ/cutout có tiếng động")
             self.assertTrue(props["music"] and props["music"]["volume"] < 0.5, "nhạc nền nhỏ xuyên suốt")
             self.assertEqual(len({s["src"] for s in props["scenes"]}), len(props["scenes"]), "không dùng lại ảnh")

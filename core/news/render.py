@@ -85,6 +85,27 @@ def zoom_limit(asset, box, fit):
     return round(max(1.0, min(MAX_ZOOM, 1.0 / fill)), 3)
 
 
+def publisher_name(name):
+    """Tên báo gọn để ghi nguồn: bỏ phần chú thích trong ngoặc, bỏ đuôi tên miền (VnExpress.net → VnExpress)."""
+    name = re.sub(r"\s*\(.*?\)", "", name).strip()
+    return re.sub(r"\.(net|vn|com|com\.vn|gov\.vn|org)$", "", name, flags=re.I)
+
+
+def credit(script, used_assets, limit=3):
+    """Khối nguồn góc phải trên (Sếp 2026-11-18), xác định theo từng tập:
+    «Nguồn: <báo trong script.sources>» và «Nguồn ảnh: Tổng hợp[, AI]» (thêm AI khi video có dùng ảnh AI).
+    Nguồn chính thống (tier thấp) đứng trước; aggregator tier 3 chỉ ghi khi không có nguồn nào khác."""
+    ranked = sorted(script.get("sources", []), key=lambda s: s.get("tier", 2))
+    if any(s.get("tier", 2) < 3 for s in ranked):
+        ranked = [s for s in ranked if s.get("tier", 2) < 3]
+    names = list(dict.fromkeys(publisher_name(s["publisher"]) for s in ranked if s.get("publisher")))
+    if len(names) > limit:
+        names = names[:limit - 1] + ["tổng hợp"]
+    ai = [a.get("kind") == "ai" or "AI" in (a.get("credit") or "") for a in used_assets]
+    photos = "AI" if ai and all(ai) else "Tổng hợp, AI" if any(ai) else "Tổng hợp"
+    return {"sources": "Nguồn: " + (", ".join(names) or "Tổng hợp"), "photos": "Nguồn ảnh: " + photos}
+
+
 def build_props(ctx):
     """Dựng props + thư mục public cho Remotion. Trả (props, public_dir, dùng_template_tạm)."""
     cfg, ep = ctx.cfg, ctx.ep
@@ -140,12 +161,13 @@ def build_props(ctx):
     scene_sounds = [sound(s["sfx"], s["start"]) for s in plan["scenes"]  # tiếng chuyển cảnh trùng lúc thẻ/cutout thì bỏ
                     if s["sfx"] and all(abs(s["start"] - t) >= 1.0 for t in busy)]
     sfx = sorted(event_sounds + scene_sounds, key=lambda s: s["start"])
+    used = [assets[s["asset"]] for s in plan["scenes"]] + [cut_files[c["name"]] for c in cutouts if c["name"] in cut_files]
     music = pick_music(cfg, ep, stage)
     props = {"fps": cfg.video["fps"], "width": cfg.video["width"], "height": cfg.video["height"],
              "duration": plan["duration"], "layout": layout,
              "overlay": stage(overlay, "overlay.png"), "voice": stage(ep.file("audio/voice.mp3"), "voice.mp3"),
              "scenes": scenes, "cards": cards, "cutouts": staged_cutouts, "sfx": sfx, "music": music,
-             "hook": script.get("hook_text"),
+             "hook": script.get("hook_text"), "credit": credit(script, used),
              "style": layout.get("brand", {})}
     write_json(ep.file("render/props.json"), props)
     return props, public, temporary

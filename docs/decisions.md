@@ -32,3 +32,4 @@
 - 2026-11-13: Kịch bản trượt hết vòng sửa khi chưa tạo giọng thì tự bỏ tin, làm tin xếp hạng kế tiếp (tối đa 2 tin/tập, chỉ tin score ≥ 6 chưa làm); tin Sếp tự chọn bằng `/taovideo <id>` thì vẫn dừng báo Sếp.
 - 2026-11-13: Câu kết mời theo dõi viết «để không bỏ lỡ…», không viết «không lỡ» (nghe không tự nhiên); lint_script chặn.
 - 2026-11-17: Đổi phân vai: Claude Sonnet 5.5 gom tin (bước 1), kiểm fact (bước 4b), tìm ảnh thật (bước 6); Codex gpt-6.1-sol chỉ còn tạo ảnh/asset AI.
+- 2026-11-18: Template không in cứng nguồn nữa (đã xóa chữ khỏi `overlay.png`). Góc phải trên ghi nguồn theo từng tập, render tự sinh: «Nguồn: <tên báo trong script.sources>» (bỏ đuôi tên miền, nguồn chính thống trước, tối đa 3 tên, nhiều hơn thì «…, tổng hợp»; aggregator tier 3 chỉ ghi khi không còn nguồn nào khác) và «Nguồn ảnh: Tổng hợp» / «Tổng hợp, AI» khi có dùng ảnh AI / «AI» khi toàn ảnh AI.
