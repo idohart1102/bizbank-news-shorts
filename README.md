@@ -1,5 +1,7 @@
 # News video
 
+Phiên bản hiện tại: [v1.4.0 — VieNeu-TTS local và tùy chọn giọng đọc](https://github.com/idohart1102/bizbank-news-shorts/releases/tag/v1.4.0). Xem [CHANGELOG.md](CHANGELOG.md).
+
 Hệ thống tự động làm short tin tức Việt Nam (dưới 60 giây, 9:16) cho hộ kinh doanh và SME: gom tin → chọn → viết → duyệt + kiểm fact → giọng → ảnh → plan dựng → render → QC → gói → hàng chờ đăng.
 
 ## Cài đặt

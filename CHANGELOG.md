@@ -1,5 +1,14 @@
 # Thay đổi
 
+## v1.4.0 — 2026-11-18
+
+- Thay giọng mặc định Vbee bằng VieNeu-TTS v3 Turbo chạy local qua ONNX CPU/fp32; giữ Whisper để căn mốc từng từ.
+- Thêm `bin/vieneu install|status|voices|say|download`; bộ cài khóa phiên bản source, cài môi trường riêng và tải model vào `local/vieneu/`, không đưa source bên thứ ba/model/audio vào GitHub.
+- Cho phép chọn giọng preset bằng `tts.voice` trong `config/channel.yaml`; hướng dẫn cài máy mới, thử giọng và đổi giọng tại `docs/VIENEU.md`.
+- Dùng lại audio đúng yêu cầu và checksum, không ghi đè ngầm; không tự chuyển sang Vbee trả phí khi VieNeu lỗi. Doctor nhận biết VieNeu offline, không yêu cầu Vbee key/service.
+- Nguồn tin và nguồn ảnh trên template được ghi theo từng tập thay cho dòng in cứng; đánh dấu ảnh AI khi có.
+- Xác minh trên macOS Apple Silicon: 79/79 test đạt, đoạn thử VieNeu 50 từ được Whisper căn khớp 100%. Chưa nghiệm thu VieNeu thật trên Linux/WSL.
+
 ## v1.3.0 — 2026-11-17
 
 - Phân vai mới: Claude Sonnet 5.5 gom tin, kiểm fact kịch bản và tìm ảnh thật (WebSearch/WebFetch); Codex cx/gpt-6.1-sol chỉ còn tạo ảnh/asset minh họa AI.
