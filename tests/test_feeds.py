@@ -42,6 +42,29 @@ class FeedsTest(unittest.TestCase):
         guide = feeds.source_guide()
         self.assertEqual(guide["Báo theo nhóm"]["CafeF"]["tier"], 3)
 
+    def test_pillars_match_schemas_and_sources(self):
+        import json
+        pillars = feeds.load_pillars()
+        ids = [p["id"] for p in pillars["pillars"]]
+        self.assertEqual(ids, ["von", "quan-tri", "luat", "ai-marketing"])
+        for p in pillars["pillars"]:
+            self.assertGreater(p["weight"], 0)
+            self.assertNotIn("ai", p["keywords"], "«ai» trùng từ «ai» = người nào")
+        root = Path(__file__).resolve().parents[1] / "core" / "schemas"
+        inbox = json.loads((root / "inbox.schema.json").read_text(encoding="utf-8"))
+        brief = json.loads((root / "brief.schema.json").read_text(encoding="utf-8"))
+        self.assertEqual(inbox["properties"]["stories"]["items"]["properties"]["pillar"]["enum"], ids)
+        self.assertEqual(brief["properties"]["pillar"]["enum"], ids)
+        for source in feeds.load_config()["press"]:
+            self.assertTrue(set(source.get("pillars", [])) <= set(ids), source["name"])
+
+    def test_pillar_hints(self):
+        rules = [(p["id"], feeds.compile_words(p["keywords"])) for p in feeds.load_pillars()["pillars"]]
+        item = {"title": "Ai được vay vốn ưu đãi?", "summary": "Ngân hàng hạ lãi suất cho hộ kinh doanh"}
+        self.assertEqual(feeds.pillar_hints(item, {}, rules), ["von"])
+        item = {"title": "Phạt nặng quảng cáo sai trên TikTok Shop", "summary": ""}
+        self.assertEqual(feeds.pillar_hints(item, {"pillars": ["luat"]}, rules), ["luat", "ai-marketing"])
+
 
 if __name__ == "__main__":
     unittest.main()

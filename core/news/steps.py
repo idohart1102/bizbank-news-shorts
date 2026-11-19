@@ -81,6 +81,21 @@ def source_guide():
     return feeds.source_guide()
 
 
+def pillar_guide():
+    from . import feeds
+    return [{k: p[k] for k in ("id", "name", "partner", "weight")} for p in feeds.load_pillars()["pillars"]]
+
+
+def pillar_balance(ctx):
+    """Tỷ trọng chủ đề trong các tập gần đây so với mục tiêu, để pick ưu tiên chủ đề đang thiếu."""
+    from . import feeds
+    config = feeds.load_pillars()
+    recent = [h.get("pillar") for h in ctx.history() if not h.get("dry")][-config.get("recent_window", 10):]
+    total = sum(p["weight"] for p in config["pillars"])
+    return {p["id"]: {"mục tiêu %": round(100 * p["weight"] / total), "số tập gần đây": recent.count(p["id"])}
+            for p in config["pillars"]} | {"tổng số tập tính": len(recent)}
+
+
 def gate_sources(ctx, items):
     """Nguồn ngoài danh sách ưu tiên phải được Sếp duyệt: nguồn lạ → dừng chờ; nguồn bị từ chối → lỗi để làm lại."""
     if ctx.cfg.dry:
@@ -103,8 +118,9 @@ def run_collect(ctx):
     write_json(ctx.ep.file("raw_feed.json"), raw)
     if not raw["items"]:
         raise RuntimeError("RSS không có tin nào sau lọc: " + json.dumps(raw["feeds"], ensure_ascii=False)[:300])
-    items = [{k: i[k] for k in ("title", "url", "summary", "published_at", "publisher", "tier", "group")} for i in raw["items"]]
-    inbox = agents.run(ctx.cfg, ctx.ep, "sonnet", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Nhóm nguồn": source_guide(), "Bài RSS": items}, "inbox")
+    items = [{k: i[k] for k in ("title", "url", "summary", "published_at", "publisher", "tier", "group", "pillar_hints")} for i in raw["items"]]
+    inbox = agents.run(ctx.cfg, ctx.ep, "sonnet", "collect", {"Ngày": time.strftime("%Y-%m-%d"), "Nhóm nguồn": source_guide(),
+                                                         "Chủ đề kênh": pillar_guide(), "Bài RSS": items}, "inbox")
     known = {i["url"] for i in raw["items"]}
     for story in inbox["stories"]:  # AI không được bịa link: chỉ giữ link có trong RSS
         story["sources"] = [s for s in story["sources"] if s["url"] in known]
@@ -128,7 +144,8 @@ def run_pick(ctx):
     else:
         used = sorted({u for h in ctx.history() for u in h.get("urls", [])})
         ctx_data = {"Tin trong ngày (inbox.json)": ctx.json("inbox.json"), "Link đã làm (không chọn lại)": used,
-                    "Lỗi lần trước": ctx.feedback("pick"), "Nhóm nguồn": source_guide()}
+                    "Lỗi lần trước": ctx.feedback("pick"), "Nhóm nguồn": source_guide(),
+                    "Chủ đề kênh": pillar_guide(), "Tỷ trọng chủ đề các tập gần đây": pillar_balance(ctx)}
         skipped = [s["story"] for s in ctx.ep.state.get("skipped_stories", [])]
         if skipped:
             ctx_data["Tin đã bỏ vì kịch bản trượt (không chọn lại)"] = skipped
@@ -148,6 +165,12 @@ def check_pick(ctx):
     choice = ctx.ep.state.get("story_choice")
     if choice and brief["story_ids"][:1] != [choice]:
         errors.append(f"Sếp đã chọn tin '{choice}', story_ids[0] phải là tin này")
+    if brief["kind"] != "news":
+        errors.append("Nhánh kiến thức (kind=knowledge) chưa xây (giai đoạn 2); bước pick chỉ làm kind=news")
+    stories = {s["id"]: s for s in ctx.json("inbox.json").get("stories", [])}
+    main = stories.get(brief["story_ids"][0]) if brief["story_ids"] else None
+    if main and main.get("pillar") and brief["pillar"] != main["pillar"]:
+        errors.append(f"pillar '{brief['pillar']}' khác chủ đề của tin chính '{main['id']}' ({main['pillar']})")
     skipped = {s["story"] for s in ctx.ep.state.get("skipped_stories", [])}
     if brief["story_ids"][:1] and brief["story_ids"][0] in skipped:
         errors.append(f"Tin '{brief['story_ids'][0]}' đã bị bỏ vì kịch bản trượt; chọn tin khác")
@@ -518,6 +541,7 @@ def run_publish(ctx):
     brief = ctx.json("brief.json")
     with (ctx.cfg.data_dir / "index.jsonl").open("a", encoding="utf-8") as handle:
         handle.write(json.dumps({"episode": ctx.ep.id, "date": time.strftime("%Y-%m-%d"), "dry": ctx.cfg.dry,
+                                 "kind": brief.get("kind", "news"), "pillar": brief.get("pillar"),
                                  "urls": [s["url"] for s in brief["sources"]]}, ensure_ascii=False) + "\n")
 
 

@@ -1,6 +1,8 @@
 """Đọc RSS các nguồn trong config/sources.yaml → raw_feed.json. Tất định, không dùng AI.
 
 Lọc: trong `window_hours`, khớp ít nhất một từ khóa (so không dấu), bỏ trùng link. AI chỉ nhận danh sách đã lọc.
+Từ khóa = `keywords` chung + từ khóa từng chủ đề (config/pillars.yaml); nguồn khai `keywords` riêng (tiếng Anh) thì
+dùng bộ đó. Mỗi tin được gắn `pillar_hints` (chủ đề khớp từ khóa hoặc chủ đề của nguồn) để AI gắn `pillar`.
 """
 import concurrent.futures
 import email.utils
@@ -81,6 +83,22 @@ def load_config():
     return yaml.safe_load((ROOT / "config" / "sources.yaml").read_text(encoding="utf-8"))
 
 
+def load_pillars():
+    return yaml.safe_load((ROOT / "config" / "pillars.yaml").read_text(encoding="utf-8"))
+
+
+def compile_words(words):
+    return [re.compile(rf"\b{re.escape(plain(k))}\b") for k in words]
+
+
+def pillar_hints(item, source, pillar_rules):
+    """Chủ đề gợi ý cho một tin: chủ đề của nguồn trước, rồi chủ đề có từ khóa khớp (giữ thứ tự config)."""
+    haystack = plain(f"{item['title']} {item['summary']}")
+    hints = list(source.get("pillars", []))
+    hints += [pid for pid, rules in pillar_rules if pid not in hints and any(r.search(haystack) for r in rules)]
+    return hints
+
+
 def source_guide():
     """Nhóm ưu tiên nguồn (danh sách của Sếp) để đưa vào prompt: vai trò từng nhóm + báo thuộc nhóm nào."""
     config = load_config()
@@ -95,7 +113,10 @@ def collect(now=None):
     config = load_config()
     now = now or datetime.now(VN)
     since = now - timedelta(hours=config.get("window_hours", 48))
-    keywords = [re.compile(rf"\b{re.escape(plain(k))}\b") for k in config.get("keywords", [])]
+    pillar_rules = [(p["id"], compile_words(p.get("keywords", []))) for p in load_pillars()["pillars"]]
+    keywords = compile_words(config.get("keywords", [])) + [r for _, rules in pillar_rules for r in rules]
+    own = {s["name"]: compile_words(s["keywords"]) for s in config["press"] if s.get("keywords")}
+    by_name = {s["name"]: s for s in config["press"]}
     jobs = [(source, url) for source in config["press"] for url in source.get("rss", [])]
     items, report = [], []
     with concurrent.futures.ThreadPoolExecutor(8) as pool:
@@ -116,10 +137,12 @@ def collect(now=None):
         if not item["published_at"] or item["published_at"] < since:
             continue
         haystack = plain(f"{item['title']} {item['summary']}")
-        if keywords and not any(k.search(haystack) for k in keywords):
+        rules = own.get(item["publisher"], keywords)
+        if rules and not any(k.search(haystack) for k in rules):
             continue
         seen.add(item["url"])
-        kept.append({**item, "published_at": item["published_at"].isoformat()})
+        hints = pillar_hints(item, by_name.get(item["publisher"], {}), pillar_rules)
+        kept.append({**item, "published_at": item["published_at"].isoformat(), "pillar_hints": hints})
     return {"fetched_at": now.isoformat(), "window_hours": config.get("window_hours", 48), "feeds": report,
             "total": len(items), "items": kept}
 
@@ -130,4 +153,4 @@ if __name__ == "__main__":
     print(json.dumps({k: v for k, v in result.items() if k != "items"}, ensure_ascii=False, indent=1))
     print(len(result["items"]), "tin sau lọc")
     for item in result["items"][:8]:
-        print("-", item["publisher"], "|", item["title"][:90])
+        print("-", item["publisher"], "|", ",".join(item["pillar_hints"]) or "-", "|", item["title"][:90])

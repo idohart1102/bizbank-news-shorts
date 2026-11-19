@@ -6,8 +6,8 @@ Chạy tự động bằng `bin/news run` (lịch 10:30, 19:00 hoặc khi đư�
 
 | # | Bước | Người làm | Đầu ra trong `<tap>/` | Cổng kiểm soát |
 |---|---|---|---|---|
-| 1 | Gom tin RSS 48h (`config/sources.yaml`), gộp tin trùng, chấm điểm | script + Claude Sonnet | `raw_feed.json`, `inbox.json` | Có tin score ≥ 6; link chỉ lấy từ RSS |
-| 2 | Chọn tin, viết brief: "ảnh hưởng gì tới túi tiền chủ shop" | Claude | `brief.json` | ≥ 2 nguồn báo hoặc 1 nguồn chính thống; không lặp tin đã làm |
+| 1 | Gom tin RSS 48h (`config/sources.yaml`), gộp tin trùng, chấm điểm, gắn 1 trong 4 chủ đề (`config/pillars.yaml`) | script + Claude Sonnet | `raw_feed.json`, `inbox.json` | Có tin score ≥ 6; link chỉ lấy từ RSS; `pillar` hợp lệ |
+| 2 | Chọn tin, viết brief: "ảnh hưởng gì tới túi tiền chủ shop", cân tỷ trọng chủ đề | Claude | `brief.json` (`kind`, `pillar`) | ≥ 2 nguồn báo hoặc 1 nguồn chính thống; không lặp tin đã làm; `pillar` khớp tin chính |
 | 3 | Viết kịch bản theo `core/standard/script.md` | Claude | `script.json` (hook_text, đoạn say/show/visual/cards/cutouts), `script_tts.txt`, `sources.md` | `lint_script`: ≤ 220 âm tiết, câu ≤ 20, say không chữ số, ≥ 3 thẻ, mỗi đoạn tin ≥ 1 thẻ/cutout, mỗi thẻ ≤ 3 giá trị |
 | 4 | Kiểm fact (Claude Sonnet đối chiếu bài nguồn) + duyệt (Claude phiên riêng) | Claude Sonnet + Claude Opus | `qa/factcheck_vN.json`, `qa/review_vN.json` | ≥ 8/10, 0 fact sai, tối đa 3 vòng |
 | 5 | Giọng VieNeu local + căn mốc từng từ (Whisper tại máy) | `bin/vieneu` + `bin/tts align` | `audio/voice.mp3`, `voice.words.json`, `segments.json` | 15–57 giây; mốc hợp lý (2–9 âm tiết/giây) |

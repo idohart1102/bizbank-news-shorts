@@ -64,6 +64,7 @@ def cmd_topics(cfg, args):
     if not inbox.exists():
         raise SystemExit("Tập chưa gom tin: bin/news run --until collect")
     groups = {s["name"]: s.get("group", 0) for s in feeds.load_config()["press"]}
+    names = {p["id"]: p["name"] for p in feeds.load_pillars()["pillars"]}
     used = {u for h in steps.Ctx(cfg, episode).history() for u in h.get("urls", [])}
     now = time.time()
     print(f"Tập: {episode.id}")
@@ -77,7 +78,8 @@ def cmd_topics(cfg, args):
         publishers = sorted({s["publisher"] for s in story["sources"]})
         best = min((groups.get(p, 0) or 9) for p in publishers)
         flag = "  [ĐÃ LÀM]" if any(s["url"] in used for s in story["sources"]) else ""
-        print(f"- {story['id']}  | điểm {story['score']} | {hours} | {len(publishers)} báo | nhóm tốt nhất {best if best != 9 else 0}{flag}")
+        pillar = names.get(story.get("pillar"), story.get("pillar") or "?")
+        print(f"- {story['id']}  | {pillar} | điểm {story['score']} | {hours} | {len(publishers)} báo | nhóm tốt nhất {best if best != 9 else 0}{flag}")
         print(f"    {story['title']}")
         print(f"    Ảnh hưởng: {story['impact']}")
         print(f"    Nguồn: {', '.join(publishers)}")

@@ -23,6 +23,7 @@
      "summary",
      "impact",
      "topic",
+     "pillar",
      "score",
      "effective_date",
      "sources"
@@ -45,6 +46,16 @@
      },
      "topic": {
       "type": "string"
+     },
+     "pillar": {
+      "type": "string",
+      "enum": [
+       "von",
+       "quan-tri",
+       "luat",
+       "ai-marketing"
+      ],
+      "description": "chủ đề kênh (config/pillars.yaml): von, quan-tri, luat, ai-marketing"
      },
      "score": {
       "type": "integer",

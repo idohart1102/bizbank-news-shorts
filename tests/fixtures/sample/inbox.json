@@ -7,6 +7,7 @@
    "summary": "Dữ liệu giả lập để kiểm thử hệ thống. Không phải tin thật.",
    "impact": "Hộ kinh doanh mẫu",
    "topic": "hóa đơn điện tử",
+   "pillar": "von",
    "score": 8,
    "effective_date": null,
    "sources": [

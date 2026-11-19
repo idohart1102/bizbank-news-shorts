@@ -1,0 +1,33 @@
+# 4 chủ đề của kênh (Sếp chốt 2026-11-18), dùng chung cho hướng tin tức (1.1) và kiến thức (1.2).
+# id: mã máy dùng trong inbox.json / brief.json (phải khớp enum `pillar` trong core/schemas/{inbox,brief}.schema.json).
+# weight: tỷ trọng mong muốn trong các tập gần đây (tạm đặt, Sếp đổi được). pick-stories ưu tiên chủ đề đang thiếu,
+#   nhưng không chọn tin kém (score < 6) chỉ để đủ tỷ trọng.
+# keywords: từ khóa lọc thô RSS (khớp không dấu, nguyên từ), cộng thêm vào `keywords` chung trong sources.yaml;
+#   cũng dùng để gợi ý chủ đề (pillar_hints) cho Claude Sonnet ở bước gom tin. Không dùng từ đơn «ai» (trùng «ai» = người nào).
+#   Nguồn tiếng Anh khai `keywords` riêng trong sources.yaml (thay cho bộ chung).
+#   Thuế, hóa đơn tạm xếp vào «von» (tài chính doanh nghiệp); mức phạt, thủ tục pháp lý vào «luat».
+kinds:              # tỷ trọng 2 hướng nội dung (Sếp 2026-11-18); nhánh kiến thức xây ở giai đoạn 2
+  news: 4
+  knowledge: 1
+recent_window: 10   # số tập gần nhất dùng để tính tỷ trọng chủ đề
+pillars:
+  - id: von
+    name: Vốn (tài chính doanh nghiệp)
+    partner: BizBank
+    weight: 40
+    keywords: [vay von, goi vay, khoan vay, lai suat, tin dung, ngan hang, von luu dong, bao lanh, the chap, tin chap, quy phat trien doanh nghiep, ho tro von, no xau, dao no, gia han no, thue, hoa don, khai thue, quyet toan, thue khoan, ma so thue]
+  - id: quan-tri
+    name: Quản trị doanh nghiệp thông minh
+    partner: UpBase (Lark Suite)
+    weight: 20
+    keywords: [chuyen doi so, so hoa, phan mem quan ly, quan tri doanh nghiep, quan ly ban hang, quan ly kho, quan ly nhan su, cham cong, erp, crm, lark, dien toan dam may, nen tang so, cong cu so, tu dong hoa, du lieu doanh nghiep, an toan thong tin, bao mat du lieu, chu ky so, hop dong dien tu]
+  - id: luat
+    name: Luật doanh nghiệp và hộ kinh doanh
+    partner: HDS Law
+    weight: 20
+    keywords: [luat doanh nghiep, dang ky kinh doanh, giay phep kinh doanh, thanh lap doanh nghiep, giai the, hop dong, tranh chap, xu phat, muc phat, vi pham hanh chinh, nghi dinh, thong tu, du thao, co hieu luc, quy dinh moi, bao hiem xa hoi, bhxh, nguoi lao dong, luong toi thieu, so huu tri tue, nhan hieu, ve sinh an toan thuc pham, bao ve nguoi tieu dung]
+  - id: ai-marketing
+    name: AI Marketing
+    partner: MautureX
+    weight: 20
+    keywords: [cong nghe ai, ung dung ai, cong cu ai, ai tao sinh, tri tue nhan tao, chatgpt, gemini, chatbot, marketing, quang cao, facebook ads, tiktok ads, google ads, livestream, ban hang online, tiktok shop, shopee, lazada, san thuong mai, thuong mai dien tu, tmdt, kols, koc, noi dung so, thuat toan, zalo]

@@ -4,6 +4,8 @@
  "type": "object",
  "additionalProperties": false,
  "required": [
+  "kind",
+  "pillar",
   "format",
   "story_ids",
   "angle",
@@ -14,6 +16,24 @@
   "sources"
  ],
  "properties": {
+  "kind": {
+   "type": "string",
+   "enum": [
+    "news",
+    "knowledge"
+   ],
+   "description": "hướng nội dung: news = tin tức (1.1), knowledge = kiến thức (1.2, giai đoạn 2)"
+  },
+  "pillar": {
+   "type": "string",
+   "enum": [
+    "von",
+    "quan-tri",
+    "luat",
+    "ai-marketing"
+   ],
+   "description": "chủ đề kênh (config/pillars.yaml)"
+  },
   "format": {
    "type": "string",
    "enum": [

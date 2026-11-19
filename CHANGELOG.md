@@ -1,5 +1,11 @@
 # Thay đổi
 
+## Chưa phát hành — 2026-11-18
+
+- Kênh có 4 chủ đề (`config/pillars.yaml`): Vốn, Quản trị doanh nghiệp thông minh, Luật doanh nghiệp và HKD, AI Marketing, kèm tỷ trọng mục tiêu và từ khóa lọc RSS riêng từng chủ đề.
+- Gom tin gắn `pillar_hints` theo từ khóa/nguồn; Sonnet gắn `pillar` cho từng tin trong `inbox.json`. Brief có `kind` (news) và `pillar`; bước chọn tin cân tỷ trọng chủ đề theo các tập gần đây, cổng kiểm chặn `pillar` lệch tin chính. Sổ `index.jsonl` ghi `kind`, `pillar`.
+- Thêm nguồn nhóm 5 (Sếp tạm chốt) và RSS chuyên mục pháp luật/công nghệ; nguồn tiếng Anh dùng bộ từ khóa riêng. `bin/news topics` và `/chonchude` hiện và nhóm theo chủ đề.
+
 ## v1.5.0 — 2026-11-18
 
 - Chuyển ảnh minh họa, ảnh nền dự phòng và cutout AI từ 9router sang công cụ `image_gen` tích hợp của Codex CLI; dùng đăng nhập Codex tại máy.

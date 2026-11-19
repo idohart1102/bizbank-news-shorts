@@ -11,6 +11,7 @@ groups:
   3: Báo đại chúng. Chỉ để bắt mạch dư luận và lấy ngôn ngữ khách hàng; KHÔNG dùng làm nguồn số liệu/quote.
   4: Chuyên biệt hộ kinh doanh, siêu nhỏ. Gần tệp khách hàng nhất; cơ quan thuế là nguồn gốc cho mọi thay đổi thuế hộ kinh doanh.
   0: Bổ sung ngoài danh sách Sếp. Dùng như nhóm 3, riêng Thư viện Pháp luật dùng để tra nguyên văn văn bản.
+  5: Nguồn chuyên đề cho 3 chủ đề mới (luật, quản trị số, AI marketing) và vốn SME, Sếp tạm chốt 2026-11-18. Tier 1 là chính thống; Meta/Google/TikTok chỉ chính thống cho tin về sản phẩm, chính sách của chính nền tảng đó. Marketing AI, Brands Vietnam, Advertising Vietnam là báo ngành marketing, dùng làm nguồn số liệu mảng marketing (ngang nhóm 2).
 press:
   # Nhóm 1
   - {name: Thời báo Tài chính Việt Nam, url: https://thoibaotaichinhvietnam.vn, tier: 1, group: 1, rss: [https://thoibaotaichinhvietnam.vn/rss_feed/]}
@@ -27,11 +28,11 @@ press:
   - {name: VietnamFinance, url: https://vietnamfinance.vn, tier: 2, group: 2}  # RSS ngừng cập nhật từ 09/2026
   - {name: The Leader, url: https://theleader.vn, tier: 2, group: 2, rss: [https://theleader.vn/tin-moi-nhat.rss]}
   # Nhóm 3
-  - {name: VnExpress, url: https://vnexpress.net/kinh-doanh, tier: 2, group: 3, rss: [https://vnexpress.net/rss/kinh-doanh.rss]}
+  - {name: VnExpress, url: https://vnexpress.net/kinh-doanh, tier: 2, group: 3, rss: [https://vnexpress.net/rss/kinh-doanh.rss, https://vnexpress.net/rss/phap-luat.rss, https://vnexpress.net/rss/so-hoa.rss]}
   - {name: CafeF, url: https://cafef.vn, tier: 3, group: 3, rss: [https://cafef.vn/home.rss]}  # aggregator: tham khảo, không trích dẫn gốc
-  - {name: Dân trí, url: https://dantri.com.vn/kinh-doanh.htm, tier: 2, group: 3, rss: [https://dantri.com.vn/rss/kinh-doanh.rss]}
-  - {name: Tuổi Trẻ, url: https://tuoitre.vn/kinh-doanh.htm, tier: 2, group: 3, rss: [https://tuoitre.vn/rss/kinh-doanh.rss]}  # plo.vn nay chuyển về tuoitre.vn/tto-plo.htm
-  - {name: Thanh Niên, url: https://thanhnien.vn/kinh-te.htm, tier: 2, group: 3, rss: [https://thanhnien.vn/rss/kinh-te.rss]}
+  - {name: Dân trí, url: https://dantri.com.vn/kinh-doanh.htm, tier: 2, group: 3, rss: [https://dantri.com.vn/rss/kinh-doanh.rss, https://dantri.com.vn/rss/phap-luat.rss]}
+  - {name: Tuổi Trẻ, url: https://tuoitre.vn/kinh-doanh.htm, tier: 2, group: 3, rss: [https://tuoitre.vn/rss/kinh-doanh.rss, https://tuoitre.vn/rss/phap-luat.rss]}  # plo.vn nay chuyển về tuoitre.vn/tto-plo.htm
+  - {name: Thanh Niên, url: https://thanhnien.vn/kinh-te.htm, tier: 2, group: 3, rss: [https://thanhnien.vn/rss/kinh-te.rss, https://thanhnien.vn/rss/cong-nghe.rss]}
   - {name: Lao Động, url: https://laodong.vn/kinh-doanh, tier: 2, group: 3}  # RSS chặn bot bằng cookie JS
   # Nhóm 4
   - {name: Doanh nghiệp & Hội nhập (VINASME), url: https://doanhnghiephoinhap.vn, tier: 2, group: 4, rss: [https://doanhnghiephoinhap.vn/rss_feed/]}
@@ -41,11 +42,23 @@ press:
   - {name: Xây dựng chính sách (Chính phủ), url: https://xaydungchinhsach.chinhphu.vn, tier: 1, group: 0, rss: [https://xaydungchinhsach.chinhphu.vn/home.rss]}
   - {name: Thư viện Pháp luật, url: https://thuvienphapluat.vn, tier: 1, group: 0}
   - {name: VietnamBiz, url: https://vietnambiz.vn, tier: 2, group: 0, rss: [https://vietnambiz.vn/rss/tin-moi-nhat.rss]}
+  # Nhóm 5: nguồn chuyên đề (Sếp tạm chốt 2026-11-18). pillars: gợi ý chủ đề cho tin từ nguồn này (config/pillars.yaml)
+  - {name: Bộ Khoa học và Công nghệ, url: https://mst.gov.vn, tier: 1, group: 5, pillars: [quan-tri], rss: [https://mst.gov.vn/rss/home.rss]}
+  - {name: Quỹ Phát triển doanh nghiệp nhỏ và vừa, url: https://smedf.gov.vn, tier: 1, group: 5, pillars: [von], rss: [https://smedf.gov.vn/rss]}  # ít bài
+  - {name: Bộ Tư pháp, url: https://moj.gov.vn, tier: 1, group: 5, pillars: [luat]}  # không có RSS; tra cứu khi kiểm fact
+  - {name: Bộ Công Thương, url: https://moit.gov.vn, tier: 1, group: 5, pillars: [ai-marketing, luat]}  # không có RSS; quy định TMĐT, quảng cáo
+  - {name: Marketing AI, url: https://marketingai.vn, tier: 2, group: 5, pillars: [ai-marketing], rss: [https://marketingai.vn/feed]}
+  - {name: Meta Newsroom, url: https://about.fb.com, tier: 1, group: 5, pillars: [ai-marketing], rss: [https://about.fb.com/news/feed/], keywords: [small business, small businesses, advertisers, advertising, ads, marketing, ai, generative ai, business, shopping, whatsapp business, messaging, creators, vietnam]}  # tiếng Anh; chính thống chỉ cho tin về Meta
+  - {name: Google Blog, url: https://blog.google, tier: 1, group: 5, pillars: [ai-marketing], rss: [https://blog.google/rss/], keywords: [small business, small businesses, advertisers, advertising, ads, marketing, ai, generative ai, business, shopping, whatsapp business, messaging, creators, vietnam]}  # tiếng Anh; chính thống chỉ cho tin về Google
+  - {name: TikTok Newsroom, url: https://newsroom.tiktok.com, tier: 1, group: 5, pillars: [ai-marketing]}  # không có RSS; chính thống chỉ cho tin về TikTok
+  - {name: Brands Vietnam, url: https://www.brandsvietnam.com, tier: 2, group: 5, pillars: [ai-marketing]}  # chặn máy đọc; mở bằng tay
+  - {name: Advertising Vietnam, url: https://advertisingvietnam.com, tier: 2, group: 5, pillars: [ai-marketing]}  # chặn máy đọc; mở bằng tay
 social:   # chưa đọc tự động (cần API/đấu nối); chỉ làm tín hiệu, tin chỉ có ở đây phải ghi "theo thông tin lan truyền"
   - {name: Facebook fanpage báo/cơ quan, tier: 3}
   - {name: TikTok xu hướng kinh doanh, tier: 3}
   - {name: Nhóm cộng đồng chủ shop, tier: 3}
 topics_priority: [thuế, hóa đơn điện tử, hộ kinh doanh, sàn TMĐT, phí ngân hàng/thanh toán, lương tối thiểu, BHXH, giá cả đầu vào, vay vốn, quy định mới có hiệu lực]
 # Lọc thô trước khi đưa cho AI (khớp không dấu, chữ thường). Tin không khớp từ nào bị bỏ để tiết kiệm token.
+# Từ khóa riêng từng chủ đề nằm ở config/pillars.yaml và được cộng thêm vào danh sách này.
 keywords: [thue, hoa don, ho kinh doanh, ho ca the, doanh nghiep nho, sme, tieu thuong, cua hang, chu shop, ban hang online, san thuong mai, tmdt, thuong mai dien tu, shopee, tiktok shop, lazada, lai suat, vay von, goi vay, tin dung, thanh toan, chuyen khoan, phi dich vu, gia xang, gia dien, gia ca, tang gia, luong toi thieu, bhxh, bao hiem xa hoi, nghi dinh, thong tu, quy dinh moi, co hieu luc, xu phat, muc phat, chinh sach moi, ho tro doanh nghiep, mat bang, xuat khau, nhap khau, hai quan, an toan thuc pham, giay phep kinh doanh, ma so thue, khai thue, quyet toan, dnnvv, doanh nghiep nho va vua, kinh te tu nhan, khoan vay, thue khoan]
 window_hours: 48

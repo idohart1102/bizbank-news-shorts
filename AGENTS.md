@@ -1,6 +1,6 @@
 # News video — bản đồ định tuyến
 `AGENTS.md` là bản duy nhất; `CLAUDE.md` chỉ chứa dòng `@AGENTS.md`.
-Kênh short tin tức Việt Nam tổng hợp, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SME. "Sếp" là người dùng. `<tap>` = `episodes/<YYYY-MM-DD>-<slug>`.
+Kênh short Việt Nam, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SME. Hai hướng trên cùng kênh và template: tin tức (4/5) và kiến thức (1/5, giai đoạn 2), 4 chủ đề Vốn, Quản trị thông minh, Luật DN/HKD, AI Marketing (`config/pillars.yaml`). "Sếp" là người dùng. `<tap>` = `episodes/<YYYY-MM-DD>-<slug>`.
 
 ## Ai làm gì
 | Ai | Việc |
