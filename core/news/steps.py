@@ -48,16 +48,40 @@ class Ctx:
         return read_json(path) if path.exists() else []
 
     def history(self):
-        path = self.cfg.data_dir / "index.jsonl"
-        if not path.exists():
-            return []
-        return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        return history(self.cfg)
+
+    @property
+    def kind(self):
+        """Hướng nội dung của tập: news (tin tức) hoặc knowledge (kiến thức)."""
+        return self.ep.state.get("kind", "news")
 
     def sh(self, *command, timeout=600, env=None):
         out = subprocess.run([str(c) for c in command], capture_output=True, text=True, timeout=timeout, env=env)
         if out.returncode != 0:
             raise RuntimeError(f"{Path(str(command[0])).name} lỗi: {out.stderr.strip()[-400:]}")
         return out.stdout
+
+
+def history(cfg):
+    path = cfg.data_dir / "index.jsonl"
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def auto_kind(cfg):
+    """Tỷ trọng tin tức : kiến thức (config/pillars.yaml `kinds`, mặc định 4:1): đủ N tập tin tức liên tiếp kể từ
+    tập kiến thức gần nhất thì tập kế tiếp là kiến thức. Không tính tập chạy thử (dry)."""
+    from . import feeds
+    kinds = feeds.load_pillars().get("kinds", {"news": 4, "knowledge": 1})
+    every = max(1, round(kinds.get("news", 4) / max(1, kinds.get("knowledge", 1))))
+    streak = 0
+    for entry in reversed([h for h in history(cfg) if not h.get("dry")]):
+        if entry.get("kind", "news") != "news":
+            break
+        streak += 1
+    return "knowledge" if streak >= every else "news"
+
 
 
 def fixture(ctx, *names):
@@ -86,11 +110,12 @@ def pillar_guide():
     return [{k: p[k] for k in ("id", "name", "partner", "weight")} for p in feeds.load_pillars()["pillars"]]
 
 
-def pillar_balance(ctx):
-    """Tỷ trọng chủ đề trong các tập gần đây so với mục tiêu, để pick ưu tiên chủ đề đang thiếu."""
+def pillar_balance(ctx, kind=None):
+    """Tỷ trọng chủ đề trong các tập gần đây (cùng hướng nếu có `kind`) so với mục tiêu, để ưu tiên chủ đề đang thiếu."""
     from . import feeds
     config = feeds.load_pillars()
-    recent = [h.get("pillar") for h in ctx.history() if not h.get("dry")][-config.get("recent_window", 10):]
+    recent = [h.get("pillar") for h in ctx.history() if not h.get("dry") and (not kind or h.get("kind", "news") == kind)]
+    recent = recent[-config.get("recent_window", 10):]
     total = sum(p["weight"] for p in config["pillars"])
     return {p["id"]: {"mục tiêu %": round(100 * p["weight"] / total), "số tập gần đây": recent.count(p["id"])}
             for p in config["pillars"]} | {"tổng số tập tính": len(recent)}
@@ -110,9 +135,21 @@ def gate_sources(ctx, items):
 
 # --- 1. Gom tin -------------------------------------------------------------
 
+def reference_guide():
+    from . import feeds
+    return [{"pillar": p["id"], "name": p["name"], "references": p.get("references", [])} for p in feeds.load_pillars()["pillars"]]
+
+
+def done_knowledge(ctx):
+    return [{"title": h.get("title"), "pillar": h.get("pillar"), "urls": h.get("urls", [])}
+            for h in ctx.history() if h.get("kind") == "knowledge" and not h.get("dry")]
+
+
 def run_collect(ctx):
     if ctx.cfg.dry:
         return fixture(ctx, "inbox.json")
+    if ctx.kind == "knowledge":
+        return run_collect_knowledge(ctx)
     from . import feeds
     raw = feeds.collect()
     write_json(ctx.ep.file("raw_feed.json"), raw)
@@ -124,6 +161,18 @@ def run_collect(ctx):
     known = {i["url"] for i in raw["items"]}
     for story in inbox["stories"]:  # AI không được bịa link: chỉ giữ link có trong RSS
         story["sources"] = [s for s in story["sources"] if s["url"] in known]
+    inbox["stories"] = [s for s in inbox["stories"] if s["sources"]]
+    write_json(ctx.ep.file("inbox.json"), inbox)
+
+
+def run_collect_knowledge(ctx):
+    """Hướng kiến thức: Sonnet đọc nguồn tham chiếu (config/pillars.yaml `references`) và đề xuất đề tài → inbox.json."""
+    data = {"Ngày": time.strftime("%Y-%m-%d"), "Chủ đề kênh": pillar_guide(), "Nguồn tham chiếu kiến thức": reference_guide(),
+            "Tỷ trọng chủ đề các tập kiến thức gần đây": pillar_balance(ctx, "knowledge"),
+            "Đề tài kiến thức đã làm (không lặp)": done_knowledge(ctx), "Nhóm nguồn": source_guide()}
+    inbox = agents.run(ctx.cfg, ctx.ep, "sonnet", "collect_knowledge", data, "inbox", tools=["web_search"], timeout=1800)
+    for story in inbox["stories"]:  # chỉ giữ link thuộc nguồn tham chiếu/danh sách/đã duyệt
+        story["sources"] = [s for s in story["sources"] if sources.status(s["url"]) in ("listed", "approved")]
     inbox["stories"] = [s for s in inbox["stories"] if s["sources"]]
     write_json(ctx.ep.file("inbox.json"), inbox)
 
@@ -141,11 +190,17 @@ def check_collect(ctx):
 def run_pick(ctx):
     if ctx.cfg.dry:
         fixture(ctx, "brief.json")
+        brief = ctx.json("brief.json")
+        brief["kind"] = ctx.kind
+        write_json(ctx.ep.file("brief.json"), brief)
     else:
         used = sorted({u for h in ctx.history() for u in h.get("urls", [])})
         ctx_data = {"Tin trong ngày (inbox.json)": ctx.json("inbox.json"), "Link đã làm (không chọn lại)": used,
                     "Lỗi lần trước": ctx.feedback("pick"), "Nhóm nguồn": source_guide(),
-                    "Chủ đề kênh": pillar_guide(), "Tỷ trọng chủ đề các tập gần đây": pillar_balance(ctx)}
+                    "Hướng nội dung của tập (kind)": ctx.kind,
+                    "Chủ đề kênh": pillar_guide(), "Tỷ trọng chủ đề các tập gần đây": pillar_balance(ctx, ctx.kind)}
+        if ctx.kind == "knowledge":
+            ctx_data["Đề tài kiến thức đã làm (không lặp)"] = done_knowledge(ctx)
         skipped = [s["story"] for s in ctx.ep.state.get("skipped_stories", [])]
         if skipped:
             ctx_data["Tin đã bỏ vì kịch bản trượt (không chọn lại)"] = skipped
@@ -165,8 +220,8 @@ def check_pick(ctx):
     choice = ctx.ep.state.get("story_choice")
     if choice and brief["story_ids"][:1] != [choice]:
         errors.append(f"Sếp đã chọn tin '{choice}', story_ids[0] phải là tin này")
-    if brief["kind"] != "news":
-        errors.append("Nhánh kiến thức (kind=knowledge) chưa xây (giai đoạn 2); bước pick chỉ làm kind=news")
+    if brief["kind"] != ctx.kind:
+        errors.append(f"kind phải là '{ctx.kind}' (hướng nội dung của tập), không phải '{brief['kind']}'")
     stories = {s["id"]: s for s in ctx.json("inbox.json").get("stories", [])}
     main = stories.get(brief["story_ids"][0]) if brief["story_ids"] else None
     if main and main.get("pillar") and brief["pillar"] != main["pillar"]:
@@ -174,8 +229,8 @@ def check_pick(ctx):
     skipped = {s["story"] for s in ctx.ep.state.get("skipped_stories", [])}
     if brief["story_ids"][:1] and brief["story_ids"][0] in skipped:
         errors.append(f"Tin '{brief['story_ids'][0]}' đã bị bỏ vì kịch bản trượt; chọn tin khác")
-    used = {u for h in ctx.history() for u in h.get("urls", [])}
-    repeated = [s["url"] for s in brief["sources"] if s["url"] in used]
+    used = {u for h in ctx.history() if h.get("kind", "news") == "news" for u in h.get("urls", [])}
+    repeated = [s["url"] for s in brief["sources"] if s["url"] in used] if ctx.kind == "news" else []
     if repeated:
         errors.append(f"Tin đã làm ở tập trước: {repeated[:2]}")
     return errors
@@ -183,12 +238,15 @@ def check_pick(ctx):
 
 # --- 3. Viết kịch bản ---------------------------------------------------------
 
+STANDARD = {"news": "script.md", "knowledge": "script_knowledge.md"}
+
+
 def run_write(ctx):
     if ctx.cfg.dry:
         fixture(ctx, "script.json")
     else:
         ctx_data = {"Brief": ctx.json("brief.json"), "Văn bản nguồn": source_texts(ctx, ctx.json("brief.json")["sources"]),
-                    "Chuẩn kịch bản": (ROOT / "core/standard/script.md").read_text(encoding="utf-8"),
+                    "Chuẩn kịch bản": (ROOT / "core/standard" / STANDARD[ctx.kind]).read_text(encoding="utf-8"),
                     "Bản trước": ctx.json("script.json") if ctx.ep.file("script.json").exists() else "chưa có",
                     "Cần sửa": ctx.feedback("write"), "Nhóm nguồn": source_guide()}
         write_json(ctx.ep.file("script.json"), agents.run(ctx.cfg, ctx.ep, "claude", "write", ctx_data, "script"))
@@ -526,8 +584,10 @@ def check_qc(ctx):
 def run_package(ctx):
     if ctx.cfg.dry:
         return fixture(ctx, "meta.json")
-    ctx_data = {"Kịch bản": ctx.json("script.json"), "Nguồn ảnh": ctx.json("assets.json"),
-                "Cần sửa": ctx.feedback("package")}
+    brief = ctx.json("brief.json")
+    ctx_data = {"Hướng nội dung (kind)": ctx.kind, "Chủ đề kênh": next(
+                    (p for p in pillar_guide() if p["id"] == brief.get("pillar")), brief.get("pillar")),
+                "Kịch bản": ctx.json("script.json"), "Nguồn ảnh": ctx.json("assets.json"), "Cần sửa": ctx.feedback("package")}
     write_json(ctx.ep.file("meta.json"), agents.run(ctx.cfg, ctx.ep, "claude", "package", ctx_data, "meta"))
 
 
@@ -535,13 +595,34 @@ def check_package(ctx):
     return checks.validate_schema("meta", ctx.json("meta.json"))
 
 
+def partner_mentions(ctx):
+    """Tên đối tác (config/pillars.yaml `partner_names`) xuất hiện trong kịch bản/tiêu đề/mô tả, cộng brief.partner."""
+    from . import feeds
+    names = [n for p in feeds.load_pillars()["pillars"] for n in p.get("partner_names", [])]
+    texts = [json.dumps(ctx.json("script.json"), ensure_ascii=False)]
+    if ctx.ep.file("meta.json").exists():
+        texts.append(json.dumps(ctx.json("meta.json"), ensure_ascii=False))
+    haystack = feeds.plain(" ".join(texts))
+    import re
+    found = [n for n in names if re.search(rf"\b{re.escape(feeds.plain(n))}\b", haystack)]
+    partner = ctx.json("brief.json").get("partner")
+    return sorted(set(found + ([partner] if partner else [])))
+
+
 def run_publish(ctx):
     from .outputs import enqueue
+    partners = partner_mentions(ctx)
+    if partners and not ctx.ep.state.get("approved"):
+        who = "Sếp (tập chạy theo lịch)" if ctx.ep.state.get("trigger") == "schedule" else "người ra lệnh tạo video"
+        raise NotReady(f"Video có nội dung đối tác ({', '.join(partners)}): chờ {who} duyệt. Xem "
+                       f"{ctx.ep.file('render/final.mp4')} rồi duyệt: bin/news approve {ctx.ep.id}; "
+                       "chưa đạt thì góp ý: bin/news feedback <tap> <bước> \"<nội dung>\"")
     write_json(ctx.ep.file("publish.json"), enqueue(ctx.cfg, ctx.ep))
     brief = ctx.json("brief.json")
     with (ctx.cfg.data_dir / "index.jsonl").open("a", encoding="utf-8") as handle:
         handle.write(json.dumps({"episode": ctx.ep.id, "date": time.strftime("%Y-%m-%d"), "dry": ctx.cfg.dry,
                                  "kind": brief.get("kind", "news"), "pillar": brief.get("pillar"),
+                                 "title": ctx.json("script.json").get("title"), "partners": partners,
                                  "urls": [s["url"] for s in brief["sources"]]}, ensure_ascii=False) + "\n")
 
 

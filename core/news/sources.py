@@ -27,8 +27,11 @@ def load_decisions():
 
 
 def listed_domains():
+    """Tên miền trong danh sách nguồn tin + nguồn tham chiếu kiến thức (config/pillars.yaml `references`)."""
     config = yaml.safe_load((ROOT / "config" / "sources.yaml").read_text(encoding="utf-8"))
-    return {domain(s["url"]) for s in config["press"]}
+    pillars = yaml.safe_load((ROOT / "config" / "pillars.yaml").read_text(encoding="utf-8"))
+    refs = [r["url"] for p in pillars["pillars"] for r in p.get("references", [])]
+    return {domain(s["url"]) for s in config["press"]} | {domain(u) for u in refs}
 
 
 def matches(host, domains):

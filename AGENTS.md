@@ -1,6 +1,6 @@
 # News video — bản đồ định tuyến
 `AGENTS.md` là bản duy nhất; `CLAUDE.md` chỉ chứa dòng `@AGENTS.md`.
-Kênh short Việt Nam, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SME. Hai hướng trên cùng kênh và template: tin tức (4/5) và kiến thức (1/5, giai đoạn 2), 4 chủ đề Vốn, Quản trị thông minh, Luật DN/HKD, AI Marketing (`config/pillars.yaml`). "Sếp" là người dùng. `<tap>` = `episodes/<YYYY-MM-DD>-<slug>`.
+Kênh short Việt Nam, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SME. Hai hướng trên cùng kênh và template: tin tức (4/5) và kiến thức (1/5), 4 chủ đề Vốn, Quản trị thông minh, Luật DN/HKD, AI Marketing (`config/pillars.yaml`). "Sếp" là người dùng. `<tap>` = `episodes/<YYYY-MM-DD>-<slug>`.
 
 ## Ai làm gì
 | Ai | Việc |
@@ -22,7 +22,7 @@ Kênh short Việt Nam, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SM
 2. Mở đúng `core/skills/<skill>/SKILL.md` theo bảng, chỉ đọc các file skill nêu.
 3. Luồng đầy đủ: `core/standard/pipeline.md`. Lộ trình xây hệ thống, input/output từng bước: `docs/roadmap.md`.
 4. Chạy tự động: `bin/news run` (lịch 10:30, 19:00); `bin/news status`, `bin/news run --resume last`. Nguồn ngoài danh sách ưu tiên chờ Sếp duyệt: `bin/news sources pending|approve|reject <tên miền>`. Máy mới/cài lại/chuyển máy: đọc `docs/INSTALL.md` trước khi chạy; prompt bàn giao ở `docs/AI_SETUP_PROMPT.md`. `bin/bootstrap --with-tts` cài Whisper; `bin/vieneu install` tải VieNeu riêng theo `docs/VIENEU.md`. Chưa tự bật dịch vụ/lịch.
-5. Lệnh nhanh cho Sếp: `/chonchude` (tìm 3–5 chủ đề hợp trend, dừng chờ chọn), `/taovideo [id]` (chạy hết tới bước package). Skill ở `.claude/skills/`; AI khác đọc trực tiếp file `SKILL.md` ở đó.
+5. Lệnh nhanh cho Sếp: `/chonchude [tin tuc|kien thuc]` (tìm 3–5 chủ đề, dừng chờ chọn), `/taovideo [id]` (chạy hết tới bước package). Skill ở `.claude/skills/`; AI khác đọc trực tiếp file `SKILL.md` ở đó.
 6. Bài học: luật đã rút ra nằm ở `lessons/rules/<bước>.md`, bắt buộc tuân theo. Góp ý của Sếp: `bin/news feedback <tap> <bước> "<nội dung>"`.
 
 | Việc | Skill | Người làm |
@@ -43,4 +43,5 @@ Kênh short Việt Nam, dưới 60 giây, dọc 9:16, cho hộ kinh doanh và SM
 - Số liệu, ngày hiệu lực, mức phạt phải khớp nguyên văn nguồn; ghi link và trích nguyên văn (`quote`) trong `script.json`.
 - Không đọc `node_modules/`, `episodes/*/audio|render|assets`.
 - Repo là hệ độc lập, chuyển giao được: không đường dẫn máy, bí mật, dữ liệu sản phẩm/video. Dữ liệu các tập, hàng chờ đăng, sự kiện bài học thô chỉ ở local; hook `core/scripts/guard_repo.py` chặn khi commit/push.
+- Video nhắc đối tác (UpBase/Lark, HDS Law, MautureX) không tự vào hàng chờ đăng: người ra lệnh tạo video duyệt bằng `bin/news approve <tap>`.
 - VieNeu chạy local không tốn credit Vbee. Tạo một lần, dùng lại audio đúng yêu cầu; chỉ dùng `--replace` khi kịch bản đổi. Khi chọn Vbee, mỗi lần tạo vẫn tốn credit, không tự gửi lại.

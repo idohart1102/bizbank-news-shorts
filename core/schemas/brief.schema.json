@@ -38,8 +38,12 @@
    "type": "string",
    "enum": [
     "deep",
-    "digest"
-   ]
+    "digest",
+    "steps",
+    "mistakes",
+    "explainer"
+   ],
+   "description": "news: deep (1 tin sâu) | digest (3–4 tin); knowledge: steps (các bước) | mistakes (sai lầm hay gặp) | explainer (giải thích một khái niệm/quy định)"
   },
   "story_ids": {
    "type": "array",
@@ -99,6 +103,13 @@
     }
    },
    "minItems": 1
+  },
+  "partner": {
+   "type": [
+    "string",
+    "null"
+   ],
+   "description": "tên đối tác nếu video giới thiệu sản phẩm/dịch vụ của đối tác; null nếu không. Có đối tác thì phải được duyệt trước khi đăng"
   }
  }
 }

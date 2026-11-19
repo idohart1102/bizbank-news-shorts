@@ -1,5 +1,12 @@
 # Thay đổi
 
+## Chưa phát hành — 2026-11-19
+
+- Hướng kiến thức (`bin/news run --kind knowledge`, `/chonchude kien thuc`): Claude Sonnet đọc 10 nguồn tham chiếu và đề xuất đề tài; chọn 1 đề tài dạng các bước/lỗi hay gặp/giải thích; viết theo `core/standard/script_knowledge.md`. Từ bước duyệt trở đi dùng chung với tin tức.
+- Tỷ trọng 4 tin tức : 1 kiến thức: lịch chạy dùng `--kind auto`; chạy tay mặc định tin tức. Tập ghi hướng trong `state.json`, sổ `index.jsonl` ghi `kind`, `pillar`, `title`, `partners`.
+- Cổng duyệt đối tác: video nhắc tên đối tác hoặc brief có `partner` dừng trước hàng chờ đăng, người ra lệnh duyệt bằng `bin/news approve <tap>`.
+- Nguồn tham chiếu kiến thức được tính là nguồn trong danh sách (không phải chờ duyệt).
+
 ## Chưa phát hành — 2026-11-18
 
 - Kênh có 4 chủ đề (`config/pillars.yaml`): Vốn, Quản trị doanh nghiệp thông minh, Luật doanh nghiệp và HKD, AI Marketing, kèm tỷ trọng mục tiêu và từ khóa lọc RSS riêng từng chủ đề.

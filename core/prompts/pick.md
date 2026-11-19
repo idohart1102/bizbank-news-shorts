@@ -1,6 +1,6 @@
 # Bước 2: Chọn tin và viết brief (Claude)
 
-Kênh: short < 60 giây cho hộ kinh doanh, tiểu thương, SME Việt Nam, 4 chủ đề ("Chủ đề kênh"): vốn, quản trị doanh nghiệp thông minh, luật doanh nghiệp và HKD, AI marketing. Bước này làm hướng **tin tức** (`kind` = `news`). Góc nhìn luôn là **"ảnh hưởng gì tới túi tiền và công việc của chủ shop"**.
+Kênh: short < 60 giây cho hộ kinh doanh, tiểu thương, SME Việt Nam, 4 chủ đề ("Chủ đề kênh"): vốn, quản trị doanh nghiệp thông minh, luật doanh nghiệp và HKD, AI marketing. Làm theo "Hướng nội dung của tập (kind)": `news` (tin tức, phần chính bên dưới) hoặc `knowledge` (kiến thức, xem cuối). Góc nhìn luôn là **"ảnh hưởng gì tới túi tiền và công việc của chủ shop"**.
 
 Chọn từ `inbox.json`:
 - `deep`: 1 tin quan trọng (score ≥ 8) đủ nội dung cho 3 ý. Ưu tiên dạng này.
@@ -16,5 +16,14 @@ Luật cứng (vi phạm là bị trả lại):
 - Danh sách "Nhóm nguồn" là nguồn ưu tiên, không phải giới hạn: được tham khảo nguồn khác, nhưng nguồn ngoài danh sách (và ngoài "Nguồn ngoài đã được Sếp duyệt") sẽ khiến hệ thống dừng chờ Sếp duyệt. Không dùng nguồn Sếp đã từ chối.
 - Không chọn tin chính trị nhạy cảm, tin chưa xác thực, tin chỉ có trên mạng xã hội.
 
-`brief`: `kind` = `news`, `pillar` = `pillar` của tin chính (`story_ids[0]`) trong inbox, `story_ids` (id trong inbox), `angle`, `hook` (một câu gây tò mò, đánh vào quyền lợi/rủi ro, ngôn ngữ tự nhiên, đúng sự thật), `points` (2–4 ý chính, mỗi ý một fact cụ thể), `action` (chủ shop cần làm gì ngay), `template` = `default`, `sources` = toàn bộ nguồn của các tin đã chọn (giữ nguyên url, publisher, tier).
+`brief` (tin tức): `kind` = `news`, `partner` = `null`, `pillar` = `pillar` của tin chính (`story_ids[0]`) trong inbox, `story_ids` (id trong inbox), `angle`, `hook` (một câu gây tò mò, đánh vào quyền lợi/rủi ro, ngôn ngữ tự nhiên, đúng sự thật), `points` (2–4 ý chính, mỗi ý một fact cụ thể), `action` (chủ shop cần làm gì ngay), `template` = `default`, `sources` = toàn bộ nguồn của các tin đã chọn (giữ nguyên url, publisher, tier).
 Nếu có "Lỗi lần trước": sửa đúng các lỗi đó (thường là chọn tin khác).
+
+## Hướng kiến thức (`kind` = `knowledge`)
+`inbox.json` lúc này là danh sách **đề tài kiến thức** (không phải tin trong ngày). Chọn **1 đề tài** (`story_ids` có đúng 1 id):
+- Score cao, đủ luật nguồn (≥ 1 tier 1 hoặc ≥ 2 tier 2 khác nhau), không trùng "Đề tài kiến thức đã làm", ưu tiên chủ đề đang thấp hơn mục tiêu khi score chênh ≤ 1.
+- `format`: `steps` (các bước), `mistakes` (lỗi hay gặp) hoặc `explainer` (giải thích khái niệm/quy định). Không dùng `deep`/`digest`.
+- `angle`: chủ shop được lợi gì khi biết điều này. `hook`: nêu vấn đề/lợi ích, giữ lời giải cho video. `points`: 2–4 bước/lỗi/ý, mỗi ý một fact cụ thể có trong nguồn. `action`: việc làm ngay.
+- `partner`: `null` (không quảng bá đối tác) trừ khi đề tài là sản phẩm/dịch vụ của đối tác trong "Chủ đề kênh".
+- Luật "Không chọn tin có link nằm trong Link đã làm" không áp cho hướng kiến thức (cùng một trang hướng dẫn có thể dạy nhiều đề tài).
+

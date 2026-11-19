@@ -44,7 +44,7 @@ RESTART_FILES = ("brief.json", "script.json", "script_tts.txt", "sources.md", "s
 def next_story(ctx):
     """Tin kế tiếp chưa bỏ, chưa làm, score ≥ 6 (xếp theo điểm); None nếu hết."""
     skipped = {s["story"] for s in ctx.ep.state.get("skipped_stories", [])}
-    used = {u for h in ctx.history() for u in h.get("urls", [])}
+    used = {u for h in ctx.history() if h.get("kind", "news") == "news" for u in h.get("urls", [])} if ctx.kind == "news" else set()
     stories = [s for s in ctx.json("inbox.json")["stories"]
                if s["score"] >= 6 and s["id"] not in skipped and not {x["url"] for x in s["sources"]} & used]
     return max(stories, key=lambda s: s["score"])["id"] if stories else None

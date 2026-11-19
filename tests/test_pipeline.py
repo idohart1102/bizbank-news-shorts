@@ -309,3 +309,62 @@ class SkipStoryTest(Base):
         pipeline.run(self.cfg, episode)
         self.assertEqual(episode.state["status"], "needs_human")
         self.assertIn("tin do Sếp chọn", episode.state["blocker"])
+
+
+class KnowledgeTest(Base):
+    def add_history(self, *kinds):
+        path = self.cfg.data_dir / "index.jsonl"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("a", encoding="utf-8") as handle:
+            for kind in kinds:
+                handle.write(json.dumps({"episode": "x", "dry": False, "kind": kind, "urls": []}) + "\n")
+
+    def test_auto_kind_one_knowledge_after_four_news(self):
+        self.assertEqual(steps.auto_kind(self.cfg), "news")
+        self.add_history("news", "news", "news")
+        self.assertEqual(steps.auto_kind(self.cfg), "news")
+        self.add_history("news")
+        self.assertEqual(steps.auto_kind(self.cfg), "knowledge")
+        self.add_history("knowledge")
+        self.assertEqual(steps.auto_kind(self.cfg), "news")
+
+    def test_knowledge_dry_run_records_kind(self):
+        episode = self.new()
+        episode.state["kind"] = "knowledge"
+        episode.save()
+        pipeline.run(self.cfg, episode)
+        self.assertEqual(episode.state["status"], "done", episode.state["blocker"])
+        self.assertEqual(read_json(episode.file("brief.json"))["kind"], "knowledge")
+        entry = json.loads((self.cfg.data_dir / "index.jsonl").read_text().splitlines()[-1])
+        self.assertEqual((entry["kind"], entry["pillar"]), ("knowledge", "von"))
+        # cùng nguồn vẫn làm được đề tài kiến thức khác (không chặn link đã làm như tin tức)
+        second = self.new("2026-01-01-1900")
+        second.state["kind"] = "knowledge"
+        second.save()
+        pipeline.run(self.cfg, second)
+        self.assertEqual(second.state["status"], "done", second.state["blocker"])
+
+    def test_partner_video_waits_for_approval(self):
+        episode = self.new()
+        pipeline.run(self.cfg, episode, until="package")
+        script = read_json(episode.file("script.json"))
+        script["segments"][-1]["say"] += " Dùng thử Lark để quản lý ca."
+        episode.file("script.json").write_text(json.dumps(script, ensure_ascii=False), encoding="utf-8")
+        pipeline.run(self.cfg, Episode(episode.path))
+        episode = Episode(episode.path)
+        self.assertEqual(episode.state["status"], "needs_human")
+        self.assertIn("Lark", episode.state["blocker"])
+        self.assertIn("người ra lệnh", episode.state["blocker"])
+        self.assertFalse((self.cfg.data_dir / "outbox").exists())
+        episode.state["approved"] = {"at": "now", "note": ""}
+        episode.save()
+        pipeline.run(self.cfg, episode)
+        self.assertEqual(episode.state["status"], "done", episode.state["blocker"])
+        entry = json.loads((self.cfg.data_dir / "index.jsonl").read_text().splitlines()[-1])
+        self.assertIn("Lark", entry["partners"])
+
+    def test_reference_domains_pass_source_gate(self):
+        from news import sources
+        self.assertEqual(sources.status("https://vbpl.vn/TW/Pages/vbpq-toanvan.aspx?ItemID=1"), "listed")
+        self.assertEqual(sources.status("https://seller-vn.tiktok.com/university/essay?id=1"), "listed")
+

@@ -10,7 +10,8 @@ Làm ở thư mục gốc dự án. Trao đổi tiếng Việt, ngắn gọn. Đ
 - **Có id chủ đề** (Sếp đưa, hoặc vừa chọn ở `/chonchude`): `bin/news run --resume last --story <id>`.
   `last` phải là tập vừa gom ở `/chonchude` (kiểm bằng `bin/news topics last` có id đó). Không có thì báo Sếp, không đoán.
 - **Có tập đang dừng giữa chừng** (`bin/news status`: `paused`/`needs_human`) và Sếp muốn làm tiếp: `bin/news run --resume last`.
-- **Chưa có chủ đề**: `bin/news run` (tự gom tin, AI chọn tin tốt nhất, chạy hết 10 bước).
+- **Chưa có chủ đề**: `bin/news run --kind news` (tự gom tin, AI chọn tin tốt nhất, chạy hết các bước). Sếp nói "kiến thức" thì `--kind knowledge`; không nói gì mà muốn theo tỷ trọng 4 tin tức : 1 kiến thức thì `--kind auto`.
+  Tập đã có hướng (tin tức/kiến thức) từ lúc tạo; `--story` tiếp tục đúng hướng của tập đó.
 
 Lệnh chạy lâu (gọi AI, TTS, render): chạy nền (`run_in_background`), chờ thông báo xong, không hỏi dồn.
 
@@ -18,6 +19,7 @@ Lệnh chạy lâu (gọi AI, TTS, render): chạy nền (`run_in_background`), 
 `bin/news run` in dòng cuối `Trạng thái: ...`.
 - `done`: báo Sếp đường dẫn `render/final.mp4` của tập, `hook_text` (trong `script.json`), tiêu đề + hashtag (trong `meta.json`), điểm duyệt kịch bản (`qa/review_v*.json` bản mới nhất). Không đọc `audio/`, `render/`, `assets/` (chỉ đưa đường dẫn).
 - `needs_human` vì **nguồn ngoài danh sách**: liệt kê `bin/news sources pending`, hỏi Sếp duyệt hay từ chối từng tên miền, rồi chạy `bin/news sources approve|reject <tên miền>` theo lời Sếp và `bin/news run --resume last`. Không tự duyệt.
+- `needs_human` vì **video có nội dung đối tác** (UpBase/Lark, HDS Law, MautureX hoặc brief có `partner`): người ra lệnh tạo video là người duyệt. Đưa Sếp đường dẫn `render/final.mp4`, hỏi duyệt không. Sếp duyệt thì `bin/news approve <tap>` rồi `bin/news run --resume <tap>`; chưa đạt thì ghi góp ý (`bin/news feedback`). Không tự duyệt.
 - `needs_human` khác (trượt cổng nhiều vòng…) hoặc `failed`: báo nguyên văn lý do (`bin/news status last`), đề xuất cách xử lý, chờ Sếp.
 
 Luật: giọng đọc tốn credit, chỉ tạo một lần; không dùng `--replace` trừ khi kịch bản đổi. Góp ý của Sếp về tập: `bin/news feedback <tap> <bước> "<nội dung>"`.

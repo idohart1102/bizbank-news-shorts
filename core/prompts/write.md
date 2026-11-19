@@ -1,6 +1,7 @@
 # Bước 3: Viết kịch bản (Claude)
 
 Viết kịch bản short < 60 giây theo "Chuẩn kịch bản" bên dưới, chỉ dùng fact có trong "Văn bản nguồn".
+Brief `kind` = `knowledge` là video **kiến thức**: cấu trúc, hook và nội dung theo "Chuẩn kịch bản" (kiến thức) được đưa kèm; các yêu cầu kỹ thuật dưới đây (say/show, thẻ, cutout, nguồn, quote) vẫn bắt buộc. Câu `cta` của video kiến thức mời theo dõi để không bỏ lỡ kiến thức kinh doanh.
 
 Yêu cầu bắt buộc:
 - Giọng báo chí, ngắn, dễ hiểu với chủ hộ kinh doanh; thuật ngữ thuế/pháp lý có giải thích một vế ("thuế khoán, tức là mức thuế cố định hằng tháng").

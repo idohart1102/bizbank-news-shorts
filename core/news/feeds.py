@@ -105,6 +105,8 @@ def source_guide():
     return {"Vai trò nhóm": {str(k): v for k, v in config.get("groups", {}).items()},
             "Báo theo nhóm": {s["name"]: {"group": s.get("group", 0), "tier": s["tier"], "url": s["url"]}
                               for s in config["press"]},
+            "Nguồn tham chiếu kiến thức (tier như báo)": {r["name"]: {"tier": r["tier"], "url": r["url"], "pillar": p["id"]}
+                                                          for p in load_pillars()["pillars"] for r in p.get("references", [])},
             "Nguồn ngoài đã được Sếp duyệt": [d["domain"] for d in sources.load_decisions()["approved"]],
             "Nguồn Sếp đã từ chối (không dùng)": [d["domain"] for d in sources.load_decisions()["rejected"]]}
 

@@ -26,11 +26,18 @@ def find_episode(cfg, name):
 
 def cmd_run(cfg, args):
     with pipeline.Lock(cfg.data_dir):
-        episode = find_episode(cfg, args.resume) if args.resume else Episode.create(
-            cfg.data_dir, time.strftime("%Y-%m-%d-%H%M"), args.trigger)
+        if args.resume:
+            episode = find_episode(cfg, args.resume)
+            if args.kind and args.kind != "auto" and args.kind != episode.state.get("kind", "news"):
+                raise SystemExit(f"Tập {episode.id} là hướng {episode.state.get('kind', 'news')}; muốn hướng {args.kind} thì tạo tập mới")
+        else:
+            episode = Episode.create(cfg.data_dir, time.strftime("%Y-%m-%d-%H%M"), args.trigger)
+            kind = args.kind or ("auto" if args.trigger == "schedule" else "news")
+            episode.state["kind"] = steps.auto_kind(cfg) if kind == "auto" else kind
+            episode.save()
         if args.story:
             choose_story(episode, args.story)
-        print(f"Tập: {episode.path}")
+        print(f"Tập: {episode.path} (hướng: {KIND_NAMES[episode.state.get('kind', 'news')]})")
         pipeline.run(cfg, episode, until=args.until)
         if not args.no_distill:
             try:
@@ -41,6 +48,19 @@ def cmd_run(cfg, args):
                 print(f"Chưng cất bài học lỗi: {error}", file=sys.stderr)
         print(f"Trạng thái: {episode.state['status']}" + (f" — {episode.state['blocker']}" if episode.state["blocker"] else ""))
         sys.exit(0 if episode.state["status"] in ("done", "paused") else 2)
+
+
+KIND_NAMES = {"news": "tin tức", "knowledge": "kiến thức"}
+
+
+def cmd_approve(cfg, args):
+    """Người ra lệnh tạo video duyệt video có nội dung đối tác, rồi chạy tiếp bước đăng."""
+    episode = find_episode(cfg, args.episode)
+    if not episode.file("render/final.mp4").exists():
+        raise SystemExit("Tập chưa có video render/final.mp4 để duyệt")
+    episode.state["approved"] = {"at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "note": args.note}
+    episode.save()
+    print(f"Đã duyệt {episode.id}. Đưa vào hàng chờ đăng: bin/news run --resume {episode.id}")
 
 
 def choose_story(episode, story_id):
@@ -67,7 +87,7 @@ def cmd_topics(cfg, args):
     names = {p["id"]: p["name"] for p in feeds.load_pillars()["pillars"]}
     used = {u for h in steps.Ctx(cfg, episode).history() for u in h.get("urls", [])}
     now = time.time()
-    print(f"Tập: {episode.id}")
+    print(f"Tập: {episode.id} (hướng: {KIND_NAMES[episode.state.get('kind', 'news')]})")
     for story in json.loads(inbox.read_text(encoding="utf-8"))["stories"][: args.limit]:
         newest = max(s["published_at"] for s in story["sources"])
         try:
@@ -140,6 +160,9 @@ def main():
     run.add_argument("--dry", action="store_true", help="dữ liệu mẫu, không tốn tiền")
     run.add_argument("--story", metavar="ID", help="id tin trong inbox.json Sếp chọn (dùng với --resume)")
     run.add_argument("--trigger", default="manual", choices=["manual", "schedule"])
+    run.add_argument("--kind", choices=["news", "knowledge", "auto"],
+                     help="hướng nội dung của tập mới: news (tin tức), knowledge (kiến thức), auto (theo tỷ trọng 4:1). "
+                          "Mặc định: chạy tay = news, chạy theo lịch = auto")
     run.add_argument("--no-distill", action="store_true")
     status = sub.add_parser("status", help="trạng thái các tập")
     status.add_argument("episode", nargs="?")
@@ -156,6 +179,9 @@ def main():
     src.add_argument("action", choices=["pending", "approve", "reject"])
     src.add_argument("domain", nargs="?")
     src.add_argument("--note", default="", help="ghi chú lý do")
+    approve = sub.add_parser("approve", help="duyệt video có nội dung đối tác (người ra lệnh tạo video)")
+    approve.add_argument("episode")
+    approve.add_argument("--note", default="")
     doctor = sub.add_parser("doctor", help="kiểm máy đủ điều kiện chạy")
     doctor.add_argument("--local", action="store_true", help="chỉ kiểm cài đặt, không gọi TTS/AI/router")
     args = parser.parse_args()
@@ -163,7 +189,8 @@ def main():
         os.environ["NEWS_DRY"] = "1"
     cfg = Config()
     {"run": cmd_run, "status": cmd_status, "feedback": cmd_feedback, "lessons": cmd_lessons,
-     "sources": cmd_sources, "topics": cmd_topics, "doctor": cmd_doctor}[args.command](cfg, args)
+     "sources": cmd_sources, "topics": cmd_topics, "doctor": cmd_doctor,
+     "approve": cmd_approve}[args.command](cfg, args)
 
 
 if __name__ == "__main__":

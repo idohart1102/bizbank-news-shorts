@@ -5,6 +5,8 @@
 # keywords: từ khóa lọc thô RSS (khớp không dấu, nguyên từ), cộng thêm vào `keywords` chung trong sources.yaml;
 #   cũng dùng để gợi ý chủ đề (pillar_hints) cho Claude Sonnet ở bước gom tin. Không dùng từ đơn «ai» (trùng «ai» = người nào).
 #   Nguồn tiếng Anh khai `keywords` riêng trong sources.yaml (thay cho bộ chung).
+# partner_names: tên đối tác; video nhắc tới (kịch bản, tiêu đề, mô tả) phải được người ra lệnh duyệt trước khi đăng.
+#   BizBank là thương hiệu kênh nên không tự dò; video sản phẩm BizBank đặt `partner` trong brief.
 #   Thuế, hóa đơn tạm xếp vào «von» (tài chính doanh nghiệp); mức phạt, thủ tục pháp lý vào «luat».
 # references: nguồn tham chiếu nền cho hướng kiến thức (1.2), Sếp giao AI chọn 2026-11-19, không phụ thuộc đối tác.
 #   access: auto = máy đọc được; manual = chặn máy đọc/cần đăng nhập, mở bằng tay khi kiểm fact.
@@ -17,6 +19,7 @@ pillars:
   - id: von
     name: Vốn (tài chính doanh nghiệp)
     partner: BizBank
+    partner_names: []
     weight: 40
     keywords: [vay von, goi vay, khoan vay, lai suat, tin dung, ngan hang, von luu dong, bao lanh, the chap, tin chap, quy phat trien doanh nghiep, ho tro von, no xau, dao no, gia han no, thue, hoa don, khai thue, quyet toan, thue khoan, ma so thue]
     references:
@@ -26,6 +29,7 @@ pillars:
   - id: quan-tri
     name: Quản trị doanh nghiệp thông minh
     partner: UpBase (Lark Suite)
+    partner_names: [UpBase, Lark Suite, Lark]
     weight: 20
     keywords: [chuyen doi so, so hoa, phan mem quan ly, quan tri doanh nghiep, quan ly ban hang, quan ly kho, quan ly nhan su, cham cong, erp, crm, lark, dien toan dam may, nen tang so, cong cu so, tu dong hoa, du lieu doanh nghiep, an toan thong tin, bao mat du lieu, chu ky so, hop dong dien tu]
     references:
@@ -34,6 +38,7 @@ pillars:
   - id: luat
     name: Luật doanh nghiệp và hộ kinh doanh
     partner: HDS Law
+    partner_names: [HDS Law]
     weight: 20
     keywords: [luat doanh nghiep, dang ky kinh doanh, giay phep kinh doanh, thanh lap doanh nghiep, giai the, hop dong, tranh chap, xu phat, muc phat, vi pham hanh chinh, nghi dinh, thong tu, du thao, co hieu luc, quy dinh moi, bao hiem xa hoi, bhxh, nguoi lao dong, luong toi thieu, so huu tri tue, nhan hieu, ve sinh an toan thuc pham, bao ve nguoi tieu dung]
     references:
@@ -43,6 +48,7 @@ pillars:
   - id: ai-marketing
     name: AI Marketing
     partner: MautureX
+    partner_names: [MautureX]
     weight: 20
     keywords: [cong nghe ai, ung dung ai, cong cu ai, ai tao sinh, tri tue nhan tao, chatgpt, gemini, chatbot, marketing, quang cao, facebook ads, tiktok ads, google ads, livestream, ban hang online, tiktok shop, shopee, lazada, san thuong mai, thuong mai dien tu, tmdt, kols, koc, noi dung so, thuat toan, zalo]
     references:
