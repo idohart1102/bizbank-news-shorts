@@ -6,6 +6,9 @@
 #   cũng dùng để gợi ý chủ đề (pillar_hints) cho Claude Sonnet ở bước gom tin. Không dùng từ đơn «ai» (trùng «ai» = người nào).
 #   Nguồn tiếng Anh khai `keywords` riêng trong sources.yaml (thay cho bộ chung).
 #   Thuế, hóa đơn tạm xếp vào «von» (tài chính doanh nghiệp); mức phạt, thủ tục pháp lý vào «luat».
+# references: nguồn tham chiếu nền cho hướng kiến thức (1.2), Sếp giao AI chọn 2026-11-19, không phụ thuộc đối tác.
+#   access: auto = máy đọc được; manual = chặn máy đọc/cần đăng nhập, mở bằng tay khi kiểm fact.
+#   Nguồn nước ngoài (HBR, HubSpot) chỉ lấy khung kiến thức, không lấy số liệu làm số liệu Việt Nam.
 kinds:              # tỷ trọng 2 hướng nội dung (Sếp 2026-11-18); nhánh kiến thức xây ở giai đoạn 2
   news: 4
   knowledge: 1
@@ -16,18 +19,32 @@ pillars:
     partner: BizBank
     weight: 40
     keywords: [vay von, goi vay, khoan vay, lai suat, tin dung, ngan hang, von luu dong, bao lanh, the chap, tin chap, quy phat trien doanh nghiep, ho tro von, no xau, dao no, gia han no, thue, hoa don, khai thue, quyet toan, thue khoan, ma so thue]
+    references:
+      - {name: Cổng Thông tin Doanh nghiệp (Cục Phát triển doanh nghiệp), url: https://business.gov.vn, tier: 1, access: manual, use: chính sách hỗ trợ DNNVV, hướng dẫn tiếp cận vốn}  # trang dựng bằng JS
+      - {name: Quỹ Phát triển doanh nghiệp nhỏ và vừa, url: https://smedf.gov.vn, tier: 1, access: auto, use: điều kiện, hồ sơ vay ưu đãi cho SME}
+      - {name: Cục Thuế, url: https://gdt.gov.vn, tier: 1, access: auto, use: hướng dẫn kê khai, nộp thuế, hóa đơn cho hộ kinh doanh}
   - id: quan-tri
     name: Quản trị doanh nghiệp thông minh
     partner: UpBase (Lark Suite)
     weight: 20
     keywords: [chuyen doi so, so hoa, phan mem quan ly, quan tri doanh nghiep, quan ly ban hang, quan ly kho, quan ly nhan su, cham cong, erp, crm, lark, dien toan dam may, nen tang so, cong cu so, tu dong hoa, du lieu doanh nghiep, an toan thong tin, bao mat du lieu, chu ky so, hop dong dien tu]
+    references:
+      - {name: Cổng Chuyển đổi số quốc gia, url: https://dx.gov.vn, tier: 1, access: auto, use: cẩm nang, chương trình chuyển đổi số cho doanh nghiệp}
+      - {name: Harvard Business Review, url: https://hbr.org, tier: 2, access: auto, use: khung quản trị, vận hành, lãnh đạo (tiếng Anh, một phần trả phí)}
   - id: luat
     name: Luật doanh nghiệp và hộ kinh doanh
     partner: HDS Law
     weight: 20
     keywords: [luat doanh nghiep, dang ky kinh doanh, giay phep kinh doanh, thanh lap doanh nghiep, giai the, hop dong, tranh chap, xu phat, muc phat, vi pham hanh chinh, nghi dinh, thong tu, du thao, co hieu luc, quy dinh moi, bao hiem xa hoi, bhxh, nguoi lao dong, luong toi thieu, so huu tri tue, nhan hieu, ve sinh an toan thuc pham, bao ve nguoi tieu dung]
+    references:
+      - {name: CSDL quốc gia về pháp luật (Bộ Tư pháp), url: https://vbpl.vn, tier: 1, access: auto, use: nguyên văn luật, nghị định, thông tư còn hiệu lực}
+      - {name: Cổng thông tin quốc gia về đăng ký doanh nghiệp, url: https://dangkykinhdoanh.gov.vn, tier: 1, access: auto, use: thủ tục thành lập, thay đổi, giải thể doanh nghiệp và hộ kinh doanh}
+      - {name: Thư viện Pháp luật, url: https://thuvienphapluat.vn, tier: 2, access: manual, use: hỏi đáp, diễn giải văn bản; luôn đối chiếu nguyên văn ở vbpl.vn}
   - id: ai-marketing
     name: AI Marketing
     partner: MautureX
     weight: 20
     keywords: [cong nghe ai, ung dung ai, cong cu ai, ai tao sinh, tri tue nhan tao, chatgpt, gemini, chatbot, marketing, quang cao, facebook ads, tiktok ads, google ads, livestream, ban hang online, tiktok shop, shopee, lazada, san thuong mai, thuong mai dien tu, tmdt, kols, koc, noi dung so, thuat toan, zalo]
+    references:
+      - {name: Học viện TikTok Shop Việt Nam, url: https://seller-vn.tiktok.com/university, tier: 1, access: auto, use: hướng dẫn chính thức bán hàng, livestream, quảng cáo trên TikTok Shop}
+      - {name: HubSpot Blog và Academy, url: https://blog.hubspot.com, tier: 2, access: auto, use: kiến thức marketing nền tảng, ứng dụng AI trong marketing (tiếng Anh)}
