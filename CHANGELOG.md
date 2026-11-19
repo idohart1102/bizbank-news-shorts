@@ -1,17 +1,17 @@
 # Thay đổi
 
-## Chưa phát hành — 2026-11-19
+## v1.6.0 — 2026-11-19
+
+Kênh 2 hướng (tin tức 4/5, kiến thức 1/5) × 4 chủ đề: Vốn, Quản trị doanh nghiệp thông minh, Luật doanh nghiệp và HKD, AI Marketing.
 
 - Hướng kiến thức (`bin/news run --kind knowledge`, `/chonchude kien thuc`): Claude Sonnet đọc 10 nguồn tham chiếu và đề xuất đề tài; chọn 1 đề tài dạng các bước/lỗi hay gặp/giải thích; viết theo `core/standard/script_knowledge.md`. Từ bước duyệt trở đi dùng chung với tin tức.
 - Tỷ trọng 4 tin tức : 1 kiến thức: lịch chạy dùng `--kind auto`; chạy tay mặc định tin tức. Tập ghi hướng trong `state.json`, sổ `index.jsonl` ghi `kind`, `pillar`, `title`, `partners`.
 - Cổng duyệt đối tác: video nhắc tên đối tác hoặc brief có `partner` dừng trước hàng chờ đăng, người ra lệnh duyệt bằng `bin/news approve <tap>`.
 - Nguồn tham chiếu kiến thức được tính là nguồn trong danh sách (không phải chờ duyệt).
-
-## Chưa phát hành — 2026-11-18
-
 - Kênh có 4 chủ đề (`config/pillars.yaml`): Vốn, Quản trị doanh nghiệp thông minh, Luật doanh nghiệp và HKD, AI Marketing, kèm tỷ trọng mục tiêu và từ khóa lọc RSS riêng từng chủ đề.
 - Gom tin gắn `pillar_hints` theo từ khóa/nguồn; Sonnet gắn `pillar` cho từng tin trong `inbox.json`. Brief có `kind` (news) và `pillar`; bước chọn tin cân tỷ trọng chủ đề theo các tập gần đây, cổng kiểm chặn `pillar` lệch tin chính. Sổ `index.jsonl` ghi `kind`, `pillar`.
 - Thêm nguồn nhóm 5 (Sếp tạm chốt) và RSS chuyên mục pháp luật/công nghệ; nguồn tiếng Anh dùng bộ từ khóa riêng. `bin/news topics` và `/chonchude` hiện và nhóm theo chủ đề.
+- Xác minh: 88/88 test đạt; chạy thật bước đề xuất đề tài kiến thức ra 12 đề tài đủ 4 chủ đề. Chưa nghiệm thu một video kiến thức hoàn chỉnh.
 
 ## v1.5.0 — 2026-11-18
 

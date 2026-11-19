@@ -1,6 +1,6 @@
 # News video
 
-Phiên bản hiện tại: [v1.5.0 — Codex tạo ảnh trực tiếp, bỏ phụ thuộc 9router](https://github.com/idohart1102/bizbank-news-shorts/releases/tag/v1.5.0). Xem [CHANGELOG.md](CHANGELOG.md).
+Phiên bản hiện tại: [v1.6.0 — Hai hướng tin tức và kiến thức, 4 chủ đề](https://github.com/idohart1102/bizbank-news-shorts/releases/tag/v1.6.0). Xem [CHANGELOG.md](CHANGELOG.md).
 
 Hệ thống tự động làm short tin tức Việt Nam (dưới 60 giây, 9:16) cho hộ kinh doanh và SME: gom tin → chọn → viết → duyệt + kiểm fact → giọng → ảnh → plan dựng → render → QC → gói → hàng chờ đăng.
 
